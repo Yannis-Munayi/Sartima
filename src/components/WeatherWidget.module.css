@@ -1,0 +1,62 @@
+.skeleton {
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%,100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+.widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+}
+
+.weatherEmoji { font-size: 22px; flex-shrink: 0; }
+
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.temp {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.desc {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-transform: capitalize;
+}
+
+.humidity {
+  font-size: 11px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+/* ── Compact variant (used in HomeScreen strip) ── */
+.compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 20px;
+}
+
+.emoji { font-size: 14px; }
+.compactTemp { font-size: 13px; font-weight: 700; color: var(--text); }
+.compactCity { font-size: 11px; color: var(--text-faint); }

@@ -7,13 +7,14 @@ import { LABEL_WEIGHTS, getItemLabels } from '../data/labels'
 const AppContext = createContext(null)
 
 export const SCREENS = {
-  AUTH:       'auth',
-  WELCOME:    'welcome',
-  SEASONS:    'seasons',
-  CATEGORIES: 'categories',
-  DISCOVERY:  'discovery',
-  RESULTS:    'results',
-  PROFILE:    'profile',
+  AUTH:        'auth',
+  WELCOME:     'welcome',
+  ONBOARDING:  'onboarding',
+  SEASONS:     'seasons',
+  CATEGORIES:  'categories',
+  DISCOVERY:   'discovery',
+  RESULTS:     'results',
+  PROFILE:     'profile',
 }
 
 export const ALL_CATEGORIES = Object.keys(CLOTHING_ITEMS)
@@ -123,6 +124,12 @@ function reducer(state, action) {
       return { ...state, screen: SCREENS.AUTH }
 
     case 'GO_TO_WELCOME':
+      return { ...state, screen: SCREENS.WELCOME }
+
+    case 'GO_TO_ONBOARDING':
+      return { ...state, screen: SCREENS.ONBOARDING }
+
+    case 'SET_ONBOARDING_COMPLETE':
       return { ...state, screen: SCREENS.WELCOME }
 
     case 'GO_TO_PROFILE':

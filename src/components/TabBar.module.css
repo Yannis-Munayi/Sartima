@@ -16,12 +16,18 @@
   display: flex;
   align-items: stretch;
   height: 100%;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+
+.tabScroll::-webkit-scrollbar { display: none; }
 
 /* ── Tab base ── */
 .tab {
   flex: 1;
+  min-width: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,7 +42,7 @@
   font-weight: 500;
   letter-spacing: 0.3px;
   transition: color 0.18s;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .tab:hover {

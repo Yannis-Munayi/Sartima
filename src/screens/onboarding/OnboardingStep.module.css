@@ -1,0 +1,202 @@
+/* ── Shared step layout ── */
+.step {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.iconBadge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 10px;
+  line-height: 1.2;
+  font-family: 'Playfair Display', serif;
+}
+
+.title em {
+  font-style: italic;
+  font-weight: 800;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--text-faint);
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+/* ── Occupation tiles ── */
+.tileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tile:hover { border-color: rgba(232,115,90,0.5); }
+
+.tileActive {
+  background: rgba(232,115,90,0.12);
+  border-color: #E8735A;
+}
+
+.tileEmoji { font-size: 22px; }
+
+.tileLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: inherit;
+}
+
+/* ── Brand search ── */
+.searchInput, .emailInput {
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 14px;
+}
+
+.searchInput:focus, .emailInput:focus { border-color: #E8735A; }
+
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.brandChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.brandChipActive {
+  background: rgba(232,115,90,0.15);
+  border-color: #E8735A;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.brandCheck {
+  color: #E8735A;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* ── Referral sources ── */
+.sourceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sourceBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sourceBtn:hover {
+  border-color: #E8735A;
+  background: rgba(232,115,90,0.06);
+}
+
+.sourceEmoji { font-size: 20px; flex-shrink: 0; }
+
+.sourceLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: inherit;
+}
+
+/* ── CTA buttons ── */
+.nextBtn {
+  width: 100%;
+  padding: 15px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.nextBtn:disabled {
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.3);
+  cursor: not-allowed;
+}
+
+.skipBtn {
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.skipBtn:hover { color: var(--text-dim); }

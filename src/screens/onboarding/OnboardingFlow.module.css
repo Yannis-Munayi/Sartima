@@ -1,0 +1,42 @@
+.flow {
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: 60px 24px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 40px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: background 0.2s;
+}
+
+.dotActive {
+  background: #E8735A;
+}
+
+.skipAll {
+  margin-top: auto;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.skipAll:hover { color: var(--text-dim); }

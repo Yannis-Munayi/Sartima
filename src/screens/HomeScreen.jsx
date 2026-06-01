@@ -8,7 +8,10 @@ import { useAuth } from '../context/AuthContext'
 import { useExplore } from '../context/ExploreContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useShop } from '../context/ShopContext'
+import { useCloset } from '../context/ClosetContext'
 import { getLooks } from '../data/looks'
+import { generateOutfit } from '../services/outfitAI'
+import { getWeather, getWeatherEmoji } from '../services/weather'
 import AuthWidget from '../components/AuthWidget'
 import styles from './HomeScreen.module.css'
 
@@ -198,9 +201,9 @@ function StatsPills({ setActiveTab }) {
   const likedCount = Object.values(state.responses).filter((r) => r.liked).length
 
   const pills = [
-    { label: 'Liked',     value: likedCount,       icon: '❤️', tab: 'mystyle:liked' },
-    { label: 'Saved',     value: wishlist.length,   icon: '🤍', tab: 'mystyle:saved' },
-    { label: 'Shop List', value: shopList.length,   icon: '🛍️', tab: 'mystyle:shop'  },
+    { label: 'Liked',     value: likedCount,       icon: '❤️', tab: 'closet' },
+    { label: 'Saved',     value: wishlist.length,   icon: '🤍', tab: 'closet' },
+    { label: 'Shop List', value: shopList.length,   icon: '🛍️', tab: 'closet' },
   ]
 
   return (
@@ -600,6 +603,86 @@ function GuideLauncher({ onStart }) {
   )
 }
 
+// ── Daily Outfit Preview ─────────────────────────────────────────────────────
+
+const CATEGORY_EMOJIS_HOME = {
+  tops: '👕', bottoms: '👖', outerwear: '🧥',
+  dresses: '👗', footwear: '👟', accessories: '👜',
+}
+
+function DailyOutfitPreview({ setActiveTab, gender }) {
+  const { user }        = useAuth()
+  const { closetItems } = useCloset()
+  const [outfit, setOutfit]   = useState(null)
+  const [weather, setWeather] = useState(null)
+  const [done, setDone]       = useState(false)
+
+  useEffect(() => {
+    getWeather().then(setWeather).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!user || closetItems.length < 3 || done) return
+    setDone(true)
+    const dateStr = new Date().toISOString().slice(0, 10)
+    generateOutfit({ closetItems, weather, occasion: 'casual', dateStr, gender, occupation: null })
+      .then(setOutfit)
+      .catch(() => {})
+  }, [user, closetItems.length, done, gender, weather])
+
+  if (!user || closetItems.length < 3) {
+    return (
+      <div className={styles.closetCta} onClick={() => setActiveTab('closet')}>
+        <span className={styles.closetCtaIcon}>🪣</span>
+        <div>
+          <p className={styles.closetCtaTitle}>Build your digital closet</p>
+          <p className={styles.closetCtaSub}>Add 3+ items to unlock daily AI outfits</p>
+        </div>
+        <span className={styles.closetCtaArrow}>→</span>
+      </div>
+    )
+  }
+
+  if (!outfit) return null
+
+  return (
+    <div className={styles.dailyPreview}>
+      <div className={styles.dailyPreviewHeader}>
+        <div>
+          <h3 className={styles.dailyPreviewTitle}>Today's Look</h3>
+          {weather && (
+            <span className={styles.dailyWeather}>
+              {getWeatherEmoji(weather.condition)} {weather.temp}°C · {weather.city}
+            </span>
+          )}
+        </div>
+        <button
+          className={styles.dailySeeAll}
+          onClick={() => setActiveTab('daily')}
+        >
+          See full look →
+        </button>
+      </div>
+      <div className={styles.dailyItems}>
+        {outfit.items.slice(0, 3).map((item) => {
+          const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+          return (
+            <div key={item.id} className={styles.dailyItem}>
+              {photoUrl
+                ? <img src={photoUrl} alt={item.name} className={styles.dailyItemImg} />
+                : <span className={styles.dailyItemEmoji}>{CATEGORY_EMOJIS_HOME[item.category] ?? '👕'}</span>
+              }
+            </div>
+          )
+        })}
+      </div>
+      {outfit.reasoning && (
+        <p className={styles.dailyReasoning}>{outfit.reasoning}</p>
+      )}
+    </div>
+  )
+}
+
 export default function HomeScreen({ setActiveTab, startGuide }) {
   const { savedAesthetics } = useExplore()
   const { state }           = useApp()
@@ -626,6 +709,9 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
       <HeroCarousel setActiveTab={setActiveTab} gender={gender} />
 
       <div className={styles.body}>
+        {/* Daily AI outfit preview + closet CTA */}
+        <DailyOutfitPreview setActiveTab={setActiveTab} gender={gender} />
+
         {/* Fresh Looks Today — daily rotating content, main daily pull */}
         <FreshLooksSection gender={gender} setActiveTab={setActiveTab} />
 

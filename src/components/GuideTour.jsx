@@ -163,26 +163,18 @@ export const GUIDE_STEPS = [
     desc:  'See the 🤍 icon on the card? Tap it to save the item to your Wishlist without it affecting your aesthetic score. Perfect for pieces you love the look of but aren\'t sure match your overall style direction.',
   },
 
-  // ── My Style: Liked ───────────────────────────────────────────────────────
+  // ── Closet: Liked ────────────────────────────────────────────────────────
   {
-    tab:           'mystyle',
+    tab:           'closet',
     myStyleSubTab: 'liked',
-    title:         'My Style — Liked Items ❤️',
+    title:         'Closet — Liked Items ❤️',
     desc:          'Every item you swiped right on lives here. Tap "Generate my aesthetics" to run a fresh analysis on your current likes — StyleLab scores each aesthetic based on how many of its signature pieces you liked. Tap × on any card to remove it and update your profile.',
   },
 
-  // ── My Style: Saved ───────────────────────────────────────────────────────
+  // ── Closet: Outfits ───────────────────────────────────────────────────────
   {
-    tab:           'mystyle',
-    myStyleSubTab: 'saved',
-    title:         'Saved & Shop 🤍 🛍️',
-    desc:          'The Saved tab holds everything you hearted — from Discover cards, aesthetic Items tabs, and daily Fresh Looks. Each item links to Pinterest so you can track down where to buy it. Switch to the Shop sub-tab to see pieces you\'ve specifically queued for purchase, sorted by aesthetic.',
-  },
-
-  // ── My Style: Boards ─────────────────────────────────────────────────────
-  {
-    tab:           'mystyle',
-    myStyleSubTab: 'boards',
+    tab:           'closet',
+    myStyleSubTab: 'outfits',
     title:         'Outfit Boards 🗂️',
     desc:          'Boards let you combine your liked and saved pieces into named outfit collections — think of them as your personal lookbooks. Tap "+ New Board", select pieces from your library, give the board a name, and save. Boards sync to your account so they\'re available on any device.',
   },

@@ -4,6 +4,9 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ShopProvider } from './context/ShopContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { ExploreProvider, useExplore } from './context/ExploreContext'
+import { ClosetProvider } from './context/ClosetContext'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from './services/firebase'
 import HomeScreen      from './screens/HomeScreen'
 import WelcomeScreen   from './screens/WelcomeScreen'
 import SeasonScreen    from './screens/SeasonScreen'
@@ -16,6 +19,9 @@ import MyStyleScreen   from './screens/MyStyleScreen'
 import ExploreScreen   from './screens/ExploreScreen'
 import AestheticScreen from './screens/AestheticScreen'
 import WardrobeBuildScreen from './screens/WardrobeBuildScreen'
+import ClosetScreen    from './screens/ClosetScreen'
+import DailyLookScreen from './screens/DailyLookScreen'
+import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
 import TabBar          from './components/TabBar'
 import GuideTour, { GUIDE_STEPS } from './components/GuideTour'
 import Toast           from './components/Toast'
@@ -24,6 +30,7 @@ import { GuideProvider } from './context/GuideContext'
 // Screens where the tab bar is hidden (focused setup flow)
 const HIDE_TABS_ON = new Set([
   SCREENS.AUTH,
+  SCREENS.ONBOARDING,
   SCREENS.SEASONS,
   SCREENS.CATEGORIES,
 ])
@@ -31,14 +38,15 @@ const HIDE_TABS_ON = new Set([
 function QuizRouter() {
   const { state } = useApp()
   switch (state.screen) {
-    case SCREENS.AUTH:       return <AuthScreen />
-    case SCREENS.WELCOME:    return <WelcomeScreen />
-    case SCREENS.SEASONS:    return <SeasonScreen />
-    case SCREENS.CATEGORIES: return <CategoryScreen />
-    case SCREENS.DISCOVERY:  return <DiscoveryScreen />
-    case SCREENS.RESULTS:    return <ResultsScreen />
-    case SCREENS.PROFILE:    return <ProfileScreen />
-    default:                 return <WelcomeScreen />
+    case SCREENS.AUTH:        return <AuthScreen />
+    case SCREENS.WELCOME:     return <WelcomeScreen />
+    case SCREENS.ONBOARDING:  return <OnboardingFlow />
+    case SCREENS.SEASONS:     return <SeasonScreen />
+    case SCREENS.CATEGORIES:  return <CategoryScreen />
+    case SCREENS.DISCOVERY:   return <DiscoveryScreen />
+    case SCREENS.RESULTS:     return <ResultsScreen />
+    case SCREENS.PROFILE:     return <ProfileScreen />
+    default:                  return <WelcomeScreen />
   }
 }
 
@@ -114,13 +122,24 @@ function AppShell() {
     }
   }, [state.screen])
 
-  // When the user signs out, reset to explore tab so ProfileScreen doesn't linger
+  // When the user signs out, reset to home tab so ProfileScreen doesn't linger
   useEffect(() => {
     const wasSignedIn = prevUserRef.current !== null
     prevUserRef.current = user
     if (wasSignedIn && !user) {
       setActiveTab('home')
     }
+  }, [user])
+
+  // After a new sign-in, check whether onboarding has been completed
+  const onboardingCheckedRef = useRef(false)
+  useEffect(() => {
+    if (!user || onboardingCheckedRef.current) return
+    onboardingCheckedRef.current = true
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      if (snap.exists() && snap.data().onboardingComplete) return
+      dispatch({ type: 'GO_TO_ONBOARDING' })
+    }).catch(() => {})
   }, [user])
 
   // A session is "in progress" when the discovery queue is loaded and the
@@ -218,6 +237,11 @@ function AppShell() {
     if (tabId === 'mystyle') {
       setMyStyleSubTab(null)
     }
+    if (tabId.startsWith('closet:')) {
+      setMyStyleSubTab(tabId.replace('closet:', ''))
+      setActiveTab('closet')
+      return
+    }
     setActiveTab(tabId)
   }
 
@@ -272,6 +296,12 @@ function AppShell() {
       {showTabs && activeTab === 'mystyle' && (
         <MyStyleScreen forceSubTab={myStyleSubTab} />
       )}
+      {showTabs && activeTab === 'closet' && (
+        <ClosetScreen setActiveTab={handleTabChange} />
+      )}
+      {showTabs && activeTab === 'daily' && (
+        <DailyLookScreen setActiveTab={handleTabChange} />
+      )}
       {showTabs && activeTab === 'profile'  && (
         <ProfileScreen onBack={() => handleTabChange('quiz')} />
       )}
@@ -312,9 +342,11 @@ export default function App() {
       <AppProvider>
         <ShopProvider>
           <WishlistProvider>
-            <ExploreProvider>
-              <AppShell />
-            </ExploreProvider>
+            <ClosetProvider>
+              <ExploreProvider>
+                <AppShell />
+              </ExploreProvider>
+            </ClosetProvider>
           </WishlistProvider>
         </ShopProvider>
       </AppProvider>

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
+    "@imgly/background-removal": "^1.7.0",
     "firebase": "^12.12.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

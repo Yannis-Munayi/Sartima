@@ -840,3 +840,120 @@
   color: rgba(255,255,255,0.4);
   margin-top: 2px;
 }
+
+/* ── Daily Outfit Preview ── */
+.dailyPreview {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dailyPreviewHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dailyPreviewTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 3px;
+  font-family: 'Playfair Display', serif;
+}
+
+.dailyWeather {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.dailySeeAll {
+  background: none;
+  border: none;
+  color: #E8735A;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dailyItems {
+  display: flex;
+  gap: 8px;
+}
+
+.dailyItem {
+  flex: 1;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90px;
+}
+
+.dailyItemImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dailyItemEmoji { font-size: 28px; }
+
+.dailyReasoning {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Closet CTA (when empty) ── */
+.closetCta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.closetCta:hover { border-color: #E8735A; }
+
+.closetCtaIcon { font-size: 28px; flex-shrink: 0; }
+
+.closetCtaTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.closetCtaSub {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.closetCtaArrow {
+  margin-left: auto;
+  font-size: 18px;
+  color: #E8735A;
+  flex-shrink: 0;
+}
+
