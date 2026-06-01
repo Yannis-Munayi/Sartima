@@ -194,22 +194,18 @@ function HeroCarousel({ setActiveTab, gender }) {
 // ── Stats pills ───────────────────────────────────────────────────────────────
 
 function StatsPills({ setActiveTab }) {
-  const { wishlist }  = useWishlist()
-  const { shopList }  = useShop()
-  const { state }     = useApp()
-
-  const likedCount = Object.values(state.responses).filter((r) => r.liked).length
+  const { liked }       = useWishlist()
+  const { closetItems } = useCloset()
 
   const pills = [
-    { label: 'Liked',     value: likedCount,       icon: '❤️', tab: 'closet' },
-    { label: 'Saved',     value: wishlist.length,   icon: '🤍', tab: 'closet' },
-    { label: 'Shop List', value: shopList.length,   icon: '🛍️', tab: 'closet' },
+    { label: 'Liked',  value: liked.length,       icon: '❤️', tab: 'closet' },
+    { label: 'Closet', value: closetItems.length,  icon: '👕', tab: 'closet' },
   ]
 
   return (
     <div className={styles.statsRow}>
       {pills.map(({ label, value, icon, tab }) => (
-        <button key={tab} className={styles.statPill} onClick={() => setActiveTab(tab)}>
+        <button key={label} className={styles.statPill} onClick={() => setActiveTab(tab)}>
           <span className={styles.statIcon}>{icon}</span>
           <span className={styles.statValue}>{value}</span>
           <span className={styles.statLabel}>{label}</span>

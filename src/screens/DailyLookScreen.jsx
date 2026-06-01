@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext'
 import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import { generateOutfit } from '../services/outfitAI'
+import { fetchPhotosWithFallback } from '../services/pexels'
 import { getWeather, getWeatherEmoji } from '../services/weather'
 import WeatherWidget from '../components/WeatherWidget'
 import OutfitCalendarScreen from './OutfitCalendarScreen'
@@ -51,7 +52,23 @@ function todayStr() {
 }
 
 function OutfitCard({ item }) {
-  const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+  const storedUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+  const [fetchedUrl, setFetchedUrl] = useState(null)
+
+  useEffect(() => {
+    if (storedUrl) return
+    let cancelled = false
+    fetchPhotosWithFallback([
+      `${item.name} ${item.color ?? ''} fashion`.trim(),
+      `${item.name} clothing`,
+    ], 1).then(([url] = []) => {
+      if (!cancelled) setFetchedUrl(url ?? null)
+    })
+    return () => { cancelled = true }
+  }, [item.id, storedUrl, item.name, item.color])
+
+  const photoUrl = storedUrl ?? fetchedUrl
+
   return (
     <div className={styles.outfitItem}>
       <div className={styles.outfitPhoto}>

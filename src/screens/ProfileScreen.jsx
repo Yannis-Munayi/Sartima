@@ -377,8 +377,6 @@ export default function ProfileScreen({ onBack }) {
           </div>
         </section>
 
-        <GuideLauncher onStart={startGuide} />
-
         <button className={styles.retakeBtn} onClick={() => dispatch({ type: 'GO_TO_SEASONS' })}>
           Take quiz again
         </button>
