@@ -316,7 +316,7 @@ function FreshLooksSection({ gender, setActiveTab }) {
 // ── Live Aesthetic Profile ────────────────────────────────────────────────────
 
 function AestheticProfile({ setActiveTab, gender }) {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
 
   const topStyles = useMemo(() => {
     const total = Object.values(state.styleScores).reduce((a, b) => a + b, 0)
@@ -345,7 +345,7 @@ function AestheticProfile({ setActiveTab, gender }) {
           <div className={styles.aestheticBarGhost} style={{ width: '70%' }} />
           <div className={styles.aestheticBarGhost} style={{ width: '45%' }} />
         </div>
-        <button className={styles.quizCTABtn} onClick={() => setActiveTab('quiz')}>
+        <button className={styles.quizCTABtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); setActiveTab('quiz') }}>
           Take the style quiz to unlock your profile →
         </button>
       </section>

@@ -377,7 +377,7 @@ export default function ProfileScreen({ onBack }) {
           </div>
         </section>
 
-        <button className={styles.retakeBtn} onClick={() => dispatch({ type: 'GO_TO_SEASONS' })}>
+        <button className={styles.retakeBtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); if (onBack) onBack() }}>
           Take quiz again
         </button>
       </div>

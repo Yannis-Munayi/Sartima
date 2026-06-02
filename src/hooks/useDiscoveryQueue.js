@@ -3,6 +3,7 @@ import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
 
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
+const QUIZ_SIZE        = 40
 
 const WEIGHTS = {
   brand:          10,
@@ -105,26 +106,32 @@ function buildBatch(profile, batchSize, gender) {
   return diverse.map(({ product }) => product)
 }
 
-export function useDiscoveryQueue(gender = 'both') {
-  const [queue,        setQueue]    = useState([])
-  const [currentIndex, setIndex]    = useState(0)
-  const [styleScores,  setScores]   = useState({})
-  const profileRef = useRef(createEmptyProfile())
+export function useDiscoveryQueue(gender = 'both', quizMode = false) {
+  const [queue,          setQueue]          = useState([])
+  const [currentIndex,   setIndex]          = useState(0)
+  const [styleScores,    setScores]         = useState({})
+  const [quizLikedItems, setQuizLikedItems] = useState([])
+  const profileRef  = useRef(createEmptyProfile())
+  const quizModeRef = useRef(quizMode)
+  useEffect(() => { quizModeRef.current = quizMode }, [quizMode])
 
-  const currentProduct = queue[currentIndex] ?? null
-  const remaining      = queue.length - currentIndex
+  const currentProduct  = queue[currentIndex] ?? null
+  const remaining       = queue.length - currentIndex
+  const isQuizFinished  = quizMode && queue.length > 0 && currentIndex >= queue.length
 
-  // Seed queue on mount / gender change
+  // Seed queue on mount / gender change / mode change
   useEffect(() => {
     profileRef.current = createEmptyProfile()
-    const initial = buildBatch(profileRef.current, BUFFER_SIZE, gender)
+    const initial = buildBatch(profileRef.current, quizMode ? QUIZ_SIZE : BUFFER_SIZE, gender)
     setQueue(initial)
     setIndex(0)
     setScores({})
-  }, [gender])
+    setQuizLikedItems([])
+  }, [gender, quizMode])
 
-  // Refill when buffer runs low
+  // Refill when buffer runs low — infinite mode only
   useEffect(() => {
+    if (quizMode) return
     if (queue.length === 0) return
     if (remaining > REFILL_THRESHOLD) return
 
@@ -136,7 +143,7 @@ export function useDiscoveryQueue(gender = 'both') {
       return [...tail, ...more]
     })
     setIndex(0)
-  }, [remaining, currentIndex, gender, queue.length])
+  }, [remaining, currentIndex, gender, queue.length, quizMode])
 
   const onLike = useCallback((product) => {
     const p = profileRef.current
@@ -150,6 +157,9 @@ export function useDiscoveryQueue(gender = 'both') {
     p.recentLikes = [product.id, ...p.recentLikes].slice(0, 10)
     p.seenIds.add(product.id)
     setScores({ ...p.styleAffinities })
+    if (quizModeRef.current) {
+      setQuizLikedItems((prev) => [...prev, product])
+    }
     setIndex((i) => i + 1)
   }, [])
 
@@ -167,11 +177,24 @@ export function useDiscoveryQueue(gender = 'both') {
 
   const reset = useCallback(() => {
     profileRef.current = createEmptyProfile()
-    const initial = buildBatch(profileRef.current, BUFFER_SIZE, gender)
+    const initial = buildBatch(profileRef.current, quizModeRef.current ? QUIZ_SIZE : BUFFER_SIZE, gender)
     setQueue(initial)
     setIndex(0)
     setScores({})
+    setQuizLikedItems([])
   }, [gender])
 
-  return { currentProduct, remaining, onLike, onSkip, onPrev, styleScores, reset }
+  return {
+    currentProduct,
+    remaining,
+    onLike,
+    onSkip,
+    onPrev,
+    styleScores,
+    reset,
+    isQuizFinished,
+    quizProgress: quizMode ? { current: Math.min(currentIndex, queue.length), total: queue.length } : null,
+    quizQueue:    queue,
+    quizLikedItems,
+  }
 }

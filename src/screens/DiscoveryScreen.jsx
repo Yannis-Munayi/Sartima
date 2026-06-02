@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { STYLES } from '../data/styles'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
 import ProductCard from '../components/ProductCard'
 import styles from './DiscoveryScreen.module.css'
@@ -12,16 +13,41 @@ const SEASONS = [
 ]
 
 export default function DiscoveryScreen() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const gender    = state.gender ?? 'both'
+  const quizMode  = state.quizMode ?? false
 
-  const { currentProduct, remaining, onLike, onSkip, onPrev } = useDiscoveryQueue(gender)
+  const {
+    currentProduct, remaining, onLike, onSkip, onPrev,
+    styleScores, isQuizFinished, quizProgress, quizQueue, quizLikedItems,
+  } = useDiscoveryQueue(gender, quizMode)
 
   const [showFilter,     setShowFilter]     = useState(false)
   const [filterSeasons,  setFilterSeasons]  = useState([])
   const [activeSeasons,  setActiveSeasons]  = useState([])
   const [likedCount,     setLikedCount]     = useState(0)
   const [swipedCount,    setSwipedCount]    = useState(0)
+
+  const dispatchedRef = useRef(false)
+
+  // When quiz finishes, bridge results into AppContext and go to results screen
+  useEffect(() => {
+    if (!isQuizFinished || dispatchedRef.current) return
+    dispatchedRef.current = true
+
+    const likedIds = new Set(quizLikedItems.map((i) => i.id))
+    const responses = {}
+    for (const item of quizQueue) {
+      responses[item.id] = { liked: likedIds.has(item.id) }
+    }
+
+    const allStyleScores = Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0]))
+    for (const [k, v] of Object.entries(styleScores)) {
+      if (k in allStyleScores) allStyleScores[k] = v
+    }
+
+    dispatch({ type: 'SET_QUIZ_RESULTS', styleScores: allStyleScores, responses, itemQueue: quizQueue })
+  }, [isQuizFinished]) // eslint-disable-line
 
   function handleLike(product) {
     // Filter by active seasons if a filter is set
@@ -55,6 +81,14 @@ export default function DiscoveryScreen() {
     setShowFilter(true)
   }
 
+  if (isQuizFinished) {
+    return (
+      <div className={styles.loading}>
+        <p>Calculating your results…</p>
+      </div>
+    )
+  }
+
   if (!currentProduct) {
     return (
       <div className={styles.loading}>
@@ -71,29 +105,41 @@ export default function DiscoveryScreen() {
     <div className={styles.screen}>
       {/* Header */}
       <div className={styles.header}>
-        <button
-          className={styles.prevBtn}
-          onClick={onPrev}
-          aria-label="Previous"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+        {!quizMode && (
+          <button className={styles.prevBtn} onClick={onPrev} aria-label="Previous">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
 
         <div className={styles.counterWrap}>
-          <span className={styles.counter}>
-            {swipedCount > 0 ? `${swipedCount} explored · ${likedCount} liked` : 'Swipe to explore'}
-          </span>
+          {quizMode && quizProgress ? (
+            <>
+              <div className={styles.quizProgressBar}>
+                <div
+                  className={styles.quizProgressFill}
+                  style={{ width: `${(quizProgress.current / quizProgress.total) * 100}%` }}
+                />
+              </div>
+              <span className={styles.counter}>{quizProgress.current} / {quizProgress.total}</span>
+            </>
+          ) : (
+            <span className={styles.counter}>
+              {swipedCount > 0 ? `${swipedCount} explored · ${likedCount} liked` : 'Swipe to explore'}
+            </span>
+          )}
         </div>
 
-        <button className={styles.filterBtn} onClick={openFilter}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/>
-            <line x1="11" y1="18" x2="13" y2="18"/>
-          </svg>
-          {filterLabel}
-        </button>
+        {!quizMode && (
+          <button className={styles.filterBtn} onClick={openFilter}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/>
+              <line x1="11" y1="18" x2="13" y2="18"/>
+            </svg>
+            {filterLabel}
+          </button>
+        )}
       </div>
 
       {/* Card */}
@@ -106,8 +152,8 @@ export default function DiscoveryScreen() {
         />
       </div>
 
-      {/* Filter bottom sheet */}
-      {showFilter && (
+      {/* Filter bottom sheet — infinite mode only */}
+      {!quizMode && showFilter && (
         <>
           <div className={styles.backdrop} onClick={() => setShowFilter(false)} />
           <div className={styles.sheet}>

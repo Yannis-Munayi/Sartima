@@ -30,6 +30,7 @@ const initialState = {
   responses: {},
   styleScores: Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0])),
   gender: localStorage.getItem('fashionGender') ?? 'both',
+  quizMode: false,
 }
 
 function shuffle(arr) {
@@ -222,11 +223,34 @@ function reducer(state, action) {
       }
     }
 
+    case 'GO_TO_QUIZ':
+      return {
+        ...state,
+        quizMode: true,
+        screen: SCREENS.DISCOVERY,
+        selectedCategories: [],
+        selectedSeasons: [],
+        itemQueue: [],
+        currentItemIndex: 0,
+        responses: {},
+        styleScores: Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0])),
+      }
+
+    case 'SET_QUIZ_RESULTS':
+      return {
+        ...state,
+        styleScores: action.styleScores,
+        responses:   action.responses,
+        itemQueue:   action.itemQueue,
+        screen:      SCREENS.RESULTS,
+        quizMode:    false,
+      }
+
     case 'RESTART':
-      return { ...initialState }
+      return { ...initialState, gender: state.gender }
 
     case 'RESTART_QUIZ':
-      return { ...initialState, screen: SCREENS.SEASONS }
+      return { ...initialState, gender: state.gender, screen: SCREENS.SEASONS }
 
     default:
       return state

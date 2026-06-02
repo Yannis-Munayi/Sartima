@@ -78,6 +78,22 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* ── Quiz progress bar ── */
+.quizProgressBar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.quizProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #E8735A, #D4896A);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
 /* ── Card area ── */
 .cardArea {
   flex: 1;

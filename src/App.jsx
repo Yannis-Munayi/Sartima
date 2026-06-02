@@ -35,7 +35,7 @@ const HIDE_TABS_ON = new Set([
   SCREENS.CATEGORIES,
 ])
 
-function QuizRouter() {
+function QuizRouter({ setActiveTab }) {
   const { state } = useApp()
   switch (state.screen) {
     case SCREENS.AUTH:        return <AuthScreen />
@@ -44,7 +44,7 @@ function QuizRouter() {
     case SCREENS.SEASONS:     return <SeasonScreen />
     case SCREENS.CATEGORIES:  return <CategoryScreen />
     case SCREENS.DISCOVERY:   return <DiscoveryScreen />
-    case SCREENS.RESULTS:     return <ResultsScreen />
+    case SCREENS.RESULTS:     return <ResultsScreen setActiveTab={setActiveTab} />
     case SCREENS.PROFILE:     return <ProfileScreen />
     default:                  return <WelcomeScreen />
   }
@@ -218,7 +218,8 @@ function AppShell() {
       return
     }
     // Auto-start the infinite feed on first Discover tap — no season/category gates
-    if (tabId === 'quiz' && state.screen === SCREENS.WELCOME) {
+    // Don't override if quiz mode was explicitly started
+    if (tabId === 'quiz' && state.screen === SCREENS.WELCOME && !state.quizMode) {
       dispatch({ type: 'GO_TO_DISCOVERY_DIRECT' })
       setActiveTab('quiz')
       return
@@ -274,7 +275,7 @@ function AppShell() {
     <GuideProvider value={guideContextValue}>
     <div style={{ paddingBottom: showTabs ? 64 : 0 }}>
       {/* Quiz flow */}
-      {(!showTabs || activeTab === 'quiz') && <QuizRouter />}
+      {(!showTabs || activeTab === 'quiz') && <QuizRouter setActiveTab={handleTabChange} />}
 
       {/* Main tabs */}
       {showTabs && activeTab === 'home' && (

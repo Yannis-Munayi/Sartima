@@ -122,10 +122,14 @@ function ShareResults({ primaryStyle, gender }) {
   )
 }
 
-export default function ResultsScreen() {
+export default function ResultsScreen({ setActiveTab }) {
   const { user }            = useAuth()
   const { state, dispatch } = useApp()
   const { styleScores, responses, selectedSeasons, selectedCategories, itemQueue, gender } = state
+
+  function openAesthetic(id) {
+    if (setActiveTab) setActiveTab(`aesthetic:${id}`)
+  }
   const savedRef = useRef(false)
 
   // Auto-save results to Firestore if signed in
@@ -135,7 +139,11 @@ export default function ResultsScreen() {
 
     const likedItems = itemQueue
       .filter((item) => responses[item.id]?.liked)
-      .map((item) => ({ id: item.id, name: item.name, categoryId: item.categoryId }))
+      .map((item) => ({
+        id:         item.id,
+        name:       item.name,
+        categoryId: item.categoryId ?? item.parentType ?? item.type ?? null,
+      }))
 
     addDoc(collection(db, 'users', user.uid, 'quizzes'), {
       timestamp: serverTimestamp(),
@@ -174,14 +182,12 @@ export default function ResultsScreen() {
   return (
     <div className={styles.resultsWrapper}>
 
-      {/* Hero — clicking opens Pinterest for the primary style */}
-      <a
-        href={getPinterestUrl(primaryStyle, gender)}
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* Hero — clicking opens the aesthetic in Explore */}
+      <button
         className={styles.resultsHeroLink}
         style={{ background: primaryStyle.gradient }}
-        aria-label={`Explore ${primaryStyle.name} on Pinterest`}
+        onClick={() => openAesthetic(primaryStyle.id)}
+        aria-label={`Explore ${primaryStyle.name}`}
       >
         <div className={styles.heroOverlay} />
         <div className={styles.heroContent}>
@@ -193,11 +199,10 @@ export default function ResultsScreen() {
           )}
           <p className={styles.heroTagline}>{primaryStyle.tagline}</p>
           <span className={styles.heroPinterestHint}>
-            <PinterestIcon />
-            Explore on Pinterest
+            Explore this aesthetic →
           </span>
         </div>
-      </a>
+      </button>
 
       <div className={styles.resultsBody}>
 
@@ -237,12 +242,10 @@ export default function ResultsScreen() {
             {getTopStyles(styleScores, 5).map(([id, score]) => {
               const s = STYLES[id]
               return (
-                <a
+                <button
                   key={id}
-                  href={getPinterestUrl(s, gender)}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={styles.scoreRowLink}
+                  onClick={() => openAesthetic(s.id)}
                 >
                   <div className={styles.scoreLabel}>
                     <span>{s.icon}</span>
@@ -253,7 +256,7 @@ export default function ResultsScreen() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={styles.scoreArrow} aria-hidden="true">
                     <path d="M7 17L17 7M7 7h10v10" />
                   </svg>
-                </a>
+                </button>
               )
             })}
           </div>

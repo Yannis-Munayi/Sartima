@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   addDoc, collection, getDocs,
   query, where, orderBy,
-  doc, deleteDoc,
+  doc, deleteDoc, getDoc,
 } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -35,14 +35,20 @@ function buildCalendar(year, month) {
 
 // ── Day Plan Sheet ────────────────────────────────────────────────────────────
 
-function DayPlanSheet({ dateKey, plans, closetItems, onSave, onDelete, onClose }) {
+function DayPlanSheet({ dateKey, plans, closetItems, logEntries, onSave, onDelete, onClose }) {
   const [selected, setSelected] = useState(plans.map((p) => p.itemIds).flat())
-  const [saving, setSaving]     = useState(false)
+  const [tab,      setTab]      = useState('closet') // 'closet' | 'log'
+  const [saving,   setSaving]   = useState(false)
 
   const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
 
   function toggleItem(id) {
     setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+  }
+
+  function applyLogEntry(entry) {
+    setSelected(entry.itemIds)
+    setTab('closet')
   }
 
   async function handleSave() {
@@ -60,33 +66,93 @@ function DayPlanSheet({ dateKey, plans, closetItems, onSave, onDelete, onClose }
           <h3 className={styles.sheetTitle}>Plan for {dateKey}</h3>
           <button className={styles.sheetClose} onClick={onClose}>✕</button>
         </div>
-        <p className={styles.sheetSub}>Select items from your closet for this day.</p>
 
-        {closetItems.length === 0 ? (
-          <p className={styles.emptyText}>Add items to your closet first.</p>
-        ) : (
-          <div className={styles.itemPickerGrid}>
-            {closetItems.map((item) => {
-              const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
-              const sel = selected.includes(item.id)
-              return (
-                <button
-                  key={item.id}
-                  className={`${styles.pickerItem} ${sel ? styles.pickerItemActive : ''}`}
-                  onClick={() => toggleItem(item.id)}
-                >
-                  <div className={styles.pickerPhoto}>
-                    {photoUrl
-                      ? <img src={photoUrl} alt={item.name} className={styles.pickerImg} />
-                      : <span>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
-                    }
-                  </div>
-                  <p className={styles.pickerName}>{item.name}</p>
-                  {sel && <span className={styles.pickerCheck}>✓</span>}
-                </button>
-              )
-            })}
-          </div>
+        {/* Tabs */}
+        <div className={styles.sheetTabs}>
+          <button
+            className={`${styles.sheetTab} ${tab === 'closet' ? styles.sheetTabActive : ''}`}
+            onClick={() => setTab('closet')}
+          >
+            Closet Items
+          </button>
+          <button
+            className={`${styles.sheetTab} ${tab === 'log' ? styles.sheetTabActive : ''}`}
+            onClick={() => setTab('log')}
+          >
+            From Log {logEntries.length > 0 && <span className={styles.logBadge}>{logEntries.length}</span>}
+          </button>
+        </div>
+
+        {/* Closet items tab */}
+        {tab === 'closet' && (
+          closetItems.length === 0 ? (
+            <p className={styles.emptyText}>Add items to your closet first.</p>
+          ) : (
+            <div className={styles.itemPickerGrid}>
+              {closetItems.map((item) => {
+                const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+                const sel = selected.includes(item.id)
+                return (
+                  <button
+                    key={item.id}
+                    className={`${styles.pickerItem} ${sel ? styles.pickerItemActive : ''}`}
+                    onClick={() => toggleItem(item.id)}
+                  >
+                    <div className={styles.pickerPhoto}>
+                      {photoUrl
+                        ? <img src={photoUrl} alt={item.name} className={styles.pickerImg} />
+                        : <span>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
+                      }
+                    </div>
+                    <p className={styles.pickerName}>{item.name}</p>
+                    {sel && <span className={styles.pickerCheck}>✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        )}
+
+        {/* From log tab */}
+        {tab === 'log' && (
+          logEntries.length === 0 ? (
+            <p className={styles.emptyText}>No logged outfits yet — log one from the Today tab.</p>
+          ) : (
+            <div className={styles.logList}>
+              {logEntries.map((entry) => {
+                const items = (entry.itemIds ?? []).map((id) => itemMap[id]).filter(Boolean)
+                return (
+                  <button
+                    key={entry.id}
+                    className={styles.logEntry}
+                    onClick={() => applyLogEntry(entry)}
+                  >
+                    <div className={styles.logEntryMeta}>
+                      <span className={styles.logEntryDate}>{entry.date}</span>
+                      {entry.occasion && <span className={styles.logEntryOccasion}>{entry.occasion}</span>}
+                    </div>
+                    <div className={styles.logEntryThumbs}>
+                      {items.slice(0, 4).map((item) => {
+                        const photo = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+                        return (
+                          <div key={item.id} className={styles.logThumb}>
+                            {photo
+                              ? <img src={photo} alt={item.name} className={styles.logThumbImg} />
+                              : <span className={styles.logThumbEmoji}>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
+                            }
+                          </div>
+                        )
+                      })}
+                      {items.length === 0 && (
+                        <span className={styles.logNoItems}>{entry.itemIds?.length ?? 0} items</span>
+                      )}
+                    </div>
+                    {entry.notes && <p className={styles.logEntryNotes}>"{entry.notes}"</p>}
+                  </button>
+                )
+              })}
+            </div>
+          )
         )}
 
         <div className={styles.sheetBtns}>
@@ -117,7 +183,19 @@ export default function OutfitCalendarScreen() {
   const [daySheet, setDaySheet] = useState(null) // dateKey string or null
   const [loadingPlans, setLoadingPlans] = useState(true)
 
+  const [logEntries, setLogEntries] = useState([])
+
   const cells = buildCalendar(year, month)
+
+  // Load outfit log once on mount
+  useEffect(() => {
+    if (!user) return
+    getDoc(doc(db, 'users', user.uid, 'prefs', 'outfitLog'))
+      .then((snap) => {
+        if (snap.exists()) setLogEntries(snap.data().entries ?? [])
+      })
+      .catch(() => {})
+  }, [user])
 
   // Load plans for the visible month
   useEffect(() => {
@@ -256,6 +334,7 @@ export default function OutfitCalendarScreen() {
           dateKey={daySheet}
           plans={plans[daySheet] ?? []}
           closetItems={closetItems}
+          logEntries={logEntries}
           onSave={handleSavePlan}
           onDelete={handleDeletePlan}
           onClose={() => setDaySheet(null)}
