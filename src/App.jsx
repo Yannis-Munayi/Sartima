@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
+import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { AppProvider, useApp, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ShopProvider } from './context/ShopContext'
@@ -50,7 +51,7 @@ function QuizRouter({ setActiveTab }) {
   }
 }
 
-function ResumeModal({ progress, total, onContinue, onRestart }) {
+function ResumeModal({ progress, total, onContinue, onDiscover }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -66,15 +67,15 @@ function ResumeModal({ progress, total, onContinue, onRestart }) {
       }}>
         <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 24px' }} />
         <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
-          Continue your session?
+          Quiz in progress
         </h2>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: '0 0 28px', lineHeight: 1.6 }}>
           You've rated <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{progress} of {total}</strong> items.
-          Pick up where you left off, or start fresh.
+          Continue the quiz to get your results, or switch to free discovery.
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
-            onClick={onRestart}
+            onClick={onDiscover}
             style={{
               flex: 1, padding: '13px 0',
               background: 'rgba(255,255,255,0.06)',
@@ -83,7 +84,7 @@ function ResumeModal({ progress, total, onContinue, onRestart }) {
               fontSize: 14, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
             }}
           >
-            Start fresh
+            Just Discover
           </button>
           <button
             onClick={onContinue}
@@ -95,7 +96,7 @@ function ResumeModal({ progress, total, onContinue, onRestart }) {
               fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
             }}
           >
-            Continue →
+            Continue Quiz →
           </button>
         </div>
       </div>
@@ -142,10 +143,9 @@ function AppShell() {
     }).catch(() => {})
   }, [user])
 
-  // A session is "in progress" when the discovery queue is loaded and the
-  // user has left the quiz tab (so they can be offered to resume).
+  // Only intercept navigation when a finite quiz is in progress
   const sessionInProgress =
-    state.screen === SCREENS.DISCOVERY && activeTab !== 'quiz'
+    state.quizMode && state.screen === SCREENS.DISCOVERY && activeTab !== 'quiz'
 
   // Answered count for the modal
   const answeredCount = Object.keys(state.responses).length
@@ -251,8 +251,9 @@ function AppShell() {
     setActiveTab('quiz')
   }
 
-  function handleRestart() {
+  function handleDiscover() {
     setShowResumeModal(false)
+    clearQuizProgress()
     dispatch({ type: 'GO_TO_DISCOVERY_DIRECT' })
     setActiveTab('quiz')
   }
@@ -325,9 +326,9 @@ function AppShell() {
       {showResumeModal && (
         <ResumeModal
           progress={answeredCount}
-          total={state.itemQueue.length}
+          total={40}
           onContinue={handleContinue}
-          onRestart={handleRestart}
+          onDiscover={handleDiscover}
         />
       )}
 

@@ -176,6 +176,7 @@ function reducer(state, action) {
         currentItemIndex: 0,
         responses: {},
         styleScores: Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0])),
+        quizMode: false,
       }
     }
 

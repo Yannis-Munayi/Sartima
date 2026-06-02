@@ -4,6 +4,29 @@ import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
 const QUIZ_SIZE        = 40
+const QUIZ_STORAGE_KEY = 'stylelab_quiz_progress'
+
+function saveQuizProgress(queue, index, scores, likedItems) {
+  try {
+    sessionStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify({
+      queueIds:  queue.map((p) => p.id),
+      index,
+      scores,
+      likedIds:  likedItems.map((p) => p.id),
+    }))
+  } catch {}
+}
+
+function loadQuizProgress() {
+  try {
+    const raw = sessionStorage.getItem(QUIZ_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+export function clearQuizProgress() {
+  try { sessionStorage.removeItem(QUIZ_STORAGE_KEY) } catch {}
+}
 
 const WEIGHTS = {
   brand:          10,
@@ -122,6 +145,33 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
   // Seed queue on mount / gender change / mode change
   useEffect(() => {
     profileRef.current = createEmptyProfile()
+
+    if (quizMode) {
+      const saved = loadQuizProgress()
+      if (saved) {
+        const restoredQueue   = saved.queueIds.map((id) => PRODUCTS_BY_ID[id]).filter(Boolean)
+        const restoredLiked   = saved.likedIds.map((id) => PRODUCTS_BY_ID[id]).filter(Boolean)
+        // Rebuild profile affinities from liked items
+        for (const product of restoredLiked) {
+          const p = profileRef.current
+          p.brandAffinities[product.brand]           = (p.brandAffinities[product.brand]           ?? 0) + 2
+          p.typeAffinities[product.type]             = (p.typeAffinities[product.type]             ?? 0) + 3
+          p.colorAffinities[product.color]           = (p.colorAffinities[product.color]           ?? 0) + 1
+          p.parentTypeAffinities[product.parentType] = (p.parentTypeAffinities[product.parentType] ?? 0) + 1
+          for (const [style, weight] of Object.entries(product.styleWeights ?? {})) {
+            p.styleAffinities[style] = (p.styleAffinities[style] ?? 0) + weight
+          }
+          p.recentLikes = [product.id, ...p.recentLikes].slice(0, 10)
+          p.seenIds.add(product.id)
+        }
+        setQueue(restoredQueue)
+        setIndex(saved.index)
+        setScores(saved.scores)
+        setQuizLikedItems(restoredLiked)
+        return
+      }
+    }
+
     const initial = buildBatch(profileRef.current, quizMode ? QUIZ_SIZE : BUFFER_SIZE, gender)
     setQueue(initial)
     setIndex(0)
@@ -144,6 +194,17 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     })
     setIndex(0)
   }, [remaining, currentIndex, gender, queue.length, quizMode])
+
+  // Persist quiz progress after every swipe
+  useEffect(() => {
+    if (!quizMode || queue.length === 0 || isQuizFinished) return
+    saveQuizProgress(queue, currentIndex, styleScores, quizLikedItems)
+  }, [currentIndex, quizMode, queue, styleScores, quizLikedItems, isQuizFinished])
+
+  // Clear saved progress when quiz finishes or mode turns off
+  useEffect(() => {
+    if (isQuizFinished || !quizMode) clearQuizProgress()
+  }, [isQuizFinished, quizMode])
 
   const onLike = useCallback((product) => {
     const p = profileRef.current
