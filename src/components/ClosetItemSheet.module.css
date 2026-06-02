@@ -1,4 +1,4 @@
-.overlay {
+﻿.overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.6);
@@ -29,7 +29,7 @@
   flex-shrink: 0;
 }
 
-/* ── Photo ── */
+/* â”€â”€ Photo â”€â”€ */
 .photoWrap {
   position: relative;
   width: 100%;
@@ -60,13 +60,13 @@
   right: 10px;
   background: rgba(232, 115, 90, 0.9);
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 8px;
 }
 
-/* ── Body ── */
+/* â”€â”€ Body â”€â”€ */
 .body {
   flex: 1;
   overflow-y: auto;
@@ -94,7 +94,7 @@
   text-transform: capitalize;
 }
 
-/* ── Actions ── */
+/* â”€â”€ Actions â”€â”€ */
 .actions {
   display: flex;
   flex-direction: column;
@@ -137,7 +137,7 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Confirm delete ── */
+/* â”€â”€ Confirm delete â”€â”€ */
 .confirmBox {
   margin-top: 12px;
   padding: 14px;
@@ -183,7 +183,7 @@
   cursor: pointer;
 }
 
-/* ── Edit mode ── */
+/* â”€â”€ Edit mode â”€â”€ */
 .editTitle {
   font-size: 18px;
   font-weight: 700;
@@ -194,7 +194,7 @@
 
 .label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;

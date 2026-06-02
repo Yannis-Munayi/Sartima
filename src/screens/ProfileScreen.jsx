@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -132,13 +132,50 @@ function ThemeToggle() {
   )
 }
 
-export default function ProfileScreen({ onBack }) {
+function GearIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+  )
+}
+
+function SettingsSheet({ user, onClose, onLogout }) {
+  return (
+    <>
+      <div className={styles.settingsBackdrop} onClick={onClose} />
+      <div className={styles.settingsSheet}>
+        <div className={styles.settingsHandle} />
+        <h2 className={styles.settingsSheetTitle}>Settings</h2>
+        <div className={styles.settingsSheetBody}>
+          <GenderSelector />
+          <div className={styles.settingsDivider} />
+          <ThemeToggle />
+          {user && onLogout && (
+            <>
+              <div className={styles.settingsDivider} />
+              <button className={styles.settingsSignOut} onClick={onLogout}>
+                Sign out
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }) {
   const { user, logout }  = useAuth()
   const { state, dispatch } = useApp()
   const gender = state.gender
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
+  const [showSettings, setShowSettings] = useState(false)
+  const quizSectionRef = useRef(null)
 
   useEffect(() => {
     if (!user) return
@@ -158,6 +195,15 @@ export default function ProfileScreen({ onBack }) {
     }
     load()
   }, [user])
+
+  useEffect(() => {
+    if (!scrollToQuiz) return
+    const t = setTimeout(() => {
+      quizSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      onScrollComplete?.()
+    }, 120)
+    return () => clearTimeout(t)
+  }, [scrollToQuiz])
 
   // Aggregate top aesthetics across all quizzes
   const aggregated = {}
@@ -194,10 +240,11 @@ export default function ProfileScreen({ onBack }) {
             </button>
           )}
           <p className={styles.userName} style={{ flex: 1 }}>Profile</p>
+          <button className={styles.gearBtn} onClick={() => setShowSettings(true)} aria-label="Settings">
+            <GearIcon />
+          </button>
         </div>
         <div className={styles.body}>
-          <GenderSelector />
-          <ThemeToggle />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '40px 0', textAlign: 'center' }}>
             <p style={{ fontSize: 48 }}>👤</p>
             <p className={styles.userName}>Not signed in</p>
@@ -210,6 +257,9 @@ export default function ProfileScreen({ onBack }) {
             </button>
           </div>
         </div>
+        {showSettings && (
+          <SettingsSheet user={null} onClose={() => setShowSettings(false)} onLogout={null} />
+        )}
       </div>
     )
   }
@@ -230,12 +280,12 @@ export default function ProfileScreen({ onBack }) {
             <p className={styles.userEmail}>{user?.email}</p>
           </div>
         </div>
-        <button className={styles.logoutBtn} onClick={handleLogout}>Sign out</button>
+        <button className={styles.gearBtn} onClick={() => setShowSettings(true)} aria-label="Settings">
+          <GearIcon />
+        </button>
       </div>
 
       <div className={styles.body}>
-        <GenderSelector />
-        <ThemeToggle />
 
         {/* Overall top aesthetics */}
         {topOverall.length > 0 && (
@@ -269,7 +319,7 @@ export default function ProfileScreen({ onBack }) {
         )}
 
         {/* Quiz history */}
-        <section className={styles.section}>
+        <section ref={quizSectionRef} className={styles.section}>
           <h3 className={styles.sectionTitle}>
             Quiz history
             <span className={styles.quizCount}>{quizzes.length} {quizzes.length === 1 ? 'quiz' : 'quizzes'}</span>
@@ -381,6 +431,14 @@ export default function ProfileScreen({ onBack }) {
           Take quiz again
         </button>
       </div>
+
+      {showSettings && (
+        <SettingsSheet
+          user={user}
+          onClose={() => setShowSettings(false)}
+          onLogout={handleLogout}
+        />
+      )}
     </div>
   )
 }

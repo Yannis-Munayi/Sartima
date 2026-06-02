@@ -13,7 +13,7 @@
   --surface:         rgba(255, 255, 255, 0.05);
   --surface-hover:   rgba(255, 255, 255, 0.08);
   --border:          rgba(255, 255, 255, 0.08);
-  --border-strong:   rgba(255, 255, 255, 0.15);
+  --border-strong:   rgba(255, 255, 255, 0.18);
   /* Text */
   --text:            #ffffff;
   --text-dim:        rgba(255, 255, 255, 0.7);
@@ -25,6 +25,23 @@
   --accent-border:   rgba(232, 115, 90, 0.4);
   --accent-secondary: #C4A882;
   --accent-gold:     #D4AF7A;
+  /* Type scale — minimum 12px */
+  --text-2xs:        12px;
+  --text-xs:         12px;
+  --text-sm:         13px;
+  --text-base:       14px;
+  --text-md:         15px;
+  --text-lg:         17px;
+  --text-xl:         20px;
+  --text-2xl:        24px;
+  --text-3xl:        28px;
+  --text-hero:       32px;
+  /* Border radius scale */
+  --radius-sm:       8px;
+  --radius-md:       14px;
+  --radius-lg:       20px;
+  --radius-xl:       24px;
+  --radius-full:     9999px;
 }
 
 :root[data-theme="light"] {

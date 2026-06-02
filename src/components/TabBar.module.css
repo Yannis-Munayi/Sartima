@@ -37,7 +37,7 @@
   border: none;
   cursor: pointer;
   color: var(--text-faint);
-  font-size: 10px;
+  font-size: 12px;
   font-family: inherit;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -90,7 +90,7 @@
 }
 
 .discoverLabel {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.3px;
   color: var(--text-faint);
@@ -146,7 +146,7 @@
 }
 
 .aestheticTabLabel {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   max-width: 52px;
   overflow: hidden;
@@ -163,7 +163,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: rgba(255, 255, 255, 0.6);
   transition: background 0.18s, color 0.18s;
@@ -191,7 +191,7 @@
   padding: 0 4px;
   background: #E8735A;
   border-radius: 8px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   color: #fff;
   display: flex;

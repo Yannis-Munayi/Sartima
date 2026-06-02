@@ -14,16 +14,6 @@ function HomeIcon({ active }) {
   )
 }
 
-function ClosetIcon({ active }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
-      strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="5" r="1.5" />
-      <path d="M12 6.5L3 16h18L12 6.5z" />
-    </svg>
-  )
-}
 
 function ExploreIcon({ active }) {
   return (
@@ -46,13 +36,13 @@ function DiscoverIcon() {
   )
 }
 
-function DailyIcon({ active }) {
+function OutfitsIcon({ active }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
       strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="4" r="1.5" />
+      <path d="M12 5.5V8.5M12 8.5L3 17H21L12 8.5" />
     </svg>
   )
 }
@@ -98,22 +88,6 @@ export default function TabBar({ activeTab, setActiveTab }) {
           <span>Home</span>
         </button>
 
-        {/* Closet */}
-        <button
-          className={`${styles.tab} ${activeTab === 'closet' ? styles.active : ''}`}
-          onClick={() => setActiveTab('closet')}
-        >
-          <div className={`${styles.iconWrap} ${bounceTab === 'closet' ? styles.iconBounce : ''}`}>
-            <ClosetIcon active={activeTab === 'closet'} />
-            {totalClosetCount > 0 && (
-              <span className={styles.badge}>
-                {totalClosetCount > 9 ? '9+' : totalClosetCount}
-              </span>
-            )}
-          </div>
-          <span>Closet</span>
-        </button>
-
         {/* Explore */}
         <button
           className={`${styles.tab} ${activeTab === 'explore' ? styles.active : ''}`}
@@ -122,7 +96,7 @@ export default function TabBar({ activeTab, setActiveTab }) {
           <span className={bounceTab === 'explore' ? styles.iconBounce : ''}>
             <ExploreIcon active={activeTab === 'explore'} />
           </span>
-          <span>Explore</span>
+          <span>Aesthetics</span>
         </button>
 
         {/* ── Center Discover button ── */}
@@ -134,19 +108,24 @@ export default function TabBar({ activeTab, setActiveTab }) {
             <DiscoverIcon />
           </button>
           <span className={`${styles.discoverLabel} ${activeTab === 'quiz' ? styles.discoverLabelActive : ''}`}>
-            Discover
+            Swipe
           </span>
         </div>
 
-        {/* Daily Look */}
+        {/* Outfits (combined Closet + Daily) */}
         <button
           className={`${styles.tab} ${activeTab === 'daily' ? styles.active : ''}`}
           onClick={() => setActiveTab('daily')}
         >
-          <span className={bounceTab === 'daily' ? styles.iconBounce : ''}>
-            <DailyIcon active={activeTab === 'daily'} />
-          </span>
-          <span>Daily</span>
+          <div className={`${styles.iconWrap} ${bounceTab === 'daily' ? styles.iconBounce : ''}`}>
+            <OutfitsIcon active={activeTab === 'daily'} />
+            {totalClosetCount > 0 && (
+              <span className={styles.badge}>
+                {totalClosetCount > 9 ? '9+' : totalClosetCount}
+              </span>
+            )}
+          </div>
+          <span>Outfits</span>
         </button>
 
         {/* Profile */}

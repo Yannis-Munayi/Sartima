@@ -23,18 +23,18 @@ export const GUIDE_STEPS = [
     desc:  'Below the hero you\'ll find a new set of curated clothing pieces every day. The selection rotates at midnight using a daily shuffle — come back tomorrow for a fresh batch. Tap any piece to see its aesthetic, or tap the heart to save it to your Wishlist instantly.',
   },
 
-  // ── Home: Wardrobe Builder ────────────────────────────────────────────────
+  // ── Home: Shop Scout ─────────────────────────────────────────────────────
   {
     tab:   'home',
-    title: 'Build Your Wardrobe 👗',
-    desc:  'The Wardrobe Builder lets you map out the pieces you want — tops, bottoms, footwear, and more — then matches them to the best brands for your budget and aesthetic. Tap the card to open the builder and start your wardrobe plan.',
+    title: 'Shop Scout 👗',
+    desc:  'Shop Scout helps you find the best brands to buy from based on your budget and priorities. Pick the clothing pieces you want, set a budget, choose what matters most (quality, sustainability, etc.), and get matched brands. Tap the card on Home to open it.',
   },
 
   // ── Home: Aesthetic Profile ───────────────────────────────────────────────
   {
     tab:   'home',
     title: 'Your Live Aesthetic Profile 📊',
-    desc:  'Once you\'ve swiped on items in Discover, your Home screen shows a live breakdown of your top aesthetics with percentage scores. This updates every time you swipe — the more you rate, the more accurate your profile gets.',
+    desc:  'Once you\'ve swiped on items in Swipe, your Home screen shows a live breakdown of your top aesthetics with percentage scores. This updates every time you swipe — the more you rate, the more accurate your profile gets.',
   },
 
   // ── Home: Stats pills ─────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ export const GUIDE_STEPS = [
   {
     tab:   'home',
     title: 'Saved Aesthetics & Season Picks 📌',
-    desc:  'Any aesthetic you pin from the Explore screen floats to the top of your Home in a dedicated Saved row. Below that, Season Picks shows aesthetics hand-curated for the current time of year — winter layers, summer breathables, and so on.',
+    desc:  'Any aesthetic you pin from the Aesthetics screen floats to the top of your Home in a dedicated Saved row. Below that, Season Picks shows aesthetics hand-curated for the current time of year — winter layers, summer breathables, and so on.',
   },
 
   // ── Home: Capsule Wardrobe ────────────────────────────────────────────────
@@ -65,14 +65,14 @@ export const GUIDE_STEPS = [
     desc:  'The Trending section shows aesthetics gaining momentum right now. Tap the shuffle button (↻) to randomise the order and surface fresh styles. Tap any card to explore that aesthetic in full.',
   },
 
-  // ── Explore ───────────────────────────────────────────────────────────────
+  // ── Aesthetics ────────────────────────────────────────────────────────────
   {
     tab:   'explore',
-    title: 'Explore — All 51 Aesthetics 🔍',
-    desc:  'The Explore tab is the complete library. All 51 aesthetics are displayed as visual cards, grouped by category (Academia, Street, Casual, Alternative, and more). Use the search bar at the top to find any aesthetic by name, vibe, or keyword like "dark" or "preppy".',
+    title: 'Aesthetics — All 51 Styles 🔍',
+    desc:  'The Aesthetics tab is the complete library. All 51 aesthetics are displayed as visual cards, grouped by category (Academia, Street, Casual, Alternative, and more). Use the search bar at the top to find any aesthetic by name, vibe, or keyword like "dark" or "preppy".',
   },
 
-  // ── Explore: Filter ───────────────────────────────────────────────────────
+  // ── Aesthetics: Filter ────────────────────────────────────────────────────
   {
     tab:   'explore',
     title: 'Filter by Category',
@@ -116,14 +116,14 @@ export const GUIDE_STEPS = [
     tab:    'aesthetic:oldmoney',
     subTab: 'story',
     title:  'Pin an Aesthetic 📌',
-    desc:   'Tap the 📌 button near the top of any aesthetic to save it. Pinned aesthetics jump to the top of the Explore grid so you can find them instantly, and they also appear in your personalised Saved Aesthetics row on the Home screen.',
+    desc:   'Tap the 📌 button near the top of any aesthetic to save it. Pinned aesthetics jump to the top of the Aesthetics grid so you can find them instantly, and they also appear in your personalised Saved Aesthetics row on the Home screen.',
   },
 
-  // ── Discover: intro ───────────────────────────────────────────────────────
+  // ── Swipe: intro ──────────────────────────────────────────────────────────
   {
     tab:   'quiz',
-    title: 'Discover — Find Your Aesthetic ✦',
-    desc:  'The Discover tab is where StyleLab learns your taste. You\'ll pick your season and preferred clothing categories, then swipe through real outfit items. Every like or skip trains your personal aesthetic profile. Let\'s walk through it.',
+    title: 'Swipe — Find Your Aesthetic ✦',
+    desc:  'The Swipe tab is where StyleLab learns your taste. You\'ll pick your season and preferred clothing categories, then swipe through real outfit items. Every like or skip trains your personal aesthetic profile. Let\'s walk through it.',
   },
 
   // ── Forced season selection ───────────────────────────────────────────────
@@ -146,7 +146,7 @@ export const GUIDE_STEPS = [
     desc:          'Categories narrow the item pool to clothes you actually wear. You can pick multiple. Tap Jackets & Coats (highlighted) to continue the demo.',
   },
 
-  // ── Discover: swipe mechanics ─────────────────────────────────────────────
+  // ── Swipe: mechanics ──────────────────────────────────────────────────────
   {
     tab:   'quiz',
     title: 'Swipe Right — Like ❤️',

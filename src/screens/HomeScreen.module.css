@@ -71,10 +71,10 @@
 }
 
 .heroEyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   color: rgba(255, 255, 255, 0.6);
   margin: 0 0 8px;
 }
@@ -145,6 +145,35 @@
   border-radius: 3px;
 }
 
+.heroArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.5s ease, background 0.15s;
+  padding: 0;
+  font-family: inherit;
+}
+.heroArrow:hover { background: rgba(0, 0, 0, 0.55); }
+.heroArrowLeft  { left: 14px; }
+.heroArrowRight { right: 14px; }
+.heroArrowHidden { opacity: 0; pointer-events: none; }
+
 /* ── Body ── */
 .body {
   padding: 0 16px;
@@ -162,46 +191,18 @@
   font-family: 'Playfair Display', serif;
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 4px;
   letter-spacing: -0.02em;
 }
 
 .greetingSub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
 }
 
 /* ── Stats pills ── */
-.statsRow {
-  display: flex;
-  gap: 10px;
-}
-
-.statPill {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.14s, border-color 0.14s;
-}
-.statPill:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.statIcon  { font-size: 18px; line-height: 1; }
-.statValue { font-size: 20px; font-weight: 800; color: #fff; line-height: 1.1; }
-.statLabel { font-size: 10px; color: rgba(255,255,255,0.35); font-weight: 500; letter-spacing: 0.3px; }
-
 /* ── Sections ── */
 .section {}
 
@@ -220,15 +221,15 @@
 }
 
 .sectionTitle {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
 .sectionSub {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -293,7 +294,7 @@
   right: 0;
   z-index: 1;
   padding: 8px 9px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   text-align: left;
@@ -322,10 +323,10 @@
 }
 
 .ctaEyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   color: rgba(255, 255, 255, 0.65);
   margin: 0 0 8px;
 }
@@ -420,83 +421,11 @@
 }
 
 /* ── Capsule Wardrobe ── */
-.capsuleRow {
-  display: flex;
+/* ── Aesthetic grid (Trending) ── */
+.aestheticGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-
-.capsuleRow::-webkit-scrollbar { display: none; }
-
-.capsuleCard {
-  flex-shrink: 0;
-  width: 160px;
-  border-radius: 14px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.capsulePhoto {
-  position: relative;
-  width: 160px;
-  height: 220px;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.capsuleImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s;
-}
-
-.capsuleOverlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px 10px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-}
-
-.capsuleName {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 2px;
-  line-height: 1.2;
-}
-
-.capsuleVibe {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.capsuleViewAll {
-  margin-top: 10px;
-  display: block;
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.capsuleViewAll:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ── Fresh Looks Today ── */
@@ -567,7 +496,7 @@
 }
 
 .freshCardName {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   line-height: 1.3;
@@ -933,7 +862,7 @@
   transition: border-color 0.15s;
 }
 
-.closetCta:hover { border-color: #E8735A; }
+.closetCta:hover { border-color: var(--border-strong); }
 
 .closetCtaIcon { font-size: 28px; flex-shrink: 0; }
 

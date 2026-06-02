@@ -319,7 +319,7 @@
 .detectedName:disabled { color: rgba(255, 255, 255, 0.3); }
 
 .detectedMeta {
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.35);
   text-transform: capitalize;
 }

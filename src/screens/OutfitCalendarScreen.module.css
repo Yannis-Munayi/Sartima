@@ -1,10 +1,10 @@
-.screen {
+﻿.screen {
   min-height: 100dvh;
   background: var(--bg);
   padding: 20px 16px 100px;
 }
 
-/* ── Month navigation ── */
+/* â”€â”€ Month navigation â”€â”€ */
 .monthNav {
   display: flex;
   align-items: center;
@@ -37,7 +37,7 @@
   font-family: 'Playfair Display', serif;
 }
 
-/* ── Weekday headers ── */
+/* â”€â”€ Weekday headers â”€â”€ */
 .weekRow {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -46,7 +46,7 @@
 
 .weekDay {
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -54,7 +54,7 @@
   padding: 4px 0;
 }
 
-/* ── Calendar grid ── */
+/* â”€â”€ Calendar grid â”€â”€ */
 .calGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -94,7 +94,7 @@
 }
 
 .dayNum {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -126,9 +126,9 @@
   object-fit: cover;
 }
 
-.dayThumbEmoji { font-size: 10px; }
+.dayThumbEmoji { font-size: 12px; }
 
-/* ── Sign-in note ── */
+/* â”€â”€ Sign-in note â”€â”€ */
 .signInNote {
   text-align: center;
   font-size: 13px;
@@ -136,7 +136,7 @@
   margin-top: 24px;
 }
 
-/* ── Day plan sheet ── */
+/* â”€â”€ Day plan sheet â”€â”€ */
 .sheetOverlay {
   position: fixed;
   inset: 0;
@@ -249,7 +249,7 @@
 }
 
 .pickerName {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   margin: 4px 6px 0;
@@ -268,7 +268,7 @@
   border-radius: 50%;
   background: #E8735A;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -310,7 +310,7 @@
 
 .saveSheetBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Sheet tabs ── */
+/* â”€â”€ Sheet tabs â”€â”€ */
 .sheetTabs {
   display: flex;
   gap: 6px;
@@ -345,13 +345,13 @@
 .logBadge {
   background: #E8735A;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: 10px;
   padding: 1px 6px;
 }
 
-/* ── Log entries list ── */
+/* â”€â”€ Log entries list â”€â”€ */
 .logList {
   display: flex;
   flex-direction: column;
@@ -391,7 +391,7 @@
 }
 
 .logEntryOccasion {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-faint);
   text-transform: capitalize;

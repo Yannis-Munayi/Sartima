@@ -74,7 +74,7 @@
 .section {}
 
 .sectionLabel {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -179,7 +179,7 @@
 
 .shopLink {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: #E8735A;
   text-decoration: none;
@@ -239,7 +239,7 @@
 }
 
 .photoSub {
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.3);
   margin: 0;
   padding: 0 2px;
@@ -290,7 +290,7 @@
 
 /* ── Uploaded badge next to section label ── */
 .uploadedBadge {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -308,7 +308,7 @@
   position: absolute;
   bottom: 6px;
   left: 6px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   color: #E8735A;
   background: rgba(15, 15, 15, 0.85);

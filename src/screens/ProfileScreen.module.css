@@ -3,7 +3,7 @@
   background: var(--bg);
   display: flex;
   flex-direction: column;
-  color: #fff;
+  color: var(--text);
 }
 
 /* ── Header ── */
@@ -55,31 +55,101 @@
   font-weight: 700;
   font-size: 15px;
   margin: 0;
-  color: #fff;
+  color: var(--text);
 }
 
 .userEmail {
   font-size: 12px;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted);
   margin: 0;
 }
 
-.logoutBtn {
+.gearBtn {
   background: none;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  color: rgba(255,255,255,0.5);
-  font-size: 13px;
-  font-family: inherit;
-  padding: 6px 12px;
+  border: none;
+  color: rgba(255,255,255,0.45);
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: color 0.18s, background 0.18s;
+  flex-shrink: 0;
+}
+.gearBtn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.07);
 }
 
-.logoutBtn:hover {
-  border-color: rgba(255,255,255,0.25);
-  color: #fff;
+/* ── Settings sheet ── */
+.settingsBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
 }
+
+.settingsSheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 201;
+  background: var(--bg-elevated);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-top: 1px solid var(--border);
+  padding: 12px 20px 40px;
+  animation: sheetSlideUp 0.22s ease-out;
+}
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.settingsHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.15);
+  margin: 0 auto 20px;
+}
+
+.settingsSheetTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin: 0 0 20px;
+}
+
+.settingsSheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settingsDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 0 -4px;
+}
+
+.settingsSignOut {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 115, 90, 0.25);
+  background: transparent;
+  color: #E8735A;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settingsSignOut:hover { background: rgba(232, 115, 90, 0.08); }
 
 /* ── Body ── */
 .body {
@@ -96,11 +166,11 @@
 .section {}
 
 .sectionTitle {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: rgba(255,255,255,0.4);
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
   margin: 0 0 14px;
   display: flex;
   align-items: center;
@@ -140,7 +210,7 @@
 }
 
 .aestheticRank {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   opacity: 0.7;
   min-width: 24px;
@@ -403,7 +473,7 @@
 }
 
 .evolutionLabel {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.65);
   margin: 4px 0 1px;
@@ -413,8 +483,8 @@
 }
 
 .evolutionSub {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  color: var(--text-faint);
   margin: 0;
 }
 

@@ -1,4 +1,4 @@
-/* ── Shared step layout ── */
+﻿/* â”€â”€ Shared step layout â”€â”€ */
 .step {
   display: flex;
   flex-direction: column;
@@ -38,7 +38,7 @@
   line-height: 1.6;
 }
 
-/* ── Occupation tiles ── */
+/* â”€â”€ Occupation tiles â”€â”€ */
 .tileGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -76,7 +76,7 @@
   font-family: inherit;
 }
 
-/* ── Brand search ── */
+/* â”€â”€ Brand search â”€â”€ */
 .searchInput, .emailInput {
   width: 100%;
   padding: 13px 16px;
@@ -127,11 +127,11 @@
 
 .brandCheck {
   color: #E8735A;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 
-/* ── Referral sources ── */
+/* â”€â”€ Referral sources â”€â”€ */
 .sourceGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -165,7 +165,7 @@
   font-family: inherit;
 }
 
-/* ── CTA buttons ── */
+/* â”€â”€ CTA buttons â”€â”€ */
 .nextBtn {
   width: 100%;
   padding: 15px;

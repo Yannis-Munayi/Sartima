@@ -11,6 +11,7 @@ import { getWeather, getWeatherEmoji } from '../services/weather'
 import WeatherWidget from '../components/WeatherWidget'
 import OutfitCalendarScreen from './OutfitCalendarScreen'
 import TripPlannerScreen from './TripPlannerScreen'
+import ClosetScreen from './ClosetScreen'
 import styles from './DailyLookScreen.module.css'
 
 // Normalize a liked quiz/product item to the shape generateOutfit expects
@@ -364,94 +365,286 @@ function TodayTab() {
   )
 }
 
-function LogTab() {
+// ── Outfit Board Card ────────────────────────────────────────────────────────
+
+function OutfitBoardCard({ board, onEdit, onDelete }) {
+  return (
+    <div className={styles.outfitBoardCard}>
+      <div className={styles.boardInfo}>
+        <p className={styles.boardName}>{board.name}</p>
+        <p className={styles.boardMeta}>{board.items.length} piece{board.items.length !== 1 ? 's' : ''}</p>
+      </div>
+      <div className={styles.boardPhotoStrip}>
+        {board.items.slice(0, 4).map((item) => {
+          const url = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+          return (
+            <div
+              key={item.id}
+              className={styles.boardThumb}
+              style={{ background: item.gradient ?? 'rgba(255,255,255,0.08)' }}
+            >
+              {url && <img src={url} alt={item.name} className={styles.boardThumbImg} />}
+            </div>
+          )
+        })}
+      </div>
+      <div className={styles.boardActions}>
+        <button className={styles.boardEditBtn} onClick={onEdit}>Edit</button>
+        <button className={styles.boardDeleteBtn} onClick={onDelete}>Delete</button>
+      </div>
+    </div>
+  )
+}
+
+// ── Outfit Creator Sheet ──────────────────────────────────────────────────────
+
+function OutfitCreatorSheet({ closetItems, liked, initial, onSave, onClose }) {
+  const [name, setName]             = useState(initial?.name ?? '')
+  const [source, setSource]         = useState('closet')
+  const [selectedIds, setSelectedIds] = useState(new Set(initial?.items?.map((i) => i.id) ?? []))
+
+  const items = source === 'closet' ? closetItems : liked
+
+  function toggle(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function handleSave() {
+    const pool = {}
+    ;[...closetItems, ...liked].forEach((i) => { pool[i.id] = i })
+    const selectedItems = [...selectedIds].map((id) => pool[id]).filter(Boolean)
+    onSave({
+      id:        initial?.id ?? `board-${Date.now()}`,
+      name:      name.trim() || 'My Outfit',
+      aesthetic: '',
+      items:     selectedItems,
+      createdAt: initial?.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+    })
+  }
+
+  const canSave = name.trim().length > 0 && selectedIds.size > 0
+
+  return (
+    <div className={styles.creatorSheet}>
+      <div className={styles.creatorHeader}>
+        <h2 className={styles.creatorTitle}>{initial ? 'Edit Outfit' : 'Create Outfit'}</h2>
+        <button className={styles.creatorClose} onClick={onClose}>✕</button>
+      </div>
+
+      <div className={styles.creatorBody}>
+        <input
+          className={styles.creatorNameInput}
+          placeholder="Outfit name…"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <div className={styles.creatorSourcePills}>
+          <button
+            className={`${styles.creatorSourceBtn} ${source === 'closet' ? styles.creatorSourceActive : ''}`}
+            onClick={() => setSource('closet')}
+          >
+            My Closet ({closetItems.length})
+          </button>
+          <button
+            className={`${styles.creatorSourceBtn} ${source === 'liked' ? styles.creatorSourceActive : ''}`}
+            onClick={() => setSource('liked')}
+          >
+            Liked ({liked.length})
+          </button>
+        </div>
+
+        {items.length === 0 ? (
+          <div className={styles.creatorEmptyItems}>
+            <p>No items in {source === 'closet' ? 'your closet' : 'liked'} yet.</p>
+          </div>
+        ) : (
+          <div className={styles.creatorGrid}>
+            {items.map((item) => {
+              const url      = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+              const selected = selectedIds.has(item.id)
+              return (
+                <button
+                  key={item.id}
+                  className={`${styles.creatorItem} ${selected ? styles.creatorItemSelected : ''}`}
+                  onClick={() => toggle(item.id)}
+                >
+                  <div
+                    className={styles.creatorItemPhoto}
+                    style={{ background: item.gradient ?? 'rgba(255,255,255,0.06)' }}
+                  >
+                    {url
+                      ? <img src={url} alt={item.name} className={styles.creatorItemImg} />
+                      : <span className={styles.creatorItemEmoji}>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
+                    }
+                    {selected && <div className={styles.creatorCheckmark}>✓</div>}
+                  </div>
+                  <p className={styles.creatorItemName}>{item.name}</p>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.creatorFooter}>
+        {selectedIds.size > 0 && (
+          <p className={styles.creatorCount}>
+            {selectedIds.size} piece{selectedIds.size !== 1 ? 's' : ''} selected
+          </p>
+        )}
+        <button className={styles.creatorSave} onClick={handleSave} disabled={!canSave}>
+          {initial ? 'Save Changes' : 'Save Outfit'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── My Outfits Tab ────────────────────────────────────────────────────────────
+
+function MyOutfitsTab() {
   const { user }        = useAuth()
   const { closetItems } = useCloset()
-  const [entries, setEntries] = useState(null)
+  const { liked, outfitBoards, saveOutfitBoard, deleteOutfitBoard } = useWishlist()
+  const [logEntries, setLogEntries]   = useState(null)
+  const [showCreator, setShowCreator] = useState(false)
+  const [editingBoard, setEditingBoard] = useState(null)
 
   useEffect(() => {
     if (!user) return
     getDoc(doc(db, 'users', user.uid, 'prefs', 'outfitLog'))
-      .then((snap) => {
-        const data = snap.exists() ? (snap.data().entries ?? []) : []
-        setEntries(data)
-      })
-      .catch(() => setEntries([]))
+      .then((snap) => setLogEntries(snap.exists() ? (snap.data().entries ?? []) : []))
+      .catch(() => setLogEntries([]))
   }, [user])
 
   if (!user) {
     return (
       <div className={styles.emptyState}>
-        <p className={styles.emptyEmoji}>📔</p>
-        <p className={styles.emptyTitle}>Sign in to see your outfit log</p>
+        <p className={styles.emptyEmoji}>👗</p>
+        <p className={styles.emptyTitle}>Sign in to manage your outfits</p>
       </div>
     )
   }
 
-  if (entries === null) {
-    return (
-      <div className={styles.emptyState}>
-        <div className={styles.loadingDots}><span /><span /><span /></div>
-      </div>
-    )
-  }
-
-  if (entries.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p className={styles.emptyEmoji}>📔</p>
-        <p className={styles.emptyTitle}>No entries yet</p>
-        <p className={styles.emptySub}>Log your first outfit from the Today tab.</p>
-      </div>
-    )
-  }
-
-  const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
+  const hasBoards = outfitBoards.length > 0
+  const hasLog    = logEntries && logEntries.length > 0
+  const itemMap   = Object.fromEntries(closetItems.map((i) => [i.id, i]))
 
   return (
-    <div className={styles.logList}>
-      {entries.map((entry) => {
-        const items = (entry.itemIds ?? []).map((id) => itemMap[id]).filter(Boolean)
-        return (
-          <div key={entry.id} className={styles.logEntry}>
-            <div className={styles.logEntryHeader}>
-              <span className={styles.logDate}>{entry.date}</span>
-              <span className={styles.logOccasion}>{entry.occasion}</span>
-              {entry.weather && (
-                <span className={styles.logWeather}>
-                  {getWeatherEmoji(entry.weather.condition)} {entry.weather.temp}°C
-                </span>
-              )}
-            </div>
-            <div className={styles.logItemRow}>
-              {items.slice(0, 4).map((item) => {
-                const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
-                return (
-                  <div key={item.id} className={styles.logItemThumb}>
-                    {photoUrl
-                      ? <img src={photoUrl} alt={item.name} className={styles.logThumbImg} />
-                      : <span>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
-                    }
-                  </div>
-                )
-              })}
-              {items.length === 0 && (
-                <p className={styles.logItemsMissing}>Items no longer in closet</p>
-              )}
-            </div>
-            {entry.notes && <p className={styles.logNoteText}>"{entry.notes}"</p>}
+    <div className={styles.myOutfitsTab}>
+
+      {/* Saved outfits */}
+      {hasBoards && (
+        <section className={styles.outfitsSection}>
+          <h3 className={styles.outfitsSectionTitle}>Saved Outfits</h3>
+          <div className={styles.boardsList}>
+            {outfitBoards.map((board) => (
+              <OutfitBoardCard
+                key={board.id}
+                board={board}
+                onEdit={() => { setEditingBoard(board); setShowCreator(true) }}
+                onDelete={() => deleteOutfitBoard(board.id)}
+              />
+            ))}
           </div>
-        )
-      })}
+        </section>
+      )}
+
+      {/* Outfit log */}
+      {hasLog && (
+        <section className={styles.outfitsSection}>
+          <h3 className={styles.outfitsSectionTitle}>Outfit Log</h3>
+          <div className={styles.logList}>
+            {logEntries.map((entry) => {
+              const items = (entry.itemIds ?? []).map((id) => itemMap[id]).filter(Boolean)
+              return (
+                <div key={entry.id} className={styles.logEntry}>
+                  <div className={styles.logEntryHeader}>
+                    <span className={styles.logDate}>{entry.date}</span>
+                    <span className={styles.logOccasion}>{entry.occasion}</span>
+                    {entry.weather && (
+                      <span className={styles.logWeather}>
+                        {getWeatherEmoji(entry.weather.condition)} {entry.weather.temp}°C
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.logItemRow}>
+                    {items.slice(0, 4).map((item) => {
+                      const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
+                      return (
+                        <div key={item.id} className={styles.logItemThumb}>
+                          {photoUrl
+                            ? <img src={photoUrl} alt={item.name} className={styles.logThumbImg} />
+                            : <span>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
+                          }
+                        </div>
+                      )
+                    })}
+                    {items.length === 0 && (
+                      <p className={styles.logItemsMissing}>Items no longer in closet</p>
+                    )}
+                  </div>
+                  {entry.notes && <p className={styles.logNoteText}>"{entry.notes}"</p>}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Empty state */}
+      {!hasBoards && !hasLog && logEntries !== null && (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyEmoji}>👗</p>
+          <p className={styles.emptyTitle}>No outfits yet</p>
+          <p className={styles.emptySub}>Tap + to create your first outfit from your closet or liked items.</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {!hasBoards && logEntries === null && (
+        <div className={styles.emptyState}>
+          <div className={styles.loadingDots}><span /><span /><span /></div>
+        </div>
+      )}
+
+      {/* FAB */}
+      <button
+        className={styles.createFab}
+        onClick={() => { setEditingBoard(null); setShowCreator(true) }}
+        aria-label="Create outfit"
+      >
+        +
+      </button>
+
+      {/* Creator sheet */}
+      {showCreator && (
+        <OutfitCreatorSheet
+          closetItems={closetItems}
+          liked={liked}
+          initial={editingBoard}
+          onSave={(board) => { saveOutfitBoard(board); setShowCreator(false); setEditingBoard(null) }}
+          onClose={() => { setShowCreator(false); setEditingBoard(null) }}
+        />
+      )}
     </div>
   )
 }
 
 const TABS = [
-  { id: 'today',    label: 'Today'    },
-  { id: 'log',      label: 'My Log'   },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'trip',     label: 'Trip'     },
+  { id: 'closet',   label: 'My Closet'       },
+  { id: 'liked',    label: 'Liked'           },
+  { id: 'today',    label: "Today's Outfit"  },
+  { id: 'outfits',  label: 'My Outfits'      },
+  { id: 'calendar', label: 'Calendar'        },
+  { id: 'trip',     label: 'Trip'            },
 ]
 
 export default function DailyLookScreen() {
@@ -471,8 +664,10 @@ export default function DailyLookScreen() {
         ))}
       </div>
 
+      {activeTab === 'closet'   && <ClosetScreen singleTab="closet" />}
+      {activeTab === 'liked'    && <ClosetScreen singleTab="liked"  />}
       {activeTab === 'today'    && <TodayTab />}
-      {activeTab === 'log'      && <LogTab />}
+      {activeTab === 'outfits'  && <MyOutfitsTab />}
       {activeTab === 'calendar' && <OutfitCalendarScreen />}
       {activeTab === 'trip'     && <TripPlannerScreen />}
     </div>

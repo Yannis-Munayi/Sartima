@@ -52,7 +52,7 @@
 .counter {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   letter-spacing: 0.2px;
 }
 
@@ -60,12 +60,12 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface);
   border: none;
   border-radius: 20px;
   padding: 7px 12px;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: 12px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -74,8 +74,8 @@
 }
 
 .filterBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.85);
+  background: var(--surface-hover);
+  color: var(--text-dim);
 }
 
 /* ── Quiz progress bar ── */
@@ -141,7 +141,7 @@
   left: 0;
   right: 0;
   z-index: 151;
-  background: var(--surface, #1a1a1a);
+  background: var(--bg-elevated);
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--border, rgba(255,255,255,0.08));
   padding: 16px 24px calc(32px + env(safe-area-inset-bottom));

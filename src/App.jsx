@@ -20,7 +20,6 @@ import MyStyleScreen   from './screens/MyStyleScreen'
 import ExploreScreen   from './screens/ExploreScreen'
 import AestheticScreen from './screens/AestheticScreen'
 import WardrobeBuildScreen from './screens/WardrobeBuildScreen'
-import ClosetScreen    from './screens/ClosetScreen'
 import DailyLookScreen from './screens/DailyLookScreen'
 import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
 import TabBar          from './components/TabBar'
@@ -112,6 +111,7 @@ function AppShell() {
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
   const [guideStep, setGuideStep]           = useState(null)
+  const [profileScrollTarget, setProfileScrollTarget] = useState(null)
   const prevUserRef = useRef(user)
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
@@ -239,8 +239,12 @@ function AppShell() {
       setMyStyleSubTab(null)
     }
     if (tabId.startsWith('closet:')) {
-      setMyStyleSubTab(tabId.replace('closet:', ''))
-      setActiveTab('closet')
+      setActiveTab('daily')
+      return
+    }
+    if (tabId === 'profile:quiz-history') {
+      setProfileScrollTarget('quiz-history')
+      setActiveTab('profile')
       return
     }
     setActiveTab(tabId)
@@ -298,14 +302,15 @@ function AppShell() {
       {showTabs && activeTab === 'mystyle' && (
         <MyStyleScreen forceSubTab={myStyleSubTab} />
       )}
-      {showTabs && activeTab === 'closet' && (
-        <ClosetScreen setActiveTab={handleTabChange} />
-      )}
       {showTabs && activeTab === 'daily' && (
         <DailyLookScreen setActiveTab={handleTabChange} />
       )}
       {showTabs && activeTab === 'profile'  && (
-        <ProfileScreen onBack={() => handleTabChange('quiz')} />
+        <ProfileScreen
+          onBack={() => handleTabChange('quiz')}
+          scrollToQuiz={profileScrollTarget === 'quiz-history'}
+          onScrollComplete={() => setProfileScrollTarget(null)}
+        />
       )}
 
       {showTabs && (

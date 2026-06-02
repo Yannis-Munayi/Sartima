@@ -245,7 +245,7 @@ export default function ExploreScreen({ setActiveTab }) {
       <div className={styles.header}>
         <div className={styles.headerTop}>
           <div>
-            <h1 className={styles.title}>Explore</h1>
+            <h1 className={styles.title}>Aesthetics</h1>
             <p className={styles.sub}>{ALL_AESTHETICS.length} aesthetics</p>
           </div>
           <AuthWidget />

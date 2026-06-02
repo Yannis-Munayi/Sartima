@@ -9,7 +9,6 @@ import { useExplore } from '../context/ExploreContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useShop } from '../context/ShopContext'
 import { useCloset } from '../context/ClosetContext'
-import { getLooks } from '../data/looks'
 import { generateOutfit } from '../services/outfitAI'
 import { getWeather, getWeatherEmoji } from '../services/weather'
 import AuthWidget from '../components/AuthWidget'
@@ -82,8 +81,16 @@ function HeroCarousel({ setActiveTab, gender }) {
   const [photos, setPhotos]       = useState(new Array(HERO_SLIDE_IDS.length).fill(null))
   const [activeIdx, setActiveIdx] = useState(0)
   const [imgLoaded, setImgLoaded] = useState(false)
-  const timerRef    = useRef(null)
-  const touchStartX = useRef(null)
+  const [arrowsVisible, setArrowsVisible] = useState(true)
+  const timerRef      = useRef(null)
+  const arrowTimerRef = useRef(null)
+  const touchStartX   = useRef(null)
+
+  function resetArrowTimer() {
+    setArrowsVisible(true)
+    clearTimeout(arrowTimerRef.current)
+    arrowTimerRef.current = setTimeout(() => setArrowsVisible(false), 3000)
+  }
 
   useEffect(() => {
     setPhotos(new Array(HERO_SLIDE_IDS.length).fill(null))
@@ -114,17 +121,23 @@ function HeroCarousel({ setActiveTab, gender }) {
 
   useEffect(() => {
     startTimer()
-    return () => clearInterval(timerRef.current)
-  }, [])
+    resetArrowTimer()
+    return () => {
+      clearInterval(timerRef.current)
+      clearTimeout(arrowTimerRef.current)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function goTo(i) {
     setActiveIdx(i)
     setImgLoaded(false)
     startTimer()
+    resetArrowTimer()
   }
 
   function onHeroTouchStart(e) {
     touchStartX.current = e.touches[0].clientX
+    resetArrowTimer()
   }
 
   function onHeroTouchEnd(e) {
@@ -187,30 +200,21 @@ function HeroCarousel({ setActiveTab, gender }) {
           />
         ))}
       </div>
-    </div>
-  )
-}
 
-// ── Stats pills ───────────────────────────────────────────────────────────────
-
-function StatsPills({ setActiveTab }) {
-  const { liked }       = useWishlist()
-  const { closetItems } = useCloset()
-
-  const pills = [
-    { label: 'Liked',  value: liked.length,       icon: '❤️', tab: 'closet' },
-    { label: 'Closet', value: closetItems.length,  icon: '👕', tab: 'closet' },
-  ]
-
-  return (
-    <div className={styles.statsRow}>
-      {pills.map(({ label, value, icon, tab }) => (
-        <button key={label} className={styles.statPill} onClick={() => setActiveTab(tab)}>
-          <span className={styles.statIcon}>{icon}</span>
-          <span className={styles.statValue}>{value}</span>
-          <span className={styles.statLabel}>{label}</span>
-        </button>
-      ))}
+      <button
+        className={`${styles.heroArrow} ${styles.heroArrowLeft} ${arrowsVisible ? '' : styles.heroArrowHidden}`}
+        onClick={() => goTo((activeIdx - 1 + HERO_SLIDE_IDS.length) % HERO_SLIDE_IDS.length)}
+        aria-label="Previous slide"
+      >
+        ‹
+      </button>
+      <button
+        className={`${styles.heroArrow} ${styles.heroArrowRight} ${arrowsVisible ? '' : styles.heroArrowHidden}`}
+        onClick={() => goTo((activeIdx + 1) % HERO_SLIDE_IDS.length)}
+        aria-label="Next slide"
+      >
+        ›
+      </button>
     </div>
   )
 }
@@ -387,7 +391,7 @@ function AestheticProfile({ setActiveTab, gender }) {
       </div>
       <button
         className={styles.viewResultsBtn}
-        onClick={() => setActiveTab('quiz')}
+        onClick={() => setActiveTab('profile:quiz-history')}
       >
         Full breakdown →
       </button>
@@ -468,90 +472,13 @@ function HorizontalScroll({ ids, setActiveTab, gender }) {
   )
 }
 
-// ── Capsule Wardrobe ──────────────────────────────────────────────────────────
-
-function CapsuleLookCard({ look, gender, onClick }) {
-  const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    const q = gender === 'women' ? look.womenPexelsQuery : look.pexelsQuery
-    fetchPhotosWithFallback([q, look.pexelsQuery], 1).then(([url] = []) => {
-      if (!cancelled) setPhoto(url ?? null)
-    })
-    return () => { cancelled = true }
-  }, [look.id, look.pexelsQuery, look.womenPexelsQuery, gender])
-
+function AestheticGrid({ ids, setActiveTab, gender }) {
   return (
-    <div className={styles.capsuleCard} onClick={onClick}>
-      <div className={styles.capsulePhoto}>
-        {photo && (
-          <img
-            src={photo}
-            alt={look.name}
-            className={styles.capsuleImg}
-            style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
-          />
-        )}
-        <div className={styles.capsuleOverlay}>
-          <p className={styles.capsuleName}>{look.name}</p>
-          <p className={styles.capsuleVibe}>{look.vibe}</p>
-        </div>
-      </div>
+    <div className={styles.aestheticGrid}>
+      {ids.filter((id) => STYLES[id]).map((id) => (
+        <AestheticMiniCard key={`${id}-${gender}`} aestheticId={id} setActiveTab={setActiveTab} gender={gender} />
+      ))}
     </div>
-  )
-}
-
-function CapsuleWardrobe({ setActiveTab, gender, season }) {
-  const { state }           = useApp()
-  const { savedAesthetics } = useExplore()
-
-  const capsuleAestheticId = useMemo(() => {
-    const scores = state.styleScores
-    const topFromQuiz = Object.entries(scores)
-      .filter(([, s]) => s > 0)
-      .sort(([, a], [, b]) => b - a)[0]
-    if (topFromQuiz) return topFromQuiz[0]
-    if (savedAesthetics.length > 0) return savedAesthetics[0]
-    return SEASON_PICKS[season][0]
-  }, [state.styleScores, savedAesthetics, season])
-
-  const looks = useMemo(() => getLooks(capsuleAestheticId, { season }), [capsuleAestheticId, season])
-  const style = STYLES[capsuleAestheticId]
-
-  if (!style || looks.length === 0) return null
-
-  return (
-    <section className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}>✦</span>
-        <div>
-          <h2 className={styles.sectionTitle}>Your Capsule Wardrobe</h2>
-          <p className={styles.sectionSub}>
-            {getStyleName(style, gender)} · {season.charAt(0).toUpperCase() + season.slice(1)} edition
-          </p>
-        </div>
-      </div>
-      <div className={styles.capsuleRow}>
-        {looks.map((look) => (
-          <CapsuleLookCard
-            key={look.id}
-            look={look}
-            gender={gender}
-            onClick={() => setActiveTab(`aesthetic:${capsuleAestheticId}`)}
-          />
-        ))}
-      </div>
-      <button
-        className={styles.capsuleViewAll}
-        onClick={() => setActiveTab(`aesthetic:${capsuleAestheticId}`)}
-      >
-        View all {getStyleName(style, gender)} looks →
-      </button>
-    </section>
   )
 }
 
@@ -566,9 +493,9 @@ function WardrobeBuilderCTA({ setActiveTab }) {
       >
         <div className={styles.wardrobeCTAIcon}>👗</div>
         <div className={styles.wardrobeCTAText}>
-          <p className={styles.wardrobeCTATitle}>Build Your Wardrobe</p>
+          <p className={styles.wardrobeCTATitle}>Shop Scout</p>
           <p className={styles.wardrobeCTASub}>
-            Tell us what pieces you want → get the best brands for your budget
+            Pick pieces, set your budget → find the best brands to shop
           </p>
         </div>
         <span className={styles.wardrobeCTAArrow}>→</span>
@@ -628,7 +555,7 @@ function DailyOutfitPreview({ setActiveTab, gender }) {
 
   if (!user || closetItems.length < 3) {
     return (
-      <div className={styles.closetCta} onClick={() => setActiveTab('closet')}>
+      <div className={styles.closetCta} onClick={() => setActiveTab('daily')}>
         <span className={styles.closetCtaIcon}>🪣</span>
         <div>
           <p className={styles.closetCtaTitle}>Build your digital closet</p>
@@ -686,6 +613,7 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
   const season              = getSeason()
   const meta                = SEASON_META[season]
   const [trendingKey, setTrendingKey] = useState(0)
+  const isNewUser = !Object.values(state.styleScores).some(s => s > 0)
 
   const trendingIds = useMemo(() => {
     if (trendingKey === 0) return TRENDING
@@ -708,6 +636,9 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
         {/* Daily AI outfit preview + closet CTA */}
         <DailyOutfitPreview setActiveTab={setActiveTab} gender={gender} />
 
+        {/* Guide tour — show at top for new users */}
+        {startGuide && isNewUser && <GuideLauncher onStart={startGuide} />}
+
         {/* Fresh Looks Today — daily rotating content, main daily pull */}
         <FreshLooksSection gender={gender} setActiveTab={setActiveTab} />
 
@@ -716,9 +647,6 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
 
         {/* Live Aesthetic Profile — only appears once user has swiped */}
         <AestheticProfile setActiveTab={setActiveTab} gender={gender} />
-
-        {/* Stats */}
-        <StatsPills setActiveTab={setActiveTab} />
 
         {/* Saved aesthetics */}
         {savedAesthetics.length > 0 && (
@@ -734,22 +662,21 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
           </section>
         )}
 
-        {/* Season picks */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>{meta.icon}</span>
-            <div>
-              <h2 className={styles.sectionTitle}>{meta.label}</h2>
-              <p className={styles.sectionSub}>{meta.sub}</p>
+        {/* Season picks — only shown before user has personalised saves */}
+        {savedAesthetics.length === 0 && (
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionIcon}>{meta.icon}</span>
+              <div>
+                <h2 className={styles.sectionTitle}>{meta.label}</h2>
+                <p className={styles.sectionSub}>{meta.sub}</p>
+              </div>
             </div>
-          </div>
-          <HorizontalScroll ids={SEASON_PICKS[season]} setActiveTab={setActiveTab} gender={gender} />
-        </section>
+            <HorizontalScroll ids={SEASON_PICKS[season]} setActiveTab={setActiveTab} gender={gender} />
+          </section>
+        )}
 
-        {/* Seasonal Capsule Wardrobe */}
-        <CapsuleWardrobe setActiveTab={setActiveTab} gender={gender} season={season} />
-
-        {/* Trending */}
+        {/* Trending — 2-column grid instead of another carousel */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionIcon}>🔥</span>
@@ -765,10 +692,11 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
               ↻
             </button>
           </div>
-          <HorizontalScroll ids={trendingIds} setActiveTab={setActiveTab} gender={gender} />
+          <AestheticGrid ids={trendingIds.slice(0, 6)} setActiveTab={setActiveTab} gender={gender} />
         </section>
 
-        {startGuide && <GuideLauncher onStart={startGuide} />}
+        {/* Guide tour — bottom position for returning users */}
+        {startGuide && !isNewUser && <GuideLauncher onStart={startGuide} />}
 
         <button className={styles.exploreAllBtn} onClick={() => setActiveTab('explore')}>
           Browse all {Object.keys(STYLES).length} aesthetics →

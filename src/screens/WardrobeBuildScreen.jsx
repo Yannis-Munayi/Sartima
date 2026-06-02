@@ -627,7 +627,7 @@ export default function WardrobeBuildScreen({ onBack }) {
           </svg>
         </button>
         <div className={styles.headerCenter}>
-          <h1 className={styles.headerTitle}>Wardrobe Builder</h1>
+          <h1 className={styles.headerTitle}>Shop Scout</h1>
           {step < 4 && (
             <p className={styles.headerSub}>Step {step} of 3</p>
           )}

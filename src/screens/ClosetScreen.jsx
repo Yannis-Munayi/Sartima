@@ -183,10 +183,14 @@ function MyClosetTab() {
   )
 }
 
-export default function ClosetScreen() {
+export default function ClosetScreen({ singleTab } = {}) {
   const [activeTab, setActiveTab] = useState('closet')
   const { closetItems }          = useCloset()
   const { liked, wishlist }      = useWishlist()
+
+  // Embedded mode: render just the requested tab content, no screen wrapper or sub-nav
+  if (singleTab === 'closet') return <MyClosetTab />
+  if (singleTab === 'liked')  return <WardrobeScreen />
 
   const counts = {
     closet:  closetItems.length,

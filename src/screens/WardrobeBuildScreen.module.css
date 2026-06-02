@@ -108,7 +108,7 @@
 }
 
 .stepDotLabel {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -496,7 +496,7 @@
 }
 
 .pieceGroupBudget {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
   background: rgba(255,255,255,0.06);
@@ -554,7 +554,7 @@
 }
 
 .productBrand {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -587,7 +587,7 @@
 }
 
 .productLabel {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #D4896A;
   background: rgba(255,107,53,0.1);
@@ -693,7 +693,7 @@
 }
 
 .complementAdd {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #E8735A;
   background: rgba(0,0,0,0.45);

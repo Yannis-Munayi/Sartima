@@ -21,14 +21,14 @@
   font-family: 'Playfair Display', serif;
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
   letter-spacing: -0.02em;
 }
 
 .sub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -90,7 +90,7 @@
 
 .noResults {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   text-align: center;
   padding: 48px 0;
 }
@@ -99,11 +99,11 @@
 .section {}
 
 .sectionLabel {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
   margin: 0 0 12px;
   padding: 0 4px;
 }
@@ -318,11 +318,11 @@
 /* ── Group tag on search/filter results ── */
 .groupTag {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-muted);
   margin-bottom: 2px;
   line-height: 1;
 }
