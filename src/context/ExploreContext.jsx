@@ -39,7 +39,11 @@ export function ExploreProvider({ children }) {
 
     getDoc(doc(db, 'users', user.uid, 'prefs', 'savedAesthetics'))
       .then((snap) => {
-        setSavedAesthetics(snap.exists() ? (snap.data().ids ?? []) : [])
+        const stored = snap.exists() ? (snap.data().ids ?? []) : []
+        setSavedAesthetics((current) => {
+          const pending = current.filter((id) => !stored.includes(id))
+          return pending.length > 0 ? [...pending, ...stored] : stored
+        })
       })
       .catch(() => {})
       .finally(() => setLoadReady(true))

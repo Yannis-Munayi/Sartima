@@ -17,34 +17,48 @@ export function ClosetProvider({ children }) {
   const { user } = useAuth()
   const [items, setItems]       = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(null)
   const loadedUid               = useRef(null)
   // Block saves from running before the initial load resolves
   const loadReady               = useRef(false)
+
+  const loadItems = useCallback(() => {
+    if (!user) return
+    setLoading(true)
+    setError(null)
+    loadReady.current = false
+
+    getDoc(doc(db, 'users', user.uid, 'prefs', PREF_DOC))
+      .then((snap) => {
+        const stored = snap.exists() ? (snap.data().items ?? []) : []
+        setItems((current) => {
+          // Preserve any items added while the load was in-flight
+          const storedIds = new Set(stored.map((i) => i.id))
+          const pending   = current.filter((i) => !storedIds.has(i.id))
+          return pending.length > 0 ? [...pending, ...stored] : stored
+        })
+      })
+      .catch((err) => setError(err))
+      .finally(() => {
+        setLoading(false)
+        loadReady.current = true
+      })
+  }, [user])
 
   // Load from Firestore when user changes
   useEffect(() => {
     if (!user) {
       setItems([])
       setLoading(false)
+      setError(null)
       loadedUid.current = null
       loadReady.current = false
       return
     }
     if (loadedUid.current === user.uid) return
     loadedUid.current = user.uid
-    loadReady.current = false
-    setLoading(true)
-
-    getDoc(doc(db, 'users', user.uid, 'prefs', PREF_DOC))
-      .then((snap) => {
-        setItems(snap.exists() ? (snap.data().items ?? []) : [])
-      })
-      .catch(() => {})
-      .finally(() => {
-        setLoading(false)
-        loadReady.current = true
-      })
-  }, [user])
+    loadItems()
+  }, [user, loadItems])
 
   // Persist whenever items change (after initial load)
   useEffect(() => {
@@ -98,6 +112,8 @@ export function ClosetProvider({ children }) {
     <ClosetContext.Provider value={{
       closetItems: items,
       closetLoading: loading,
+      closetError: error,
+      retryLoadCloset: loadItems,
       closetByCategory,
       totalClosetCount: items.length,
       addToCloset,

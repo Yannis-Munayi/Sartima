@@ -125,6 +125,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
   const [preview,   setPreview]   = useState(null)
   const [file,      setFile]      = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
+  const [cooldown,  setCooldown]  = useState(false)
   const [items,     setItems]     = useState(null) // detected items
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState(null)
@@ -141,6 +142,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
   async function handleAnalyze() {
     if (!file) return
     setAnalyzing(true)
+    setCooldown(true)
     setError(null)
     try {
       const base64   = await fileToBase64(file)
@@ -154,6 +156,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
       )
     } finally {
       setAnalyzing(false)
+      setTimeout(() => setCooldown(false), 15_000)
     }
   }
 
@@ -211,9 +214,10 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
 
       {/* Analyze button — shown before results */}
       {file && !items && (
-        <button className={styles.analyzeBtn} onClick={handleAnalyze} disabled={analyzing}>
+        <button className={styles.analyzeBtn} onClick={handleAnalyze} disabled={analyzing || cooldown}>
           {analyzing
             ? <><span className={styles.spinner} /> Analyzing…</>
+            : cooldown ? 'Please wait…'
             : '✦ Identify items with AI'
           }
         </button>

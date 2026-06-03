@@ -1,3 +1,7 @@
+import { httpsCallable } from 'firebase/functions'
+import { functions } from './firebase'
+import { logError } from './logger'
+
 const CACHE_KEY = 'stylelab_weather'
 const CACHE_TTL  = 30 * 60 * 1000 // 30 minutes
 
@@ -30,7 +34,11 @@ function getCoords() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+        // Round to ~1 km precision — sufficient for weather, avoids storing exact address
+        const coords = {
+          lat: Math.round(pos.coords.latitude  * 100) / 100,
+          lon: Math.round(pos.coords.longitude * 100) / 100,
+        }
         try { sessionStorage.setItem('stylelab_coords', JSON.stringify(coords)) } catch {}
         resolve(coords)
       },
@@ -39,6 +47,8 @@ function getCoords() {
     )
   })
 }
+
+const weatherFn = httpsCallable(functions, 'getWeather')
 
 /**
  * Returns a WeatherData object or null if geolocation is unavailable/denied.
@@ -49,9 +59,6 @@ export async function getWeather() {
   const cached = getCached()
   if (cached) return cached
 
-  const apiKey = import.meta.env.VITE_OPENWEATHER_KEY
-  if (!apiKey) return null
-
   let coords
   try {
     coords = await getCoords()
@@ -60,26 +67,11 @@ export async function getWeather() {
   }
 
   try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${coords.lat}&lon=${coords.lon}&units=metric&appid=${apiKey}`
-    )
-    if (!res.ok) return null
-    const json = await res.json()
-
-    const data = {
-      city:        json.name,
-      temp:        Math.round(json.main.temp),
-      feelsLike:   Math.round(json.main.feels_like),
-      condition:   json.weather[0]?.main ?? 'Clear',
-      description: json.weather[0]?.description ?? '',
-      icon:        json.weather[0]?.icon ?? '01d',
-      humidity:    json.main.humidity,
-      windSpeed:   Math.round(json.wind?.speed ?? 0),
-      fetchedAt:   Date.now(),
-    }
+    const { data } = await weatherFn({ lat: coords.lat, lon: coords.lon })
     setCache(data)
     return data
-  } catch {
+  } catch (err) {
+    logError('weather', 'getWeather failed', { lat: coords.lat, lon: coords.lon, error: err?.message })
     return null
   }
 }

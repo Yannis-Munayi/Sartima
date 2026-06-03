@@ -275,7 +275,9 @@ export function useApp() {
 // ── Theme hook ────────────────────────────────────────────────────────────────
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('stylelab_theme') ?? 'dark'
+    const t = localStorage.getItem('stylelab_theme') ?? 'dark'
+    document.documentElement.setAttribute('data-theme', t)
+    return t
   })
 
   function setTheme(t) {
@@ -283,10 +285,6 @@ export function useTheme() {
     document.documentElement.setAttribute('data-theme', t)
     setThemeState(t)
   }
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { theme, setTheme }
 }

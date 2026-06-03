@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
+import { useGuideController } from './hooks/useGuideController'
 import { AppProvider, useApp, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ShopProvider } from './context/ShopContext'
@@ -23,7 +24,7 @@ import WardrobeBuildScreen from './screens/WardrobeBuildScreen'
 import DailyLookScreen from './screens/DailyLookScreen'
 import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
 import TabBar          from './components/TabBar'
-import GuideTour, { GUIDE_STEPS } from './components/GuideTour'
+import GuideTour from './components/GuideTour'
 import Toast           from './components/Toast'
 import { GuideProvider } from './context/GuideContext'
 
@@ -110,7 +111,6 @@ function AppShell() {
   const [activeTab, setActiveTab]           = useState('home')
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
-  const [guideStep, setGuideStep]           = useState(null)
   const [profileScrollTarget, setProfileScrollTarget] = useState(null)
   const prevUserRef = useRef(user)
 
@@ -150,67 +150,9 @@ function AppShell() {
   // Answered count for the modal
   const answeredCount = Object.keys(state.responses).length
 
-  function startGuide() {
-    setGuideStep(0)
-    setActiveTab('home')
-  }
-
-  function navigateGuideTab(tab, step) {
-    if (tab.startsWith('aesthetic:')) {
-      const id = tab.replace('aesthetic:', '')
-      openAestheticTab(id)
-      setActiveTab(tab)
-    } else {
-      if (tab === 'mystyle' && step?.myStyleSubTab) {
-        setMyStyleSubTab(step.myStyleSubTab)
-      }
-      setActiveTab(tab)
-    }
-  }
-
-  function guideNext() {
-    const next = guideStep + 1
-    if (next >= GUIDE_STEPS.length) { setGuideStep(null); return }
-    setGuideStep(next)
-    const nextStep = GUIDE_STEPS[next]
-    const curStep  = GUIDE_STEPS[guideStep]
-    if (nextStep.tab !== curStep.tab) {
-      navigateGuideTab(nextStep.tab, nextStep)
-    } else if (nextStep.tab === 'mystyle' && nextStep.myStyleSubTab) {
-      setMyStyleSubTab(nextStep.myStyleSubTab)
-    }
-  }
-
-  function guideBack() {
-    const prev = guideStep - 1
-    if (prev < 0) return
-    setGuideStep(prev)
-    const prevStep = GUIDE_STEPS[prev]
-    const curStep  = GUIDE_STEPS[guideStep]
-    if (prevStep.tab !== curStep.tab) {
-      navigateGuideTab(prevStep.tab, prevStep)
-    } else if (prevStep.tab === 'mystyle' && prevStep.myStyleSubTab) {
-      setMyStyleSubTab(prevStep.myStyleSubTab)
-    }
-  }
-
-  function guideSkip() {
-    // If we're mid-quiz-setup, reset so the user isn't stuck on season/category screens
-    if (state.screen === SCREENS.SEASONS || state.screen === SCREENS.CATEGORIES) {
-      dispatch({ type: 'GO_TO_WELCOME' })
-    }
-    setGuideStep(null)
-  }
-
-  // When a guide step requires a specific quiz screen, dispatch the transition
-  useEffect(() => {
-    if (guideStep === null) return
-    const step = GUIDE_STEPS[guideStep]
-    if (step.forceScreen === 'seasons') {
-      dispatch({ type: 'GO_TO_SEASONS' })
-      setActiveTab('quiz')
-    }
-  }, [guideStep])
+  const { guideStep, startGuide, guideNext, guideBack, guideSkip, guideContextValue } = useGuideController({
+    state, dispatch, openAestheticTab, setActiveTab, setMyStyleSubTab,
+  })
 
   function handleTabChange(tabId) {
     if (tabId === 'quiz' && sessionInProgress) {
@@ -262,19 +204,9 @@ function AppShell() {
     setActiveTab('quiz')
   }
 
-  const isAestheticTab = activeTab.startsWith('aesthetic:')
-  const aestheticId    = isAestheticTab ? activeTab.replace('aesthetic:', '') : null
-
-  const currentGuideStep  = guideStep !== null ? GUIDE_STEPS[guideStep] : null
-  const guideForceSubTab  = currentGuideStep?.subTab ?? null
-
-  const guideContextValue = {
-    isActive:      guideStep !== null,
-    currentStep:   currentGuideStep,
-    guideNext,
-    forceSeason:   currentGuideStep?.forceSeason   ?? null,
-    forceCategory: currentGuideStep?.forceCategory ?? null,
-  }
+  const isAestheticTab   = activeTab.startsWith('aesthetic:')
+  const aestheticId      = isAestheticTab ? activeTab.replace('aesthetic:', '') : null
+  const guideForceSubTab = guideContextValue.currentStep?.subTab ?? null
 
   return (
     <GuideProvider value={guideContextValue}>

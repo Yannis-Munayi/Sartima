@@ -17,7 +17,14 @@ function usePersistedList(user, docId) {
     loadedUid.current = user.uid
     setReady(false)
     getDoc(doc(db, 'users', user.uid, 'prefs', docId))
-      .then((snap) => setList(snap.exists() ? (snap.data().items ?? []) : []))
+      .then((snap) => {
+        const stored = snap.exists() ? (snap.data().items ?? []) : []
+        setList((current) => {
+          const storedIds = new Set(stored.map((i) => i.id))
+          const pending   = current.filter((i) => !storedIds.has(i.id))
+          return pending.length > 0 ? [...pending, ...stored] : stored
+        })
+      })
       .catch(() => {})
       .finally(() => setReady(true))
   }, [user, docId])

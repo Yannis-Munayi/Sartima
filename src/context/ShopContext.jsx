@@ -30,7 +30,12 @@ export function ShopProvider({ children }) {
 
     getDoc(doc(db, 'users', user.uid, 'prefs', 'shopList'))
       .then((snap) => {
-        setShopList(snap.exists() ? (snap.data().items ?? []) : [])
+        const stored = snap.exists() ? (snap.data().items ?? []) : []
+        setShopList((current) => {
+          const storedIds = new Set(stored.map((e) => e.item?.id))
+          const pending   = current.filter((e) => !storedIds.has(e.item?.id))
+          return pending.length > 0 ? [...pending, ...stored] : stored
+        })
       })
       .catch(() => {})
       .finally(() => setLoadReady(true))

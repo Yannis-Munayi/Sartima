@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      // Only the authenticated owner can read or write their profile document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Flat prefs documents (closet, wishlist, liked, outfitBoards,
+      // savedAesthetics, shopList, outfitLog, ...)
+      match /prefs/{prefId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Outfit calendar plans (OutfitCalendarScreen uses addDoc/deleteDoc here)
+      match /outfitPlans/{planId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Quiz history (ResultsScreen writes, ProfileScreen reads)
+      match /quizzes/{quizId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Uploaded catalog items (WishlistScreen)
+      match /uploadedItems/{itemId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Deny every other path — no public reads, no cross-user access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

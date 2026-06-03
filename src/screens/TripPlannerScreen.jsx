@@ -1,13 +1,8 @@
 import { useState } from 'react'
-import Anthropic from '@anthropic-ai/sdk'
 import { useCloset } from '../context/ClosetContext'
 import { useApp } from '../context/AppContext'
+import { generateTrip } from '../services/tripAI'
 import styles from './TripPlannerScreen.module.css'
-
-const client = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
-  dangerouslyAllowBrowser: true,
-})
 
 const CATEGORY_EMOJIS = {
   tops: '👕', bottoms: '👖', outerwear: '🧥',
@@ -32,49 +27,8 @@ export default function TripPlannerScreen() {
     setError(null)
     setResult(null)
 
-    const itemList = closetItems.map((i) => ({
-      id: i.id, name: i.name, category: i.category,
-      color: i.color ?? '', seasons: i.seasons ?? [],
-    }))
-
-    const prompt = `You are a personal travel stylist. Create a packing list and daily outfit plan for a ${nights}-night trip to ${destination}.
-
-Available wardrobe:
-${JSON.stringify(itemList)}
-
-Gender preference: ${state.gender}
-
-Rules:
-- Choose items ONLY from the wardrobe above (use their IDs)
-- Suggest 1 outfit per day (reference item IDs)
-- Create a concise packing list (item IDs + names)
-- Add 2-3 items to "also consider buying" if the wardrobe has gaps for this destination
-
-Return ONLY valid JSON:
-{
-  "destination": "${destination}",
-  "nights": ${nights},
-  "packingList": [
-    { "itemId": "id or null if suggested purchase", "name": "item name", "note": "why pack it", "fromCloset": true/false }
-  ],
-  "dailyOutfits": [
-    { "day": 1, "label": "Day 1 - Arrival", "itemIds": ["id1", "id2"], "note": "styling tip" }
-  ],
-  "gapItems": ["description of items to consider buying if any"]
-}`
-
     try {
-      const response = await client.messages.create({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
-        messages:   [{ role: 'user', content: prompt }],
-      })
-
-      const text = response.content[0]?.text ?? ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('No JSON')
-
-      const parsed = JSON.parse(jsonMatch[0])
+      const parsed  = await generateTrip({ destination, nights, closetItems, gender: state.gender })
       const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
       setResult({ ...parsed, itemMap })
     } catch (err) {

@@ -41,12 +41,7 @@ export default function CatalogSearchSheet({ onAdd, onClose }) {
         urls = await fetchPexels(`${query} fashion clothing outfit`, 12)
       }
       if (!urls.length) {
-        const hasPexels = !!import.meta.env.VITE_PEXELS_KEY
-        setError(
-          hasPexels
-            ? 'No results found. Try a different search term.'
-            : 'Search requires a Pexels API key (VITE_PEXELS_KEY). Add it to your .env file.'
-        )
+        setError('No results found. Try a different search term.')
         return
       }
       setResults(urls.map((url) => ({ url, selected: false })))

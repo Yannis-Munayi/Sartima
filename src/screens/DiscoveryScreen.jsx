@@ -20,6 +20,7 @@ export default function DiscoveryScreen() {
   const {
     currentProduct, remaining, onLike, onSkip, onPrev,
     styleScores, isQuizFinished, quizProgress, quizQueue, quizLikedItems,
+    seeded, reset,
   } = useDiscoveryQueue(gender, quizMode)
 
   const [showFilter,     setShowFilter]     = useState(false)
@@ -47,7 +48,7 @@ export default function DiscoveryScreen() {
     }
 
     dispatch({ type: 'SET_QUIZ_RESULTS', styleScores: allStyleScores, responses, itemQueue: quizQueue })
-  }, [isQuizFinished]) // eslint-disable-line
+  }, [isQuizFinished, dispatch, quizLikedItems, quizQueue, styleScores])
 
   function handleLike(product) {
     // Filter by active seasons if a filter is set
@@ -89,10 +90,19 @@ export default function DiscoveryScreen() {
     )
   }
 
-  if (!currentProduct) {
+  if (!currentProduct && !isQuizFinished) {
     return (
       <div className={styles.loading}>
-        <p>Loading more looks…</p>
+        {seeded ? (
+          <>
+            <p>No items to show right now.</p>
+            <button onClick={reset} style={{ marginTop: '0.75rem', padding: '0.5rem 1.25rem', borderRadius: '2rem', border: 'none', background: 'var(--accent)', color: '#fff', cursor: 'pointer' }}>
+              Try again
+            </button>
+          </>
+        ) : (
+          <p>Loading more looks…</p>
+        )}
       </div>
     )
   }

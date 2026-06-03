@@ -1,28 +1,26 @@
-const cache = new Map()
+import { httpsCallable } from 'firebase/functions'
+import { functions } from './firebase'
+import { logError } from './logger'
+import { createBoundedCache } from './cache'
+
+const cache    = createBoundedCache()
+const imagesFn = httpsCallable(functions, 'searchImages')
 
 export async function fetchPhotos(query, count = 1) {
-  const key = import.meta.env.VITE_PEXELS_KEY
-  if (!key) return []
-
-  const cacheKey = `${query}:${count}`
+  const cacheKey = `pexels:${query}:${count}`
   if (cache.has(cacheKey)) return cache.get(cacheKey)
 
   try {
-    const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
-      { headers: { Authorization: key } }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    const urls = (data.photos ?? []).map((p) => p.src.large)
+    const { data } = await imagesFn({ query, count, source: 'pexels' })
+    const urls = data.urls ?? []
     cache.set(cacheKey, urls)
     return urls
-  } catch {
+  } catch (err) {
+    logError('pexels', 'fetchPhotos failed', { query, count, error: err?.message })
     return []
   }
 }
 
-// Tries each query in order, returns the first that has results.
 export async function fetchPhotosWithFallback(queries, count = 1) {
   for (const query of queries) {
     const urls = await fetchPhotos(query, count)

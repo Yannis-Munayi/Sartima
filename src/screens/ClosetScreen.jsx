@@ -59,7 +59,7 @@ function ClosetItemCard({ item, onTap }) {
 
 function MyClosetTab() {
   const { user }                   = useAuth()
-  const { closetItems, closetLoading, closetByCategory, addToCloset } = useCloset()
+  const { closetItems, closetLoading, closetError, retryLoadCloset, closetByCategory, addToCloset } = useCloset()
   const [activeFilter, setFilter]  = useState('all')
   const [showUpload, setShowUpload]       = useState(false)
   const [showSearch, setShowSearch]       = useState(false)
@@ -80,6 +80,19 @@ function MyClosetTab() {
         <div className={styles.loadingDots}>
           <span /><span /><span />
         </div>
+      </div>
+    )
+  }
+
+  if (closetError) {
+    return (
+      <div className={styles.emptyState}>
+        <p className={styles.emptyEmoji}>⚠️</p>
+        <p className={styles.emptyTitle}>Couldn't load your closet</p>
+        <p className={styles.emptySub}>Check your connection and try again</p>
+        <button className={styles.fab} style={{ position: 'static', marginTop: '1rem' }} onClick={retryLoadCloset}>
+          Retry
+        </button>
       </div>
     )
   }

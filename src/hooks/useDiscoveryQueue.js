@@ -134,6 +134,7 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
   const [currentIndex,   setIndex]          = useState(0)
   const [styleScores,    setScores]         = useState({})
   const [quizLikedItems, setQuizLikedItems] = useState([])
+  const [seeded,         setSeeded]         = useState(false)
   const profileRef  = useRef(createEmptyProfile())
   const quizModeRef = useRef(quizMode)
   useEffect(() => { quizModeRef.current = quizMode }, [quizMode])
@@ -177,6 +178,7 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     setIndex(0)
     setScores({})
     setQuizLikedItems([])
+    setSeeded(true)
   }, [gender, quizMode])
 
   // Refill when buffer runs low — infinite mode only
@@ -253,6 +255,7 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     onPrev,
     styleScores,
     reset,
+    seeded,
     isQuizFinished,
     quizProgress: quizMode ? { current: Math.min(currentIndex, queue.length), total: queue.length } : null,
     quizQueue:    queue,
