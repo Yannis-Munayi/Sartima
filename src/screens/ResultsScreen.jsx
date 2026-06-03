@@ -3,6 +3,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import { useNavigation } from '../context/NavigationContext'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import styles from './screens.module.css'
 
@@ -122,13 +123,14 @@ function ShareResults({ primaryStyle, gender }) {
   )
 }
 
-export default function ResultsScreen({ setActiveTab }) {
+export default function ResultsScreen() {
   const { user }            = useAuth()
   const { state, dispatch } = useApp()
+  const navigate            = useNavigation()
   const { styleScores, responses, selectedSeasons, selectedCategories, itemQueue, gender } = state
 
   function openAesthetic(id) {
-    if (setActiveTab) setActiveTab(`aesthetic:${id}`)
+    navigate(`aesthetic:${id}`)
   }
   const savedRef = useRef(false)
 

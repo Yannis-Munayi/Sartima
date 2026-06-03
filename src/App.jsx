@@ -3,6 +3,7 @@ import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
 import { AppProvider, useApp, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { NavigationProvider } from './context/NavigationContext'
 import { ShopProvider } from './context/ShopContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { ExploreProvider, useExplore } from './context/ExploreContext'
@@ -36,7 +37,7 @@ const HIDE_TABS_ON = new Set([
   SCREENS.CATEGORIES,
 ])
 
-function QuizRouter({ setActiveTab }) {
+function QuizRouter() {
   const { state } = useApp()
   switch (state.screen) {
     case SCREENS.AUTH:        return <AuthScreen />
@@ -45,7 +46,7 @@ function QuizRouter({ setActiveTab }) {
     case SCREENS.SEASONS:     return <SeasonScreen />
     case SCREENS.CATEGORIES:  return <CategoryScreen />
     case SCREENS.DISCOVERY:   return <DiscoveryScreen />
-    case SCREENS.RESULTS:     return <ResultsScreen setActiveTab={setActiveTab} />
+    case SCREENS.RESULTS:     return <ResultsScreen />
     case SCREENS.PROFILE:     return <ProfileScreen />
     default:                  return <WelcomeScreen />
   }
@@ -209,17 +210,18 @@ function AppShell() {
   const guideForceSubTab = guideContextValue.currentStep?.subTab ?? null
 
   return (
+    <NavigationProvider navigate={handleTabChange}>
     <GuideProvider value={guideContextValue}>
     <div style={{ paddingBottom: showTabs ? 64 : 0 }}>
       {/* Quiz flow */}
-      {(!showTabs || activeTab === 'quiz') && <QuizRouter setActiveTab={handleTabChange} />}
+      {(!showTabs || activeTab === 'quiz') && <QuizRouter />}
 
       {/* Main tabs */}
       {showTabs && activeTab === 'home' && (
-        <HomeScreen setActiveTab={handleTabChange} startGuide={startGuide} />
+        <HomeScreen startGuide={startGuide} />
       )}
       {showTabs && activeTab === 'explore' && (
-        <ExploreScreen setActiveTab={handleTabChange} />
+        <ExploreScreen />
       )}
       {showTabs && activeTab === 'wardrobe-builder' && (
         <WardrobeBuildScreen onBack={() => handleTabChange('home')} />
@@ -227,7 +229,6 @@ function AppShell() {
       {showTabs && isAestheticTab && (
         <AestheticScreen
           aestheticId={aestheticId ?? openAesthetic}
-          setActiveTab={handleTabChange}
           forceSubTab={guideForceSubTab}
         />
       )}
@@ -235,7 +236,7 @@ function AppShell() {
         <MyStyleScreen forceSubTab={myStyleSubTab} />
       )}
       {showTabs && activeTab === 'daily' && (
-        <DailyLookScreen setActiveTab={handleTabChange} />
+        <DailyLookScreen />
       )}
       {showTabs && activeTab === 'profile'  && (
         <ProfileScreen
@@ -272,6 +273,7 @@ function AppShell() {
       <Toast />
     </div>
     </GuideProvider>
+    </NavigationProvider>
   )
 }
 

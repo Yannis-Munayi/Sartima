@@ -15,7 +15,7 @@ function requireAuth(request) {
 
 // ─── Vision Analysis ──────────────────────────────────────────────────────────
 
-export const anthropicVision = onCall({ timeoutSeconds: 90 }, async (request) => {
+export const anthropicVision = onCall({ timeoutSeconds: 90, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const { imageBase64, mimeType = 'image/jpeg' } = request.data
   if (!imageBase64) throw new HttpsError('invalid-argument', 'imageBase64 required')
@@ -63,7 +63,7 @@ Rules:
 
 // ─── Outfit Generation ────────────────────────────────────────────────────────
 
-export const anthropicOutfit = onCall({ timeoutSeconds: 60 }, async (request) => {
+export const anthropicOutfit = onCall({ timeoutSeconds: 60, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const { items, weather, occasion, dateStr, occupation } = request.data
   if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
@@ -107,7 +107,7 @@ Return ONLY valid JSON, no markdown:
 
 // ─── Trip Planning ────────────────────────────────────────────────────────────
 
-export const anthropicTrip = onCall({ timeoutSeconds: 120 }, async (request) => {
+export const anthropicTrip = onCall({ timeoutSeconds: 120, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const { destination, nights, items, gender } = request.data
   if (!destination) throw new HttpsError('invalid-argument', 'destination required')
@@ -154,7 +154,7 @@ Return ONLY valid JSON:
 
 // ─── Weather Proxy ────────────────────────────────────────────────────────────
 
-export const getWeather = onCall({ timeoutSeconds: 30 }, async (request) => {
+export const getWeather = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const { lat, lon } = request.data
   if (lat == null || lon == null) throw new HttpsError('invalid-argument', 'lat and lon required')
@@ -183,7 +183,7 @@ export const getWeather = onCall({ timeoutSeconds: 30 }, async (request) => {
 
 // ─── Image Search Proxy ───────────────────────────────────────────────────────
 
-export const searchImages = onCall({ timeoutSeconds: 30 }, async (request) => {
+export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const { query, count = 3, source = 'pexels' } = request.data
   if (!query) throw new HttpsError('invalid-argument', 'query required')

@@ -81,21 +81,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-core':   ['react', 'react-dom'],
-          'firebase':     ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage', 'firebase/functions'],
-          'data-styles':  [
-            './src/data/styles.js',
-            './src/data/categories.js',
-            './src/data/aestheticItems.js',
-            './src/data/looks.js',
-            './src/data/retailers.js',
-            './src/data/labels.js',
-          ],
-          'data-content': [
-            './src/data/aestheticDepth.js',
-            './src/data/itemGuide.js',
-          ],
+        manualChunks(id) {
+          const n = id.replace(/\\/g, '/')
+          if (n.includes('/node_modules/react/') || n.includes('/node_modules/react-dom/')) return 'react-core'
+          if (n.includes('/node_modules/firebase/')) return 'firebase'
+          if (/\/src\/data\/(styles|categories|aestheticItems|looks|retailers|labels)\.js$/.test(n)) return 'data-styles'
+          if (/\/src\/data\/(aestheticDepth|itemGuide)\.js$/.test(n)) return 'data-content'
         },
       },
     },

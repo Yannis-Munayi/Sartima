@@ -180,7 +180,7 @@ function AestheticCard({ style, onOpen, pinned, gender, groupLabel }) {
   )
 }
 
-export default function ExploreScreen({ setActiveTab }) {
+export default function ExploreScreen() {
   const { savedAesthetics, openAesthetic, openAestheticTab, isSaved } = useExplore()
   const { state } = useApp()
   const gender = state.gender
@@ -231,12 +231,7 @@ export default function ExploreScreen({ setActiveTab }) {
 
   // Show aesthetic detail if one is open
   if (openAesthetic) {
-    return (
-      <AestheticScreen
-        aestheticId={openAesthetic}
-        setActiveTab={setActiveTab}
-      />
-    )
+    return <AestheticScreen aestheticId={openAesthetic} />
   }
 
   return (

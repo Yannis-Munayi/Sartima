@@ -6,6 +6,7 @@ import { fetchPhotosWithFallback } from '../services/pexels'
 import { useApp, SCREENS } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { useExplore } from '../context/ExploreContext'
+import { useNavigation } from '../context/NavigationContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useShop } from '../context/ShopContext'
 import { useCloset } from '../context/ClosetContext'
@@ -77,7 +78,7 @@ function getDailyItems(pool, count = 10) {
 
 // ── Hero carousel ─────────────────────────────────────────────────────────────
 
-function HeroCarousel({ setActiveTab, gender }) {
+function HeroCarousel({ navigate, gender }) {
   const [photos, setPhotos]       = useState(new Array(HERO_SLIDE_IDS.length).fill(null))
   const [activeIdx, setActiveIdx] = useState(0)
   const [imgLoaded, setImgLoaded] = useState(false)
@@ -184,7 +185,7 @@ function HeroCarousel({ setActiveTab, gender }) {
         <p className={styles.heroTagline}>{style?.tagline}</p>
         <button
           className={styles.heroBtn}
-          onClick={() => setActiveTab(`aesthetic:${slideId}`)}
+          onClick={() => navigate(`aesthetic:${slideId}`)}
         >
           Explore look →
         </button>
@@ -293,7 +294,7 @@ function FreshLookCard({ item, gender }) {
   )
 }
 
-function FreshLooksSection({ gender, setActiveTab }) {
+function FreshLooksSection({ gender, navigate }) {
   const items = useMemo(() => getDailyItems(ALL_FRESH_ITEMS, 10), [])
 
   return (
@@ -310,7 +311,7 @@ function FreshLooksSection({ gender, setActiveTab }) {
           <FreshLookCard key={item.id} item={item} gender={gender} />
         ))}
       </div>
-      <button className={styles.freshDiscoverBtn} onClick={() => setActiveTab('quiz')}>
+      <button className={styles.freshDiscoverBtn} onClick={() => navigate('quiz')}>
         Swipe more looks →
       </button>
     </section>
@@ -319,7 +320,7 @@ function FreshLooksSection({ gender, setActiveTab }) {
 
 // ── Live Aesthetic Profile ────────────────────────────────────────────────────
 
-function AestheticProfile({ setActiveTab, gender }) {
+function AestheticProfile({ navigate, gender }) {
   const { state, dispatch } = useApp()
 
   const topStyles = useMemo(() => {
@@ -349,7 +350,7 @@ function AestheticProfile({ setActiveTab, gender }) {
           <div className={styles.aestheticBarGhost} style={{ width: '70%' }} />
           <div className={styles.aestheticBarGhost} style={{ width: '45%' }} />
         </div>
-        <button className={styles.quizCTABtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); setActiveTab('quiz') }}>
+        <button className={styles.quizCTABtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); navigate('quiz') }}>
           Take the style quiz to unlock your profile →
         </button>
       </section>
@@ -373,7 +374,7 @@ function AestheticProfile({ setActiveTab, gender }) {
             <button
               key={id}
               className={styles.aestheticBar}
-              onClick={() => setActiveTab(`aesthetic:${id}`)}
+              onClick={() => navigate(`aesthetic:${id}`)}
             >
               <div className={styles.aestheticBarLabel}>
                 <span className={styles.aestheticBarName}>{getStyleName(s, gender)}</span>
@@ -391,7 +392,7 @@ function AestheticProfile({ setActiveTab, gender }) {
       </div>
       <button
         className={styles.viewResultsBtn}
-        onClick={() => setActiveTab('profile:quiz-history')}
+        onClick={() => navigate('profile:quiz-history')}
       >
         Full breakdown →
       </button>
@@ -401,7 +402,7 @@ function AestheticProfile({ setActiveTab, gender }) {
 
 // ── Aesthetic mini-card (horizontal scroll) ───────────────────────────────────
 
-function AestheticMiniCard({ aestheticId, setActiveTab, gender }) {
+function AestheticMiniCard({ aestheticId, navigate, gender }) {
   const [photo, setPhoto]   = useState(null)
   const [loaded, setLoaded] = useState(false)
   const cardRef  = useRef(null)
@@ -442,7 +443,7 @@ function AestheticMiniCard({ aestheticId, setActiveTab, gender }) {
     <button
       ref={cardRef}
       className={styles.miniCard}
-      onClick={() => setActiveTab(`aesthetic:${aestheticId}`)}
+      onClick={() => navigate(`aesthetic:${aestheticId}`)}
     >
       <div className={styles.miniCardBg} style={{ background: style.gradient }}>
         {photo && (
@@ -462,21 +463,21 @@ function AestheticMiniCard({ aestheticId, setActiveTab, gender }) {
   )
 }
 
-function HorizontalScroll({ ids, setActiveTab, gender }) {
+function HorizontalScroll({ ids, navigate, gender }) {
   return (
     <div className={styles.hScroll}>
       {ids.filter((id) => STYLES[id]).map((id) => (
-        <AestheticMiniCard key={`${id}-${gender}`} aestheticId={id} setActiveTab={setActiveTab} gender={gender} />
+        <AestheticMiniCard key={`${id}-${gender}`} aestheticId={id} navigate={navigate} gender={gender} />
       ))}
     </div>
   )
 }
 
-function AestheticGrid({ ids, setActiveTab, gender }) {
+function AestheticGrid({ ids, navigate, gender }) {
   return (
     <div className={styles.aestheticGrid}>
       {ids.filter((id) => STYLES[id]).map((id) => (
-        <AestheticMiniCard key={`${id}-${gender}`} aestheticId={id} setActiveTab={setActiveTab} gender={gender} />
+        <AestheticMiniCard key={`${id}-${gender}`} aestheticId={id} navigate={navigate} gender={gender} />
       ))}
     </div>
   )
@@ -484,12 +485,12 @@ function AestheticGrid({ ids, setActiveTab, gender }) {
 
 // ── Wardrobe Builder CTA ──────────────────────────────────────────────────────
 
-function WardrobeBuilderCTA({ setActiveTab }) {
+function WardrobeBuilderCTA({ navigate }) {
   return (
     <section className={styles.section}>
       <button
         className={styles.wardrobeCTA}
-        onClick={() => setActiveTab('wardrobe-builder')}
+        onClick={() => navigate('wardrobe-builder')}
       >
         <div className={styles.wardrobeCTAIcon}>👗</div>
         <div className={styles.wardrobeCTAText}>
@@ -533,7 +534,7 @@ const CATEGORY_EMOJIS_HOME = {
   dresses: '👗', footwear: '👟', accessories: '👜',
 }
 
-function DailyOutfitPreview({ setActiveTab, gender }) {
+function DailyOutfitPreview({ navigate, gender }) {
   const { user }        = useAuth()
   const { closetItems } = useCloset()
   const [outfit, setOutfit]   = useState(null)
@@ -555,7 +556,7 @@ function DailyOutfitPreview({ setActiveTab, gender }) {
 
   if (!user || closetItems.length < 3) {
     return (
-      <div className={styles.closetCta} onClick={() => setActiveTab('daily')}>
+      <div className={styles.closetCta} onClick={() => navigate('daily')}>
         <span className={styles.closetCtaIcon}>🪣</span>
         <div>
           <p className={styles.closetCtaTitle}>Build your digital closet</p>
@@ -581,7 +582,7 @@ function DailyOutfitPreview({ setActiveTab, gender }) {
         </div>
         <button
           className={styles.dailySeeAll}
-          onClick={() => setActiveTab('daily')}
+          onClick={() => navigate('daily')}
         >
           See full look →
         </button>
@@ -606,7 +607,8 @@ function DailyOutfitPreview({ setActiveTab, gender }) {
   )
 }
 
-export default function HomeScreen({ setActiveTab, startGuide }) {
+export default function HomeScreen({ startGuide }) {
+  const navigate            = useNavigation()
   const { savedAesthetics } = useExplore()
   const { state }           = useApp()
   const gender              = state.gender
@@ -630,23 +632,23 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
   return (
     <div className={styles.screen}>
       {/* Hero */}
-      <HeroCarousel setActiveTab={setActiveTab} gender={gender} />
+      <HeroCarousel navigate={navigate} gender={gender} />
 
       <div className={styles.body}>
         {/* Daily AI outfit preview + closet CTA */}
-        <DailyOutfitPreview setActiveTab={setActiveTab} gender={gender} />
+        <DailyOutfitPreview navigate={navigate} gender={gender} />
 
         {/* Guide tour — show at top for new users */}
         {startGuide && isNewUser && <GuideLauncher onStart={startGuide} />}
 
         {/* Fresh Looks Today — daily rotating content, main daily pull */}
-        <FreshLooksSection gender={gender} setActiveTab={setActiveTab} />
+        <FreshLooksSection gender={gender} navigate={navigate} />
 
         {/* Wardrobe Builder CTA */}
-        <WardrobeBuilderCTA setActiveTab={setActiveTab} />
+        <WardrobeBuilderCTA navigate={navigate} />
 
         {/* Live Aesthetic Profile — only appears once user has swiped */}
-        <AestheticProfile setActiveTab={setActiveTab} gender={gender} />
+        <AestheticProfile navigate={navigate} gender={gender} />
 
         {/* Saved aesthetics */}
         {savedAesthetics.length > 0 && (
@@ -658,7 +660,7 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
                 <p className={styles.sectionSub}>{savedAesthetics.length} pinned from Explore</p>
               </div>
             </div>
-            <HorizontalScroll ids={savedAesthetics} setActiveTab={setActiveTab} gender={gender} />
+            <HorizontalScroll ids={savedAesthetics} navigate={navigate} gender={gender} />
           </section>
         )}
 
@@ -672,7 +674,7 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
                 <p className={styles.sectionSub}>{meta.sub}</p>
               </div>
             </div>
-            <HorizontalScroll ids={SEASON_PICKS[season]} setActiveTab={setActiveTab} gender={gender} />
+            <HorizontalScroll ids={SEASON_PICKS[season]} navigate={navigate} gender={gender} />
           </section>
         )}
 
@@ -692,13 +694,13 @@ export default function HomeScreen({ setActiveTab, startGuide }) {
               ↻
             </button>
           </div>
-          <AestheticGrid ids={trendingIds.slice(0, 6)} setActiveTab={setActiveTab} gender={gender} />
+          <AestheticGrid ids={trendingIds.slice(0, 6)} navigate={navigate} gender={gender} />
         </section>
 
         {/* Guide tour — bottom position for returning users */}
         {startGuide && !isNewUser && <GuideLauncher onStart={startGuide} />}
 
-        <button className={styles.exploreAllBtn} onClick={() => setActiveTab('explore')}>
+        <button className={styles.exploreAllBtn} onClick={() => navigate('explore')}>
           Browse all {Object.keys(STYLES).length} aesthetics →
         </button>
       </div>

@@ -11,6 +11,7 @@ import { PRODUCTS } from '../data/products'
 import { useExplore } from '../context/ExploreContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useApp } from '../context/AppContext'
+import { useNavigation } from '../context/NavigationContext'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
 import styles from './AestheticScreen.module.css'
@@ -797,7 +798,8 @@ const TABS = [
   { id: 'guide', label: 'Guide' },
 ]
 
-export default function AestheticScreen({ aestheticId, setActiveTab, forceSubTab }) {
+export default function AestheticScreen({ aestheticId, forceSubTab }) {
+  const navigate = useNavigation()
   const { closeAestheticTab, saveAesthetic, unsaveAesthetic, isSaved } = useExplore()
   const { state } = useApp()
   const gender = state.gender
@@ -836,7 +838,7 @@ export default function AestheticScreen({ aestheticId, setActiveTab, forceSubTab
 
   function handleBack() {
     closeAestheticTab()
-    setActiveTab('explore')
+    navigate('explore')
   }
 
   function handleSaveToggle() {
