@@ -43,7 +43,20 @@ export default function OnboardingFlow() {
   }
 
   function next() { setStep((s) => Math.min(s + 1, STEPS.length - 1)) }
-  function skip() { dispatch({ type: 'SET_ONBOARDING_COMPLETE' }) }
+
+  async function skip() {
+    try {
+      if (user) {
+        await setDoc(doc(db, 'users', user.uid), {
+          onboardingComplete: true,
+          updatedAt: serverTimestamp(),
+        }, { merge: true })
+      }
+    } catch {
+      // non-fatal
+    }
+    dispatch({ type: 'SET_ONBOARDING_COMPLETE' })
+  }
 
   return (
     <div className={styles.flow}>

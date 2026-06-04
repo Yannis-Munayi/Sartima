@@ -5,6 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth'
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
   async function signup(email, password, displayName) {
     const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password)
     await updateProfile(newUser, { displayName })
-    // Create user profile doc
+    await sendEmailVerification(newUser)
     await setDoc(doc(db, 'users', newUser.uid), {
       displayName,
       email,
@@ -38,7 +39,8 @@ export function AuthProvider({ children }) {
   }
 
   async function login(email, password) {
-    await signInWithEmailAndPassword(auth, email, password)
+    const { user: loggedUser } = await signInWithEmailAndPassword(auth, email, password)
+    return loggedUser
   }
 
   async function signInWithGoogle() {
