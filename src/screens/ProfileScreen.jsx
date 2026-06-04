@@ -227,8 +227,14 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
     }
   }
 
-  // Guard: no user — show sign-in prompt
+  // Guard: no user — show locked preview
   if (!user) {
+    const previewStyles = ['oldmoney', 'streetwear', 'darkacademia', 'minimalist', 'preppy']
+      .map((id) => STYLES[id]).filter(Boolean)
+    const previewQuizzes = [
+      { label: 'Old Money', meta: '2d ago · 18 liked', gradient: STYLES['oldmoney']?.gradient },
+      { label: 'Dark Academia', meta: '1wk ago · 12 liked', gradient: STYLES['darkacademia']?.gradient },
+    ]
     return (
       <div className={styles.screen}>
         <div className={styles.header}>
@@ -244,19 +250,61 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
             <GearIcon />
           </button>
         </div>
+
         <div className={styles.body}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '40px 0', textAlign: 'center' }}>
-            <p style={{ fontSize: 48 }}>👤</p>
-            <p className={styles.userName}>Not signed in</p>
-            <p className={styles.userEmail}>Sign in to save your style, track quiz history, and pin aesthetics.</p>
-            <button
-              className={styles.retakeBtn}
-              onClick={() => dispatch({ type: 'GO_TO_AUTH' })}
-            >
+          {/* Blurred aesthetics preview */}
+          <div className={styles.lockedSection}>
+            <h3 className={styles.sectionTitle}>Your top aesthetics</h3>
+            <div className={styles.lockedContent}>
+              <div className={styles.aestheticList} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none' }}>
+                {previewStyles.map((s, i) => (
+                  <div key={s.id} className={styles.aestheticChip} style={{ background: s.gradient }}>
+                    <span className={styles.aestheticRank}>#{i + 1}</span>
+                    <span>{s.icon} {s.name}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.lockedOverlay}>
+                <span className={styles.lockIcon}>🔒</span>
+                <p className={styles.lockLabel}>Take the quiz to reveal your aesthetics</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Blurred quiz history preview */}
+          <div className={styles.lockedSection}>
+            <h3 className={styles.sectionTitle}>Quiz history</h3>
+            <div className={styles.lockedContent}>
+              <div className={styles.quizList} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none' }}>
+                {previewQuizzes.map((q, i) => (
+                  <div key={i} className={styles.quizCard}>
+                    <div className={styles.quizCardHeader} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
+                      <div className={styles.quizSwatch} style={{ background: q.gradient }} />
+                      <div>
+                        <p className={styles.quizPrimary}>{q.label}</p>
+                        <p className={styles.quizMeta}>{q.meta}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.lockedOverlay}>
+                <span className={styles.lockIcon}>🔒</span>
+                <p className={styles.lockLabel}>Sign in to save your quiz history</p>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className={styles.signInCTA}>
+            <p className={styles.signInHeading}>Your style profile lives here</p>
+            <p className={styles.signInSub}>Sign in to unlock your aesthetic breakdown, track quiz history, and sync your closet across devices.</p>
+            <button className={styles.signInBtn} onClick={() => dispatch({ type: 'GO_TO_AUTH' })}>
               Sign in / Create account
             </button>
           </div>
         </div>
+
         {showSettings && (
           <SettingsSheet user={null} onClose={() => setShowSettings(false)} onLogout={null} />
         )}

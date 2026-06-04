@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import LockedOverlay from '../components/LockedOverlay'
 import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import WardrobeUpload from '../components/WardrobeUpload'
@@ -72,6 +73,31 @@ function MyClosetTab() {
 
   async function handleSave(item) {
     await addToCloset(item)
+  }
+
+  if (!user) {
+    const ghostItems = [
+      { id: 'g1', emoji: '👕', bg: 'linear-gradient(135deg,#2d3a4a,#1a2634)', name: 'White Oxford Shirt' },
+      { id: 'g2', emoji: '👖', bg: 'linear-gradient(135deg,#1a2a1a,#2a3a2a)', name: 'Slim Chinos' },
+      { id: 'g3', emoji: '🧥', bg: 'linear-gradient(135deg,#2a1a1a,#3a2a1a)', name: 'Wool Overcoat' },
+      { id: 'g4', emoji: '👟', bg: 'linear-gradient(135deg,#1a1a2a,#2a2a3a)', name: 'Leather Sneakers' },
+      { id: 'g5', emoji: '👗', bg: 'linear-gradient(135deg,#2a1a3a,#1a1a2a)', name: 'Midi Dress' },
+      { id: 'g6', emoji: '👜', bg: 'linear-gradient(135deg,#3a2a1a,#2a1a1a)', name: 'Tote Bag' },
+    ]
+    return (
+      <LockedOverlay message="Sign in to build your digital closet">
+        <div className={styles.grid} style={{ padding: '16px 0' }}>
+          {ghostItems.map((item) => (
+            <div key={item.id} className={styles.itemCard}>
+              <div className={styles.itemPhoto} style={{ background: item.bg }}>
+                <div className={styles.itemPlaceholder}>{item.emoji}</div>
+              </div>
+              <p className={styles.itemName}>{item.name}</p>
+            </div>
+          ))}
+        </div>
+      </LockedOverlay>
+    )
   }
 
   if (closetLoading) {

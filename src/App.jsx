@@ -151,7 +151,7 @@ function AppShell() {
   const answeredCount = Object.keys(state.responses).length
 
   const { guideStep, startGuide, guideNext, guideBack, guideSkip, guideContextValue } = useGuideController({
-    state, dispatch, openAestheticTab, setActiveTab, setMyStyleSubTab,
+    openAestheticTab, setActiveTab,
   })
 
   function handleTabChange(tabId) {

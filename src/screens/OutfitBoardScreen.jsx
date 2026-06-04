@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import { useWishlist } from '../context/WishlistContext'
 import { useApp } from '../context/AppContext'
-import AuthWidget from '../components/AuthWidget'
+import { useAuth } from '../context/AuthContext'
 import styles from './OutfitBoardScreen.module.css'
 
 function ItemThumb({ entry, selected, onClick, size = 'md' }) {
@@ -193,7 +193,14 @@ function BoardEditor({ board, pool, onSave, onCancel }) {
   )
 }
 
+const GHOST_BOARDS = [
+  { name: 'Weekend Casual', aesthetic: 'Streetwear', count: 4, colors: ['#2d3a2e','#4a3728','#1a1a2e','#2a2a2a'] },
+  { name: 'Office Ready',   aesthetic: 'Old Money',  count: 3, colors: ['#3d2b1f','#2c3e50','#1a2634'] },
+  { name: 'Date Night',     aesthetic: 'Dark Academia', count: 5, colors: ['#1a0a2e','#2d1b3d','#0d1b2a','#1a2634','#2a1a0a'] },
+]
+
 export default function OutfitBoardScreen() {
+  const { user } = useAuth()
   const { outfitBoards, saveOutfitBoard, deleteOutfitBoard, liked, wishlist } = useWishlist()
   const [editing, setEditing] = useState(null)
   const [creating, setCreating] = useState(false)
@@ -209,13 +216,48 @@ export default function OutfitBoardScreen() {
     setCreating(false)
   }
 
+  if (!user) {
+    return (
+      <div className={styles.screen}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Outfit Boards</h1>
+        </div>
+        <div className={styles.subheader}>
+          <p className={styles.subtitle}>Curate outfits from your liked &amp; saved pieces.</p>
+        </div>
+        <div className={styles.lockedWrap}>
+          <div className={styles.lockedContent}>
+            <div className={styles.boardList} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none' }}>
+              {GHOST_BOARDS.map((b) => (
+                <div key={b.name} className={styles.boardCard}>
+                  <div className={styles.boardHeader}>
+                    <div>
+                      <h3 className={styles.boardName}>{b.name}</h3>
+                      <p className={styles.boardMeta}>{b.count} pieces · {b.aesthetic}</p>
+                    </div>
+                  </div>
+                  <div className={styles.boardGrid}>
+                    {b.colors.map((c, i) => (
+                      <div key={i} className={styles.smallThumb} style={{ background: c }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.lockedOverlay}>
+              <span className={styles.lockIcon}>🔒</span>
+              <p className={styles.lockLabel}>Sign in to create outfit boards</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
         <h1 className={styles.title}>Outfit Boards</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <AuthWidget />
-        </div>
       </div>
 
       <div className={styles.subheader}>

@@ -155,7 +155,6 @@ Return ONLY valid JSON:
 // ─── Weather Proxy ────────────────────────────────────────────────────────────
 
 export const getWeather = onCall({ timeoutSeconds: 30 }, async (request) => {
-  requireAuth(request)
   const { lat, lon } = request.data
   if (lat == null || lon == null) throw new HttpsError('invalid-argument', 'lat and lon required')
 
@@ -184,7 +183,6 @@ export const getWeather = onCall({ timeoutSeconds: 30 }, async (request) => {
 // ─── Image Search Proxy ───────────────────────────────────────────────────────
 
 export const searchImages = onCall({ timeoutSeconds: 30 }, async (request) => {
-  requireAuth(request)
   const { query, count = 3, source = 'pexels' } = request.data
   if (!query) throw new HttpsError('invalid-argument', 'query required')
 

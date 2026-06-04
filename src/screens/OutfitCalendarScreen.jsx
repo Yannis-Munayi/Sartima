@@ -7,6 +7,7 @@ import {
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
+import LockedOverlay from '../components/LockedOverlay'
 import styles from './OutfitCalendarScreen.module.css'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -186,6 +187,42 @@ export default function OutfitCalendarScreen() {
   const [logEntries, setLogEntries] = useState([])
 
   const cells = buildCalendar(year, month)
+
+  if (!user) {
+    const ghostCells = buildCalendar(year, month)
+    const ghostPlanned = new Set([3, 7, 12, 15, 19, 22])
+    return (
+      <div className={styles.screen}>
+        <div className={styles.monthNav}>
+          <button className={styles.navBtn}>‹</button>
+          <h2 className={styles.monthLabel}>{MONTHS[month]} {year}</h2>
+          <button className={styles.navBtn}>›</button>
+        </div>
+        <div className={styles.weekRow}>
+          {WEEKDAYS.map((d) => <span key={d} className={styles.weekDay}>{d}</span>)}
+        </div>
+        <LockedOverlay message="Sign in to plan your outfits">
+          <div className={styles.calGrid}>
+            {ghostCells.map((day, idx) => {
+              if (!day) return <div key={`e-${idx}`} className={styles.emptyCell} />
+              const planned = ghostPlanned.has(day)
+              return (
+                <div key={day} className={`${styles.dayCell} ${planned ? styles.dayCellPlanned : ''}`}>
+                  <span className={styles.dayNum}>{day}</span>
+                  {planned && (
+                    <div className={styles.dayThumbs}>
+                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#2d3a4a,#1a2634)' }} />
+                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#1a2a1a,#2a3a2a)' }} />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </LockedOverlay>
+      </div>
+    )
+  }
 
   // Load outfit log once on mount
   useEffect(() => {
