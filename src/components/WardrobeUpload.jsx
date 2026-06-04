@@ -2,6 +2,12 @@ import { useRef, useState } from 'react'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../services/firebase'
 import { analyzeOutfit } from '../services/claudeVision'
+import CareSymbolPicker from './CareSymbolPicker'
+import {
+  WASH_FREQUENCY_DEFAULTS,
+  STORAGE_DEFAULTS,
+  inferColorGroup,
+} from '../data/careSymbols'
 import styles from './WardrobeUpload.module.css'
 
 const CATEGORIES = [
@@ -30,15 +36,61 @@ async function uploadImage(file, uid, folder) {
   return getDownloadURL(storageRef)
 }
 
+async function uploadBlob(blob, uid, filename) {
+  const path       = `users/${uid}/wardrobe/crops/${filename}`
+  const storageRef = ref(storage, path)
+  await uploadBytes(storageRef, blob)
+  return getDownloadURL(storageRef)
+}
+
+// Crop a bounding-box region from an image File, with padding around the box.
+// bbox values are 0–100 integer percentages of image dimensions.
+function cropItemFromFile(file, bbox, padding = 0.18) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const W = img.naturalWidth
+      const H = img.naturalHeight
+
+      const bx = (bbox.x / 100) * W
+      const by = (bbox.y / 100) * H
+      const bw = (bbox.w / 100) * W
+      const bh = (bbox.h / 100) * H
+
+      const px = bw * padding
+      const py = bh * padding
+      const cx = Math.max(0, bx - px)
+      const cy = Math.max(0, by - py)
+      const cw = Math.min(W - cx, bw + px * 2)
+      const ch = Math.min(H - cy, bh + py * 2)
+
+      const canvas = document.createElement('canvas')
+      canvas.width  = Math.round(cw)
+      canvas.height = Math.round(ch)
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, cx, cy, cw, ch, 0, 0, cw, ch)
+
+      URL.revokeObjectURL(url)
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('crop failed')), 'image/jpeg', 0.88)
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image load failed')) }
+    img.src = url
+  })
+}
+
 // ── Single piece upload ──────────────────────────────────────────────────────
 function AddPiecePane({ uid, onSave, onClose }) {
   const fileRef = useRef(null)
-  const [preview,  setPreview]  = useState(null)
-  const [file,     setFile]     = useState(null)
-  const [name,     setName]     = useState('')
-  const [category, setCategory] = useState('tops')
-  const [saving,   setSaving]   = useState(false)
-  const [error,    setError]    = useState(null)
+  const [preview,      setPreview]      = useState(null)
+  const [file,         setFile]         = useState(null)
+  const [name,         setName]         = useState('')
+  const [category,     setCategory]     = useState('tops')
+  const [showCare,     setShowCare]     = useState(false)
+  const [material,     setMaterial]     = useState('')
+  const [careSymbols,  setCareSymbols]  = useState([])
+  const [saving,       setSaving]       = useState(false)
+  const [error,        setError]        = useState(null)
 
   function handleFile(e) {
     const f = e.target.files?.[0]
@@ -54,13 +106,18 @@ function AddPiecePane({ uid, onSave, onClose }) {
     try {
       const imageUrl = file ? await uploadImage(file, uid, 'pieces') : null
       await onSave({
-        id:         `piece_${Date.now()}`,
-        type:       'uploaded',
-        name:       name.trim(),
+        id:           `piece_${Date.now()}`,
+        type:         'uploaded',
+        name:         name.trim(),
         category,
         imageUrl,
-        aiDetected: false,
-        uploadedAt: new Date().toISOString(),
+        aiDetected:   false,
+        uploadedAt:   new Date().toISOString(),
+        // care fields (only saved if the user filled them in)
+        ...(material.trim()       && { material: material.trim() }),
+        ...(careSymbols.length    && { careSymbols }),
+        washFrequency: WASH_FREQUENCY_DEFAULTS[category] ?? 'every-2-3-wears',
+        storageMethod: STORAGE_DEFAULTS[category] ?? 'fold',
       })
       onClose()
     } catch (err) {
@@ -109,6 +166,35 @@ function AddPiecePane({ uid, onSave, onClose }) {
           </button>
         ))}
       </div>
+
+      {/* Care label — optional, collapsible */}
+      <button
+        type="button"
+        className={styles.careToggle}
+        onClick={() => setShowCare((v) => !v)}
+      >
+        <span>🏷 Add care label</span>
+        <span className={styles.careToggleChevron}>{showCare ? '▲' : '▼'}</span>
+      </button>
+
+      {showCare && (
+        <div className={styles.careSection}>
+          <p className={styles.careSectionHint}>
+            Check the tag on your piece and fill in what you see — helps you track washing and storage.
+          </p>
+
+          <label className={styles.careLabel}>Material</label>
+          <input
+            className={styles.careInput}
+            placeholder="e.g. 100% cotton, 60% polyester / 40% cotton"
+            value={material}
+            onChange={(e) => setMaterial(e.target.value)}
+          />
+
+          <label className={styles.careLabel}>Care symbols on the tag</label>
+          <CareSymbolPicker selected={careSymbols} onChange={setCareSymbols} />
+        </div>
+      )}
 
       {error && <p className={styles.error}>{error}</p>}
 
@@ -165,11 +251,27 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
     if (!toSave.length) { setError('Select at least one item to save.'); return }
     setSaving(true)
     try {
-      const imageUrl = await uploadImage(file, uid, 'outfits')
-      const outfitId = `outfit_${Date.now()}`
+      // Upload the full outfit photo once as a fallback reference
+      const outfitImageUrl = await uploadImage(file, uid, 'outfits')
+      const outfitId       = `outfit_${Date.now()}`
+
       for (const item of toSave) {
+        let imageUrl = outfitImageUrl
+
+        // Crop the specific piece from the outfit photo when bbox is available
+        if (item.bbox) {
+          try {
+            const croppedBlob = await cropItemFromFile(file, item.bbox)
+            imageUrl = await uploadBlob(croppedBlob, uid, `${item.id}_${Date.now()}.jpg`)
+          } catch {
+            // Fall back to full outfit photo if crop fails
+            imageUrl = outfitImageUrl
+          }
+        }
+
+        const { bbox: _bbox, ...itemData } = item
         await onSave({
-          ...item,
+          ...itemData,
           type:       'uploaded',
           imageUrl,
           aiDetected: true,
