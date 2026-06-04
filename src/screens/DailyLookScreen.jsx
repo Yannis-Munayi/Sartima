@@ -13,6 +13,7 @@ import WeatherWidget from '../components/WeatherWidget'
 import OutfitCalendarScreen from './OutfitCalendarScreen'
 import TripPlannerScreen from './TripPlannerScreen'
 import ClosetScreen from './ClosetScreen'
+import LaundryTab from './LaundryTab'
 import styles from './DailyLookScreen.module.css'
 
 // Normalize a liked quiz/product item to the shape generateOutfit expects
@@ -683,6 +684,7 @@ const TABS = [
   { id: 'outfits',  label: 'My Outfits'      },
   { id: 'calendar', label: 'Calendar'        },
   { id: 'trip',     label: 'Trip'            },
+  { id: 'laundry',  label: 'Laundry'         },
 ]
 
 export default function DailyLookScreen() {
@@ -708,6 +710,7 @@ export default function DailyLookScreen() {
       {activeTab === 'outfits'  && <MyOutfitsTab />}
       {activeTab === 'calendar' && <OutfitCalendarScreen />}
       {activeTab === 'trip'     && <TripPlannerScreen />}
+      {activeTab === 'laundry'  && <LaundryTab />}
     </div>
   )
 }

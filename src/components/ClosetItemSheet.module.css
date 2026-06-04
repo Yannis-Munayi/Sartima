@@ -282,3 +282,99 @@
 }
 
 .saveBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Care summary (view mode) ── */
+.careSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+}
+
+.carePill {
+  padding: 4px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.carePillWarn {
+  border-color: rgba(232, 115, 90, 0.5);
+  color: #E8735A;
+  background: rgba(232, 115, 90, 0.08);
+}
+
+.symbolMini {
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* ── Care & Longevity section divider (edit mode) ── */
+.sectionDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 4px;
+}
+
+.sectionDivider::before,
+.sectionDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.sectionDivider span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.labelHint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0 0 10px;
+}
+
+/* ── Last washed date row ── */
+.dateRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dateRow .input {
+  flex: 1;
+}
+
+.todayBtn {
+  padding: 11px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.todayBtn:hover {
+  border-color: #E8735A;
+  color: #E8735A;
+}
