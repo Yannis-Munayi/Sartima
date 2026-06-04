@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useCloset } from '../context/ClosetContext'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import { generateTrip } from '../services/tripAI'
+import LockedOverlay from '../components/LockedOverlay'
 import styles from './TripPlannerScreen.module.css'
 
 const CATEGORY_EMOJIS = {
@@ -10,6 +12,7 @@ const CATEGORY_EMOJIS = {
 }
 
 export default function TripPlannerScreen() {
+  const { user }        = useAuth()
   const { closetItems } = useCloset()
   const { state }       = useApp()
 
@@ -36,6 +39,43 @@ export default function TripPlannerScreen() {
     } finally {
       setGenerating(false)
     }
+  }
+
+  if (!user) {
+    const ghostPacking = ['White Oxford Shirt', 'Slim Chinos', 'Wool Overcoat', 'Leather Sneakers', 'Tote Bag']
+    const ghostDays = ['Day 1 — Arrival', 'Day 2 — Exploring', 'Day 3 — Departure']
+    return (
+      <div className={styles.screen}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Trip Planner</h1>
+          <p className={styles.sub}>Pack smart. AI selects from your closet.</p>
+        </div>
+        <LockedOverlay message="Sign in to generate AI-powered trip packing lists">
+          <div className={styles.results} style={{ pointerEvents: 'none' }}>
+            <h2 className={styles.resultTitle}>Paris, France · 3 nights</h2>
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>🧳 Packing List</h3>
+              <div className={styles.packingList}>
+                {ghostPacking.map((name) => (
+                  <div key={name} className={styles.packingItem}>
+                    <div className={styles.packThumb}><span>👕</span></div>
+                    <div className={styles.packInfo}><p className={styles.packName}>{name}</p></div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>📅 Daily Outfits</h3>
+              {ghostDays.map((label) => (
+                <div key={label} className={styles.dayPlan}>
+                  <p className={styles.dayLabel}>{label}</p>
+                </div>
+              ))}
+            </section>
+          </div>
+        </LockedOverlay>
+      </div>
+    )
   }
 
   return (

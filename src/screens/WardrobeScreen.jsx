@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useWishlist } from '../context/WishlistContext'
+import { useAuth } from '../context/AuthContext'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
-import AuthWidget from '../components/AuthWidget'
 import styles from './WardrobeScreen.module.css'
 
 // Ordered category buckets for grouping liked items
@@ -98,11 +98,51 @@ function LikedItemCard({ item, onSelect }) {
   )
 }
 
+const GHOST_ITEMS = [
+  { id: 'g1', name: 'Slim Fit Chinos',      gradient: 'linear-gradient(135deg,#3d2b1f,#2c3e50)', emoji: '👖' },
+  { id: 'g2', name: 'Oxford Button-Down',   gradient: 'linear-gradient(135deg,#1a2634,#2d3a4a)', emoji: '👕' },
+  { id: 'g3', name: 'White Leather Sneakers', gradient: 'linear-gradient(135deg,#2a2a3a,#1a1a2a)', emoji: '👟' },
+  { id: 'g4', name: 'Wool Overcoat',        gradient: 'linear-gradient(135deg,#1a0a2e,#2d1b3d)', emoji: '🧥' },
+  { id: 'g5', name: 'Satin Midi Skirt',     gradient: 'linear-gradient(135deg,#2e1a3d,#1a2e3d)', emoji: '👗' },
+  { id: 'g6', name: 'Crossbody Bag',        gradient: 'linear-gradient(135deg,#3d1a1a,#2d2a1a)', emoji: '👜' },
+]
+
 export default function WardrobeScreen() {
+  const { user } = useAuth()
   const { liked, removeFromLiked }      = useWishlist()
 
   const [activeItem, setActiveItem] = useState(null)
   const [shopItem,   setShopItem]   = useState(null)
+
+  if (!user) {
+    return (
+      <div className={styles.screen}>
+        <div className={styles.header}>
+          <div className={styles.headerTop}>
+            <h1 className={styles.title}>Liked</h1>
+          </div>
+        </div>
+        <div className={styles.lockedWrap}>
+          <div className={styles.lockedContent}>
+            <div className={styles.grid} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', padding: '16px 0' }}>
+              {GHOST_ITEMS.map((item) => (
+                <div key={item.id} className={styles.item}>
+                  <div className={styles.itemPhoto} style={{ background: item.gradient }}>
+                    <span className={styles.itemEmoji}>{item.emoji}</span>
+                  </div>
+                  <p className={styles.itemName}>{item.name}</p>
+                </div>
+              ))}
+            </div>
+            <div className={styles.lockedOverlay}>
+              <span className={styles.lockIcon}>🔒</span>
+              <p className={styles.lockLabel}>Sign in to save your liked items</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Group liked items by bucket (parentType for products, categoryId for old items)
   const grouped = useMemo(() => {
@@ -143,7 +183,6 @@ export default function WardrobeScreen() {
               </p>
             )}
           </div>
-          <AuthWidget />
         </div>
       </div>
 

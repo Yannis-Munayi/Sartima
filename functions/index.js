@@ -54,16 +54,22 @@ Return a JSON object with this exact shape — no markdown, no explanation, just
       "name": "short descriptive name (3-5 words max)",
       "category": "one of: tops | bottoms | outerwear | dresses | footwear | accessories",
       "color": "primary color (one word)",
-      "description": "one sentence describing the piece"
+      "description": "one sentence describing the piece",
+      "bbox": { "x": 10, "y": 20, "w": 30, "h": 40 }
     }
   ]
 }
+
+bbox is the bounding box of that specific item within the image, as integer percentages (0–100) of the image dimensions:
+- x, y = top-left corner (x is from left edge, y is from top edge)
+- w, h = width and height of the box
 
 Rules:
 - Include every visible item (shirt, pants, shoes, bag, hat, jewellery, etc.)
 - Use lowercase for category
 - If the full outfit is a dress or jumpsuit, list it as a single "dresses" item
-- Maximum 10 items`,
+- Maximum 10 items
+- Every item MUST include a bbox — estimate as accurately as possible`,
         },
       ],
     }],

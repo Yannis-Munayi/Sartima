@@ -1,0 +1,334 @@
+.root {
+  padding: 16px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px;
+  font-family: 'Playfair Display', serif;
+}
+
+.emptySection {
+  padding: 16px;
+  background: var(--bg-elevated, #1a1a1a);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--text-faint);
+  line-height: 1.5;
+}
+
+.emptySection p { margin: 0; }
+
+/* ── Due for wash list ── */
+.washList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-elevated, #1a1a1a);
+}
+
+.washRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.washRow:last-child {
+  border-bottom: none;
+}
+
+.thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbEmoji {
+  font-size: 22px;
+}
+
+.washInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.washName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.washCat {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.statusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusOverdue {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+}
+
+.statusDueSoon {
+  background: rgba(232, 115, 90, 0.15);
+  color: #E8735A;
+}
+
+.statusClean {
+  background: rgba(100, 200, 130, 0.12);
+  color: #64c882;
+}
+
+.statusUnknown {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-faint);
+}
+
+.markWashedBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.markWashedBtn:hover {
+  background: rgba(100, 200, 130, 0.15);
+  color: #64c882;
+  border-color: #64c882;
+}
+
+/* ── Wash together ── */
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupCard {
+  background: var(--bg-elevated, #1a1a1a);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.groupEmoji {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.groupMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.groupHint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.groupCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-faint);
+  background: rgba(255,255,255,0.06);
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.conflictWarning {
+  font-size: 12px;
+  color: #E8735A;
+  background: rgba(232, 115, 90, 0.1);
+  border: 1px solid rgba(232, 115, 90, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.thumbStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.moreChip {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: none;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.moreChip:hover {
+  border-color: #E8735A;
+  color: #E8735A;
+}
+
+/* ── Laundry day card ── */
+.laundryCard {
+  background: var(--bg-elevated, #1a1a1a);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.laundryCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+  font-family: 'Playfair Display', serif;
+}
+
+.laundryDueNote {
+  font-size: 13px;
+  color: #E8735A;
+  margin: 0 0 14px;
+  font-weight: 600;
+}
+
+.datePickRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.dateInput {
+  flex: 1;
+  padding: 11px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dateInput:focus { border-color: #E8735A; }
+
+.planBtn {
+  padding: 11px 18px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.planBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.plannedMsg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plannedCheck {
+  font-size: 24px;
+  color: #64c882;
+}
+
+.plannedMsg p {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.changeDateBtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.changeDateBtn:hover {
+  border-color: #E8735A;
+  color: #E8735A;
+}

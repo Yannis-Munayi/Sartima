@@ -1,9 +1,17 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { prettifyImage } from '../services/prettify'
+import CareSymbolPicker from './CareSymbolPicker'
+import {
+  CARE_SYMBOLS,
+  WASH_FREQUENCIES,
+  WASH_FREQUENCY_DEFAULTS,
+  STORAGE_DEFAULTS,
+  inferColorGroup,
+} from '../data/careSymbols'
 import styles from './ClosetItemSheet.module.css'
 
 const CATEGORIES = [
@@ -18,8 +26,30 @@ const CATEGORIES = [
 const OCCASIONS = ['casual', 'work', 'date', 'gym', 'errand', 'formal', 'outdoor']
 const SEASONS   = ['spring', 'summer', 'fall', 'winter']
 
+const STORAGE_OPTIONS = [
+  { id: 'hang',         label: 'Hang' },
+  { id: 'fold',         label: 'Fold' },
+  { id: 'hang-or-fold', label: 'Hang or Fold' },
+]
+
+function getDaysSince(isoStr) {
+  if (!isoStr) return null
+  const diff = Date.now() - new Date(isoStr).getTime()
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
+}
+
+function getWashStatusLabel(item) {
+  const freq = WASH_FREQUENCIES.find((f) => f.id === item.washFrequency)
+  const days = getDaysSince(item.lastWashedAt)
+  if (!item.lastWashedAt) return null
+  if (!freq || freq.thresholdDays === null) return `Washed ${days}d ago`
+  if (days >= freq.thresholdDays) return 'Due for wash'
+  if (days === freq.thresholdDays - 1) return 'Due soon'
+  return `Washed ${days === 0 ? 'today' : `${days}d ago`}`
+}
+
 export default function ClosetItemSheet({ item, onClose, onUpdate }) {
-  const { user }                         = useAuth()
+  const { user }                               = useAuth()
   const { updateClosetItem, removeFromCloset } = useCloset()
 
   const [mode, setMode]             = useState('view') // 'view' | 'edit'
@@ -29,11 +59,33 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
   const [color, setColor]           = useState(item.color ?? '')
   const [occasions, setOccasions]   = useState(item.occasions ?? [])
   const [seasons, setSeasons]       = useState(item.seasons ?? [])
+
+  // Care fields
+  const [material,      setMaterial]      = useState(item.material ?? '')
+  const [careSymbols,   setCareSymbols]   = useState(item.careSymbols ?? [])
+  const [washFrequency, setWashFrequency] = useState(
+    item.washFrequency ?? WASH_FREQUENCY_DEFAULTS[item.category] ?? 'every-2-3-wears'
+  )
+  const [storageMethod, setStorageMethod] = useState(
+    item.storageMethod ?? STORAGE_DEFAULTS[item.category] ?? 'fold'
+  )
+  const [lastWashedAt, setLastWashedAt]   = useState(
+    item.lastWashedAt ? item.lastWashedAt.slice(0, 10) : ''
+  )
+
   const [saving, setSaving]         = useState(false)
   const [prettifying, setPrettifying] = useState(false)
   const [prettifyProgress, setProgress] = useState(0)
   const [error, setError]           = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Re-default wash + storage when category changes (only if user hasn't saved their own preference)
+  const hasOwnFreq    = useRef(!!item.washFrequency)
+  const hasOwnStorage = useRef(!!item.storageMethod)
+  useEffect(() => {
+    if (!hasOwnFreq.current)    setWashFrequency(WASH_FREQUENCY_DEFAULTS[category] ?? 'every-2-3-wears')
+    if (!hasOwnStorage.current) setStorageMethod(STORAGE_DEFAULTS[category] ?? 'fold')
+  }, [category])
 
   const photoUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
 
@@ -50,7 +102,20 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
     setSaving(true)
     setError(null)
     try {
-      await updateClosetItem(item.id, { name: name.trim(), brand: brand.trim(), category, color: color.trim(), occasions, seasons })
+      await updateClosetItem(item.id, {
+        name:         name.trim(),
+        brand:        brand.trim(),
+        category,
+        color:        color.trim(),
+        occasions,
+        seasons,
+        material:     material.trim() || undefined,
+        careSymbols,
+        washFrequency,
+        storageMethod,
+        lastWashedAt: lastWashedAt ? new Date(lastWashedAt).toISOString() : undefined,
+        colorGroup:   item.colorGroup ?? inferColorGroup(color.trim()) ?? undefined,
+      })
       onUpdate()
     } catch {
       setError('Save failed. Please try again.')
@@ -72,7 +137,6 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
       const resultBlob = await prettifyImage(src, (key, current, total) => {
         setProgress(total > 0 ? Math.round((current / total) * 100) : 0)
       })
-      // Upload prettified blob to Firebase Storage
       const path       = `users/${user.uid}/wardrobe/prettified/${item.id}.png`
       const storageRef = ref(storage, path)
       await uploadBytes(storageRef, resultBlob)
@@ -90,6 +154,9 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
     await removeFromCloset(item.id)
     onClose()
   }
+
+  const washStatusLabel = getWashStatusLabel(item)
+  const hasCareData     = item.material || item.careSymbols?.length || item.lastWashedAt || item.storageMethod
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -119,6 +186,33 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                 {CATEGORIES.find((c) => c.id === item.category)?.emoji} {item.category}
                 {item.color ? ` · ${item.color}` : ''}
               </p>
+
+              {/* Care summary */}
+              {hasCareData && (
+                <div className={styles.careSummary}>
+                  {item.material && (
+                    <span className={styles.carePill}>{item.material}</span>
+                  )}
+                  {item.storageMethod && (
+                    <span className={styles.carePill}>
+                      {item.storageMethod === 'hang' ? '🪝 Hang' : item.storageMethod === 'fold' ? '📦 Fold' : '🪝 Hang or fold'}
+                    </span>
+                  )}
+                  {item.careSymbols?.slice(0, 4).map((id) => {
+                    const sym = CARE_SYMBOLS.find((s) => s.id === id)
+                    return sym ? (
+                      <span key={id} className={styles.symbolMini} title={sym.label}>
+                        {sym.abbreviation}
+                      </span>
+                    ) : null
+                  })}
+                  {washStatusLabel && (
+                    <span className={`${styles.carePill} ${washStatusLabel === 'Due for wash' ? styles.carePillWarn : ''}`}>
+                      {washStatusLabel === 'Due for wash' ? '⚠ ' : ''}{washStatusLabel}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className={styles.actions}>
@@ -177,6 +271,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                 {CATEGORIES.map((c) => (
                   <button
                     key={c.id}
+                    type="button"
                     className={`${styles.chip} ${category === c.id ? styles.chipActive : ''}`}
                     onClick={() => setCategory(c.id)}
                   >
@@ -190,6 +285,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                 {OCCASIONS.map((occ) => (
                   <button
                     key={occ}
+                    type="button"
                     className={`${styles.chip} ${occasions.includes(occ) ? styles.chipActive : ''}`}
                     onClick={() => toggleOccasion(occ)}
                   >
@@ -203,12 +299,76 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                 {SEASONS.map((s) => (
                   <button
                     key={s}
+                    type="button"
                     className={`${styles.chip} ${seasons.includes(s) ? styles.chipActive : ''}`}
                     onClick={() => toggleSeason(s)}
                   >
                     {s}
                   </button>
                 ))}
+              </div>
+
+              {/* ── Care & Longevity ── */}
+              <div className={styles.sectionDivider}>
+                <span>Care &amp; Longevity</span>
+              </div>
+
+              <label className={styles.label}>Material</label>
+              <input
+                className={styles.input}
+                placeholder="e.g. 100% cotton, 60% polyester / 40% cotton"
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+              />
+
+              <label className={styles.label}>Care Symbols</label>
+              <p className={styles.labelHint}>Select the symbols from your garment's care label.</p>
+              <CareSymbolPicker selected={careSymbols} onChange={setCareSymbols} />
+
+              <label className={styles.label} style={{ marginTop: 16 }}>How often to wash</label>
+              <div className={styles.chipRow}>
+                {WASH_FREQUENCIES.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`${styles.chip} ${washFrequency === f.id ? styles.chipActive : ''}`}
+                    onClick={() => { setWashFrequency(f.id); hasOwnFreq.current = true }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className={styles.label}>Store by</label>
+              <div className={styles.chipRow}>
+                {STORAGE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`${styles.chip} ${storageMethod === opt.id ? styles.chipActive : ''}`}
+                    onClick={() => { setStorageMethod(opt.id); hasOwnStorage.current = true }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className={styles.label}>Last washed</label>
+              <div className={styles.dateRow}>
+                <input
+                  type="date"
+                  className={styles.input}
+                  value={lastWashedAt}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setLastWashedAt(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.todayBtn}
+                  onClick={() => setLastWashedAt(new Date().toISOString().slice(0, 10))}
+                >
+                  Today
+                </button>
               </div>
 
               {error && <p className={styles.error}>{error}</p>}

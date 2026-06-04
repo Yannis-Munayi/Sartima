@@ -4,6 +4,37 @@
   padding: 0 0 100px;
 }
 
+/* ── Locked preview ── */
+.lockedWrap {
+  padding: 0 20px;
+}
+
+.lockedContent {
+  position: relative;
+}
+
+.lockedOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 14px;
+}
+
+.lockIcon { font-size: 24px; line-height: 1; }
+
+.lockLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  text-align: center;
+}
+
 /* ── Header ── */
 .header {
   padding: 56px 20px 16px;

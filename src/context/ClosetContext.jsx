@@ -72,12 +72,13 @@ export function ClosetProvider({ children }) {
 
   const addToCloset = useCallback((item) => {
     const newItem = {
-      type:       'uploaded',
-      aiDetected: false,
-      favorite:   false,
-      tags:       [],
-      seasons:    [],
-      occasions:  [],
+      type:        'uploaded',
+      aiDetected:  false,
+      favorite:    false,
+      tags:        [],
+      seasons:     [],
+      occasions:   [],
+      careSymbols: [],
       ...item,
       id:      item.id ?? makeId(),
       addedAt: item.addedAt ?? new Date().toISOString(),

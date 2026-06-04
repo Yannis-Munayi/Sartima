@@ -28,5 +28,6 @@ export async function analyzeOutfit(imageBase64, mimeType = 'image/jpeg') {
     category:    item.category in CATEGORY_MAP ? item.category : inferCategory(item.name, item.description),
     color:       item.color,
     description: item.description,
+    bbox:        item.bbox ?? null,
   }))
 }

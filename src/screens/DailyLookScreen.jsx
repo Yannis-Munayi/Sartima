@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import LockedOverlay from '../components/LockedOverlay'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +13,7 @@ import WeatherWidget from '../components/WeatherWidget'
 import OutfitCalendarScreen from './OutfitCalendarScreen'
 import TripPlannerScreen from './TripPlannerScreen'
 import ClosetScreen from './ClosetScreen'
+import LaundryTab from './LaundryTab'
 import styles from './DailyLookScreen.module.css'
 
 // Normalize a liked quiz/product item to the shape generateOutfit expects
@@ -210,11 +212,29 @@ function TodayTab() {
 
   // Not signed in
   if (!user) {
+    const ghostItems = [
+      { id: 'g1', emoji: '👕', name: 'White Oxford', category: 'tops',    bg: 'linear-gradient(135deg,#2d3a4a,#1a2634)' },
+      { id: 'g2', emoji: '👖', name: 'Slim Chinos',  category: 'bottoms', bg: 'linear-gradient(135deg,#1a2a1a,#2a3a2a)' },
+      { id: 'g3', emoji: '👟', name: 'Leather Sneakers', category: 'footwear', bg: 'linear-gradient(135deg,#1a1a2a,#2a2a3a)' },
+    ]
     return (
-      <div className={styles.emptyState}>
-        <p className={styles.emptyEmoji}>🌟</p>
-        <p className={styles.emptyTitle}>Sign in to get your daily look</p>
-        <p className={styles.emptySub}>Your AI stylist needs to know your closet.</p>
+      <div className={styles.todayWrap}>
+        <LockedOverlay message="Sign in to get AI-powered daily outfit suggestions">
+          <div className={styles.outfitGrid}>
+            {ghostItems.map((item) => (
+              <div key={item.id} className={styles.outfitItem}>
+                <div className={styles.outfitPhoto} style={{ background: item.bg }}>
+                  <span className={styles.outfitEmoji}>{item.emoji}</span>
+                </div>
+                <p className={styles.outfitItemName}>{item.name}</p>
+                <p className={styles.outfitItemCat}>{item.category}</p>
+              </div>
+            ))}
+          </div>
+          <div className={styles.reasoningBox} style={{ marginTop: 12 }}>
+            <p className={styles.reasoningText}>A clean, versatile outfit perfect for a casual day out. The white oxford pairs seamlessly with slim chinos for a put-together look.</p>
+          </div>
+        </LockedOverlay>
       </div>
     )
   }
@@ -525,10 +545,29 @@ function MyOutfitsTab() {
   }, [user])
 
   if (!user) {
+    const ghostBoards = [
+      { name: 'Weekend Casual', count: 4, colors: ['#2d3a2e','#4a3728','#1a1a2e','#2a2a2a'] },
+      { name: 'Office Ready',   count: 3, colors: ['#3d2b1f','#2c3e50','#1a2634'] },
+    ]
     return (
-      <div className={styles.emptyState}>
-        <p className={styles.emptyEmoji}>👗</p>
-        <p className={styles.emptyTitle}>Sign in to manage your outfits</p>
+      <div className={styles.myOutfitsTab}>
+        <LockedOverlay message="Sign in to save and manage your outfits">
+          <div className={styles.boardsList} style={{ padding: '8px 0' }}>
+            {ghostBoards.map((b) => (
+              <div key={b.name} className={styles.outfitBoardCard}>
+                <div className={styles.boardInfo}>
+                  <p className={styles.boardName}>{b.name}</p>
+                  <p className={styles.boardMeta}>{b.count} pieces</p>
+                </div>
+                <div className={styles.boardPhotoStrip}>
+                  {b.colors.map((c, i) => (
+                    <div key={i} className={styles.boardThumb} style={{ background: c }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </LockedOverlay>
       </div>
     )
   }
@@ -645,6 +684,7 @@ const TABS = [
   { id: 'outfits',  label: 'My Outfits'      },
   { id: 'calendar', label: 'Calendar'        },
   { id: 'trip',     label: 'Trip'            },
+  { id: 'laundry',  label: 'Laundry'         },
 ]
 
 export default function DailyLookScreen() {
@@ -670,6 +710,7 @@ export default function DailyLookScreen() {
       {activeTab === 'outfits'  && <MyOutfitsTab />}
       {activeTab === 'calendar' && <OutfitCalendarScreen />}
       {activeTab === 'trip'     && <TripPlannerScreen />}
+      {activeTab === 'laundry'  && <LaundryTab />}
     </div>
   )
 }
