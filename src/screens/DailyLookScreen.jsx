@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import LockedOverlay from '../components/LockedOverlay'
+import { useAvatar } from '../hooks/useAvatar'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -385,7 +386,9 @@ function TodayTab() {
   )
 }
 
-// ── Outfit Board Card ────────────────────────────────────────────────────────
+// ── (Studio overlay system removed — virtual try-on is now handled by TryOnSheet) ──
+
+// ── Outfit board card (used in My Outfits saved looks) ────────────────────────
 
 function OutfitBoardCard({ board, onEdit, onDelete }) {
   return (
@@ -416,153 +419,46 @@ function OutfitBoardCard({ board, onEdit, onDelete }) {
   )
 }
 
-// ── Outfit Creator Sheet ──────────────────────────────────────────────────────
-
-function OutfitCreatorSheet({ closetItems, liked, initial, onSave, onClose }) {
-  const [name, setName]             = useState(initial?.name ?? '')
-  const [source, setSource]         = useState('closet')
-  const [selectedIds, setSelectedIds] = useState(new Set(initial?.items?.map((i) => i.id) ?? []))
-
-  const items = source === 'closet' ? closetItems : liked
-
-  function toggle(id) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  function handleSave() {
-    const pool = {}
-    ;[...closetItems, ...liked].forEach((i) => { pool[i.id] = i })
-    const selectedItems = [...selectedIds].map((id) => pool[id]).filter(Boolean)
-    onSave({
-      id:        initial?.id ?? `board-${Date.now()}`,
-      name:      name.trim() || 'My Outfit',
-      aesthetic: '',
-      items:     selectedItems,
-      createdAt: initial?.createdAt ?? Date.now(),
-      updatedAt: Date.now(),
-    })
-  }
-
-  const canSave = name.trim().length > 0 && selectedIds.size > 0
-
-  return (
-    <div className={styles.creatorSheet}>
-      <div className={styles.creatorHeader}>
-        <h2 className={styles.creatorTitle}>{initial ? 'Edit Outfit' : 'Create Outfit'}</h2>
-        <button className={styles.creatorClose} onClick={onClose}>✕</button>
-      </div>
-
-      <div className={styles.creatorBody}>
-        <input
-          className={styles.creatorNameInput}
-          placeholder="Outfit name…"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <div className={styles.creatorSourcePills}>
-          <button
-            className={`${styles.creatorSourceBtn} ${source === 'closet' ? styles.creatorSourceActive : ''}`}
-            onClick={() => setSource('closet')}
-          >
-            My Closet ({closetItems.length})
-          </button>
-          <button
-            className={`${styles.creatorSourceBtn} ${source === 'liked' ? styles.creatorSourceActive : ''}`}
-            onClick={() => setSource('liked')}
-          >
-            Liked ({liked.length})
-          </button>
-        </div>
-
-        {items.length === 0 ? (
-          <div className={styles.creatorEmptyItems}>
-            <p>No items in {source === 'closet' ? 'your closet' : 'liked'} yet.</p>
-          </div>
-        ) : (
-          <div className={styles.creatorGrid}>
-            {items.map((item) => {
-              const url      = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
-              const selected = selectedIds.has(item.id)
-              return (
-                <button
-                  key={item.id}
-                  className={`${styles.creatorItem} ${selected ? styles.creatorItemSelected : ''}`}
-                  onClick={() => toggle(item.id)}
-                >
-                  <div
-                    className={styles.creatorItemPhoto}
-                    style={{ background: item.gradient ?? 'rgba(255,255,255,0.06)' }}
-                  >
-                    {url
-                      ? <img src={url} alt={item.name} className={styles.creatorItemImg} />
-                      : <span className={styles.creatorItemEmoji}>{CATEGORY_EMOJIS[item.category] ?? '👕'}</span>
-                    }
-                    {selected && <div className={styles.creatorCheckmark}>✓</div>}
-                  </div>
-                  <p className={styles.creatorItemName}>{item.name}</p>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className={styles.creatorFooter}>
-        {selectedIds.size > 0 && (
-          <p className={styles.creatorCount}>
-            {selectedIds.size} piece{selectedIds.size !== 1 ? 's' : ''} selected
-          </p>
-        )}
-        <button className={styles.creatorSave} onClick={handleSave} disabled={!canSave}>
-          {initial ? 'Save Changes' : 'Save Outfit'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
+// ── (StudioItemCard, StudioMoodboardCards, StudioSaveSheet removed — replaced by TryOnSheet) ──
 // ── My Outfits Tab ────────────────────────────────────────────────────────────
 
-function MyOutfitsTab() {
-  const { user }        = useAuth()
-  const { closetItems } = useCloset()
-  const { liked, outfitBoards, saveOutfitBoard, deleteOutfitBoard } = useWishlist()
-  const [logEntries, setLogEntries]   = useState(null)
-  const [showCreator, setShowCreator] = useState(false)
-  const [editingBoard, setEditingBoard] = useState(null)
-
+function useOutfitLog(user) {
+  const [logEntries, setLogEntries] = useState(null)
   useEffect(() => {
     if (!user) return
     getDoc(doc(db, 'users', user.uid, 'prefs', 'outfitLog'))
       .then((snap) => setLogEntries(snap.exists() ? (snap.data().entries ?? []) : []))
       .catch(() => setLogEntries([]))
   }, [user])
+  return { logEntries }
+}
+
+function MyOutfitsTab() {
+  const { user }    = useAuth()
+  const { outfitBoards, deleteOutfitBoard } = useWishlist()
+  const { logEntries }  = useOutfitLog(user)
+  const { closetItems } = useCloset()
+  const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
+  const { avatarUrl, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying } = useAvatar()
+  const avatarFileRef = useRef(null)
+
+  async function handleAvatarFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    await uploadAvatar(file)
+  }
 
   if (!user) {
-    const ghostBoards = [
-      { name: 'Weekend Casual', count: 4, colors: ['#2d3a2e','#4a3728','#1a1a2e','#2a2a2a'] },
-      { name: 'Office Ready',   count: 3, colors: ['#3d2b1f','#2c3e50','#1a2634'] },
-    ]
     return (
       <div className={styles.myOutfitsTab}>
         <LockedOverlay message="Sign in to save and manage your outfits">
-          <div className={styles.boardsList} style={{ padding: '8px 0' }}>
-            {ghostBoards.map((b) => (
+          <div className={styles.boardsList} style={{ padding: '8px 0', filter: 'blur(4px)', pointerEvents: 'none' }}>
+            {[{ name: 'Weekend Casual', count: 4 }, { name: 'Office Ready', count: 3 }].map((b) => (
               <div key={b.name} className={styles.outfitBoardCard}>
                 <div className={styles.boardInfo}>
                   <p className={styles.boardName}>{b.name}</p>
                   <p className={styles.boardMeta}>{b.count} pieces</p>
-                </div>
-                <div className={styles.boardPhotoStrip}>
-                  {b.colors.map((c, i) => (
-                    <div key={i} className={styles.boardThumb} style={{ background: c }} />
-                  ))}
                 </div>
               </div>
             ))}
@@ -574,12 +470,62 @@ function MyOutfitsTab() {
 
   const hasBoards = outfitBoards.length > 0
   const hasLog    = logEntries && logEntries.length > 0
-  const itemMap   = Object.fromEntries(closetItems.map((i) => [i.id, i]))
 
   return (
     <div className={styles.myOutfitsTab}>
 
-      {/* Saved outfits */}
+      {/* Hidden file input */}
+      <input
+        ref={avatarFileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleAvatarFile}
+      />
+
+      {/* Avatar card */}
+      <div className={styles.avatarCard}>
+        <div className={styles.avatarCardThumbWrap} onClick={() => avatarFileRef.current?.click()}>
+          {displayUrl ? (
+            <img src={displayUrl} alt="Your try-on photo" className={styles.avatarCardThumb} />
+          ) : (
+            <span className={styles.avatarCardEmoji}>🪞</span>
+          )}
+          {(uploading || prettifying) && (
+            <div className={styles.avatarCardOverlay}>
+              {prettifying ? 'Removing bg…' : 'Uploading…'}
+            </div>
+          )}
+        </div>
+        <div className={styles.avatarCardInfo}>
+          <p className={styles.avatarCardTitle}>Try-On Photo</p>
+          <p className={styles.avatarCardSub}>
+            {displayUrl
+              ? 'Used for virtual try-on. Tap "Try On" on any item in My Closet or Liked.'
+              : 'Upload a full-body photo to try on clothes virtually.'}
+          </p>
+          <div className={styles.avatarCardBtns}>
+            <button
+              className={styles.avatarCardUpload}
+              onClick={() => avatarFileRef.current?.click()}
+              disabled={uploading || prettifying}
+            >
+              {displayUrl ? 'Change' : '+ Upload'}
+            </button>
+            {displayUrl && (
+              <button
+                className={styles.avatarCardDelete}
+                onClick={deleteAvatar}
+                disabled={uploading || prettifying}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Saved outfit boards */}
       {hasBoards && (
         <section className={styles.outfitsSection}>
           <h3 className={styles.outfitsSectionTitle}>Saved Outfits</h3>
@@ -588,7 +534,7 @@ function MyOutfitsTab() {
               <OutfitBoardCard
                 key={board.id}
                 board={board}
-                onEdit={() => { setEditingBoard(board); setShowCreator(true) }}
+                onEdit={() => {}}
                 onDelete={() => deleteOutfitBoard(board.id)}
               />
             ))}
@@ -643,35 +589,17 @@ function MyOutfitsTab() {
         <div className={styles.emptyState}>
           <p className={styles.emptyEmoji}>👗</p>
           <p className={styles.emptyTitle}>No outfits yet</p>
-          <p className={styles.emptySub}>Tap + to create your first outfit from your closet or liked items.</p>
+          <p className={styles.emptySub}>
+            Try on items from your closet — tap "Try On" on any piece to get started.
+          </p>
         </div>
       )}
 
-      {/* Loading state */}
+      {/* Loading */}
       {!hasBoards && logEntries === null && (
         <div className={styles.emptyState}>
           <div className={styles.loadingDots}><span /><span /><span /></div>
         </div>
-      )}
-
-      {/* FAB */}
-      <button
-        className={styles.createFab}
-        onClick={() => { setEditingBoard(null); setShowCreator(true) }}
-        aria-label="Create outfit"
-      >
-        +
-      </button>
-
-      {/* Creator sheet */}
-      {showCreator && (
-        <OutfitCreatorSheet
-          closetItems={closetItems}
-          liked={liked}
-          initial={editingBoard}
-          onSave={(board) => { saveOutfitBoard(board); setShowCreator(false); setEditingBoard(null) }}
-          onClose={() => { setShowCreator(false); setEditingBoard(null) }}
-        />
       )}
     </div>
   )

@@ -1,3 +1,6 @@
+import { httpsCallable } from 'firebase/functions'
+import { functions } from './firebase'
+
 let bgRemoval = null
 
 async function loadBgRemoval() {
@@ -8,12 +11,31 @@ async function loadBgRemoval() {
   return bgRemoval
 }
 
+const proxyImageFn = httpsCallable(functions, 'proxyImage')
+
 /**
- * Remove the background from an image URL or File and return a Blob.
+ * Fetch an image URL as a Blob.
+ * Tries a direct fetch first (works for Firebase Storage and same-origin URLs).
+ * Falls back to the proxyImage Firebase Function for cross-origin CDN URLs (Pexels, Google, etc.)
+ */
+export async function fetchImageAsBlob(url) {
+  try {
+    const res = await fetch(url)
+    if (res.ok) return res.blob()
+  } catch (_) {
+    // CORS or network error — fall through to proxy
+  }
+  const { data } = await proxyImageFn({ url })
+  const res = await fetch(data.dataUrl)
+  return res.blob()
+}
+
+/**
+ * Remove the background from an image and return a transparent PNG Blob.
  * Lazy-loads the WASM module on first call.
  *
- * @param {string|File} source  - Firebase Storage URL or File object
- * @param {function}    onProgress - (key, current, total) callback
+ * @param {string|File|Blob} source  - URL, File, or Blob
+ * @param {function}         onProgress - (key, current, total) callback
  * @returns {Promise<Blob>}
  */
 export async function prettifyImage(source, onProgress) {
@@ -23,14 +45,9 @@ export async function prettifyImage(source, onProgress) {
   if (source instanceof File || source instanceof Blob) {
     blob = source
   } else {
-    const res = await fetch(source)
-    if (!res.ok) throw new Error('Failed to fetch image for prettify')
-    blob = await res.blob()
+    // Use fetchImageAsBlob to handle CORS for external URLs
+    blob = await fetchImageAsBlob(source)
   }
 
-  const result = await removeBackground(blob, {
-    progress: onProgress ?? (() => {}),
-  })
-
-  return result
+  return removeBackground(blob, { progress: onProgress ?? (() => {}) })
 }

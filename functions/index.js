@@ -257,3 +257,152 @@ export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'p
 
   return { urls: [] }
 })
+
+// ─── Image Proxy (server-side fetch to bypass CORS) ──────────────────────────
+
+const PROXY_ALLOWED_HOSTS = [
+  'images.pexels.com',
+  'lh3.googleusercontent.com',
+  'encrypted-tbn',
+  'images.unsplash.com',
+]
+
+export const proxyImage = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const { url } = request.data
+  if (!url || typeof url !== 'string') throw new HttpsError('invalid-argument', 'url required')
+
+  let hostname
+  try {
+    hostname = new URL(url).hostname
+  } catch {
+    throw new HttpsError('invalid-argument', 'invalid url')
+  }
+
+  if (!PROXY_ALLOWED_HOSTS.some((h) => hostname.includes(h))) {
+    throw new HttpsError('permission-denied', 'Host not allowed')
+  }
+
+  const res = await fetch(url)
+  if (!res.ok) throw new HttpsError('unavailable', `Fetch failed: ${res.status}`)
+
+  const buffer   = await res.arrayBuffer()
+  const base64   = Buffer.from(buffer).toString('base64')
+  const mimeType = res.headers.get('content-type') ?? 'image/jpeg'
+  return { dataUrl: `data:${mimeType};base64,${base64}` }
+})
+
+// ─── AI Virtual Try-On (cuuupid/idm-vton) ─────────────────────────────────────
+
+// Pinned version of cuuupid/idm-vton on Replicate (replaces removed yisol/idm-vton)
+const IDM_VTON_VERSION = '0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985'
+
+// In-process cooldown: prevents rapid-fire calls from burning Replicate quota.
+// Resets on cold start — sufficient to stop accidental double-taps.
+const tryOnCooldown = new Map()
+
+// Layer order for chaining: base layers first so outer garments render on top
+const VTON_LAYER_ORDER = ['bottoms', 'dresses', 'tops', 'outerwear']
+
+// Map closet category to IDM-VTON category param
+function toVtonCategory(category) {
+  if (['tops', 'outerwear'].includes(category)) return 'upper_body'
+  if (category === 'bottoms')                   return 'lower_body'
+  if (category === 'dresses')                   return 'dresses'
+  return null  // footwear, accessories — not supported
+}
+
+// Submit one Replicate prediction and poll until complete (~110s per piece)
+// Assumes garment has already been validated by the caller.
+async function runOnePrediction(apiKey, personImageUrl, garment) {
+  const vtonCategory = toVtonCategory(garment.category)
+
+  const createRes = await fetch('https://api.replicate.com/v1/predictions', {
+    method:  'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      version: IDM_VTON_VERSION,
+      input: {
+        human_img:   personImageUrl,
+        garm_img:    garment.garmentImageUrl,
+        garment_des: garment.garmentName ?? 'clothing item',
+        category:    vtonCategory,
+        steps:       30,
+        seed:        42,
+      },
+    }),
+  })
+
+  if (!createRes.ok) {
+    const errBody = await createRes.text().catch(() => '')
+    console.error('Replicate error:', createRes.status, errBody)
+    throw new HttpsError('unavailable', `Try-on generation failed (${createRes.status})`)
+  }
+
+  const prediction = await createRes.json()
+  const pollUrl    = prediction.urls?.get ?? `https://api.replicate.com/v1/predictions/${prediction.id}`
+  const deadline   = Date.now() + 110_000
+
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 3000))
+    const pollRes  = await fetch(pollUrl, { headers: { Authorization: `Bearer ${apiKey}` } })
+    const pollData = await pollRes.json()
+    if (pollData.status === 'succeeded') {
+      const out = pollData.output
+      return Array.isArray(out) ? out[0] : out
+    }
+    if (pollData.status === 'failed') throw new HttpsError('internal', 'Try-on generation failed')
+  }
+  throw new HttpsError('deadline-exceeded', 'Try-on timed out')
+}
+
+// Accepts garments[] so multi-piece chaining happens server-side in one call.
+// Timeout 300s covers up to 3 pieces × ~90s each.
+export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid  = request.auth.uid
+  const last = tryOnCooldown.get(uid)
+  if (last && Date.now() - last < 30_000) {
+    throw new HttpsError('resource-exhausted', 'Please wait before generating again')
+  }
+  tryOnCooldown.set(uid, Date.now())
+
+  const { personImageUrl, garments } = request.data
+
+  if (typeof personImageUrl !== 'string' || !personImageUrl.startsWith('https://')) {
+    throw new HttpsError('invalid-argument', 'personImageUrl must be a valid https URL')
+  }
+  if (!Array.isArray(garments) || garments.length === 0) {
+    throw new HttpsError('invalid-argument', 'garments must be a non-empty array')
+  }
+  if (garments.length > 3) {
+    throw new HttpsError('invalid-argument', 'Maximum 3 pieces per try-on')
+  }
+
+  // Validate all garments upfront — fail fast before spending any Replicate quota
+  for (const g of garments) {
+    if (typeof g.garmentImageUrl !== 'string' || !g.garmentImageUrl.startsWith('https://')) {
+      throw new HttpsError('invalid-argument', 'Each garment must have a valid https garmentImageUrl')
+    }
+    if (!toVtonCategory(g.category)) {
+      throw new HttpsError('invalid-argument', `Category '${g.category}' is not supported for try-on`)
+    }
+  }
+
+  const apiKey = process.env.REPLICATE_API_KEY
+  if (!apiKey) throw new HttpsError('internal', 'Try-On service not configured — add REPLICATE_API_KEY')
+
+  // Sort by layer order, then chain: each output becomes the next person image
+  const sorted = [...garments].sort((a, b) => {
+    const ai = VTON_LAYER_ORDER.indexOf(a.category)
+    const bi = VTON_LAYER_ORDER.indexOf(b.category)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
+
+  let currentPersonUrl = personImageUrl
+  for (const garment of sorted) {
+    currentPersonUrl = await runOnePrediction(apiKey, currentPersonUrl, garment)
+  }
+
+  return { outputUrl: currentPersonUrl }
+})

@@ -481,13 +481,144 @@
   40%            { opacity: 1;   transform: scale(1);   }
 }
 
-/* â”€â”€ My Outfits tab â”€â”€ */
+/* ── My Outfits tab ── */
 .myOutfitsTab {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-bottom: 96px; /* room for FAB */
+  padding-bottom: 96px;
+}
+
+/* ── Avatar card (My Outfits tab) ── */
+.avatarCard {
+  display: flex;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  align-items: center;
+}
+
+.avatarCardThumbWrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarCardThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.avatarCardEmoji { font-size: 28px; line-height: 1; }
+
+.avatarCardOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  padding: 4px;
+  line-height: 1.3;
+}
+
+.avatarCardInfo { flex: 1; min-width: 0; }
+
+.avatarCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  margin: 0 0 3px;
+}
+
+.avatarCardSub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.avatarCardBtns { display: flex; gap: 8px; }
+
+.avatarCardUpload {
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.avatarCardUpload:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.avatarCardDelete {
+  padding: 6px 12px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.25);
+  border-radius: 8px;
+  color: rgba(220, 100, 100, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.avatarCardDelete:hover { background: rgba(220, 53, 69, 0.2); }
+.avatarCardDelete:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.tryOnBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(108,71,212,0.15), rgba(155,110,232,0.08));
+  border: 1px solid rgba(108,71,212,0.3);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.tryOnBannerText { flex: 1; min-width: 0; }
+
+.tryOnBannerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9b6ee8;
+  margin: 0 0 2px;
+}
+
+.tryOnBannerSub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tryOnBannerEmoji {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .outfitsSection {}
@@ -812,3 +943,803 @@
   transition: opacity 0.15s;
 }
 .creatorSave:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Outfit Studio (Try On) ─────────────────────────────────────────────────── */
+
+.studioModeToggle {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+}
+
+.studioModeBtn {
+  flex: 1;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.studioModeBtnActive {
+  background: rgba(232, 115, 90, 0.12);
+  border-color: rgba(232, 115, 90, 0.4);
+  color: #E8735A;
+}
+
+.studioModeBadge {
+  background: #E8735A;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 6px;
+  line-height: 1.4;
+}
+
+/* ── Avatar hero ── */
+.studioAvatarHero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 62dvh;
+  background: linear-gradient(180deg, #1a1a2a 0%, #111118 100%);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-top: 10px;
+}
+
+.studioAvatarPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+  /* Fade bottom edge to hide bg-removal artifacts */
+  -webkit-mask-image: linear-gradient(to bottom, black 88%, transparent 100%);
+  mask-image:         linear-gradient(to bottom, black 88%, transparent 100%);
+}
+
+/* While bg removal is running — show the original dimmed */
+.studioAvatarPhotoPrettifying {
+  opacity: 0.6;
+  filter: blur(2px);
+  transition: opacity 0.3s;
+}
+
+.studioAvatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  overflow: hidden;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.studioSilhouette {
+  /* Height-driven so the SVG never overflows the hero */
+  height: 42%;
+  width: auto;
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+
+.studioSilhouette svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.studioAvatarHint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0;
+  text-align: center;
+  padding: 0 32px;
+  line-height: 1.5;
+}
+
+.studioUploadBtn {
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.studioUploadBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.studioAvatarBtns {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.studioChangeBtn,
+.studioDeleteBtn {
+  width: 34px;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s;
+}
+
+.studioChangeBtn:hover { background: rgba(0, 0, 0, 0.8); }
+
+.studioDeleteBtn {
+  color: rgba(220, 80, 80, 0.9);
+  border-color: rgba(220, 80, 80, 0.25);
+}
+
+.studioDeleteBtn:hover { background: rgba(220, 53, 69, 0.3); }
+
+/* Prettifying (bg removal) overlay */
+.studioPrettifyingBadge {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.studioPrettifyingBadge::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(232, 115, 90, 0.4);
+  border-top-color: #E8735A;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Item overlays ── */
+.studioOverlay {
+  position: absolute;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 0.92; transform: scale(1); }
+}
+
+.studioOverlayImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.92;
+  animation: overlayFadeIn 0.35s ease;
+}
+
+/* ── Plain (non-prettified) chips ── */
+.studioPlainRow {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  gap: 5px;
+  z-index: 5;
+}
+
+.studioPlainChip {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.studioPlainImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.studioPlainEmoji {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* ── Hero prompt ── */
+.studioHeroPrompt {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 16px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.studioHeroPrompt p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+/* ── Category tabs ── */
+.studioCatWrap {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.studioCatTabs {
+  display: flex;
+  overflow-x: auto;
+  padding: 4px 10px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 0;
+}
+
+.studioCatTabs::-webkit-scrollbar { display: none; }
+
+.studioCatTab {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px 9px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.32);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.studioCatTabActive {
+  color: #E8735A;
+  border-bottom-color: #E8735A;
+}
+
+.studioCatTabPicked:not(.studioCatTabActive) {
+  color: rgba(232, 115, 90, 0.6);
+}
+
+.studioCatEmoji { font-size: 17px; line-height: 1; }
+
+.studioCatLabel {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studioCatDot {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  background: #E8735A;
+  border-radius: 50%;
+}
+
+/* ── Item picker ── */
+.studioPickerSection {
+  flex-shrink: 0;
+  padding: 10px 0;
+  min-height: 110px;
+}
+
+.studioItemRow {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.studioItemRow::-webkit-scrollbar { display: none; }
+
+.studioPickerEmpty { padding: 18px 24px; text-align: center; }
+
+.studioPickerEmptyText {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 3px;
+}
+
+.studioPickerEmptySub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.22);
+  margin: 0;
+}
+
+.studioItem {
+  flex-shrink: 0;
+  width: 78px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: transform 0.12s;
+}
+
+.studioItem:active { transform: scale(0.94); }
+
+.studioItemPhoto {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.studioItemSelected .studioItemPhoto {
+  border-color: #E8735A;
+  box-shadow: 0 0 0 1px #E8735A;
+}
+
+.studioItemImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.studioItemEmoji { font-size: 26px; line-height: 1; }
+
+.studioItemCheck {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: #E8735A;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.studioItemLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.42);
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 78px;
+}
+
+.studioItemSelected .studioItemLabel { color: rgba(232, 115, 90, 0.85); }
+
+.studioItemLoading .studioItemPhoto {
+  border-color: rgba(232, 115, 90, 0.4);
+}
+
+.studioItemSpinner {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.studioItemSpinner::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(232, 115, 90, 0.35);
+  border-top-color: #E8735A;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.studioPlainChipLoading {
+  border-color: rgba(232, 115, 90, 0.4);
+}
+
+.studioChipSpinner {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.studioChipSpinner::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(232, 115, 90, 0.3);
+  border-top-color: #E8735A;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+/* ── Action bar ── */
+.studioActionBar {
+  display: flex;
+  gap: 10px;
+  padding: 8px 14px 6px;
+  flex-shrink: 0;
+}
+
+.studioSaveBtn {
+  flex: 1;
+  padding: 13px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 13px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.studioSaveBtn:disabled { opacity: 0.28; cursor: not-allowed; }
+
+.studioClearBtn {
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ── Save sheet ── */
+.studioSheetOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.studioSheet {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-elevated);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 20px 36px;
+}
+
+.studioSheetHandle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  margin: 12px auto 16px;
+}
+
+.studioSheetTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.studioSheetInput {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  margin-bottom: 14px;
+  transition: border-color 0.15s;
+}
+
+.studioSheetInput::placeholder { color: rgba(255, 255, 255, 0.25); }
+.studioSheetInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+
+.studioSheetActions { display: flex; gap: 10px; }
+
+.studioSheetCancel {
+  flex: 1;
+  padding: 13px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.studioSheetSave {
+  flex: 2;
+  padding: 13px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.studioSheetSave:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Boards view ── */
+.studioBoardsView {
+  padding: 10px 0;
+  padding-bottom: 80px;
+}
+
+.studioBoardsHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0 0 10px;
+  padding: 0 16px;
+}
+
+.studioGoBtn {
+  margin-top: 8px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg, #E8735A, #D4896A);
+  border: none;
+  border-radius: 13px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* avatar edge fade rule merged into primary .studioAvatarPhoto above */
+
+/* ── Moodboard cards ── */
+.studioMoodRow {
+  position: absolute;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.studioMoodCard {
+  flex-shrink: 0;
+  width: 72px;
+  background: rgba(8, 8, 16, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--card-idx, 0) * -5px));
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.studioMoodCardLoading {
+  border-color: rgba(232, 115, 90, 0.4);
+}
+
+.studioMoodImg {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  mix-blend-mode: luminosity;
+  opacity: 0.9;
+}
+
+.studioMoodEmoji {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.studioMoodLabel {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 5px 5px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.studioMoodCatEmoji { font-size: 9px; line-height: 1; flex-shrink: 0; }
+
+.studioMoodName {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.studioMoodSpinner {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(232, 115, 90, 0.3);
+  border-top-color: #E8735A;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+/* ── AI Try-On overlay states ── */
+.studioTryOnLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(10, 10, 20, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 20;
+}
+
+.studioTryOnSpinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid rgba(232, 115, 90, 0.25);
+  border-top-color: #E8735A;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.studioTryOnMsg {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.studioTryOnClearBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 7px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  z-index: 10;
+}
+
+/* ── Generate row ── */
+.studioGenerateRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 14px 8px;
+}
+
+.studioGenerateBtn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #6c47d4, #9b6ee8);
+  border: none;
+  border-radius: 13px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.studioGenerateBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.studioGenerateHint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  margin: 0;
+}
+
+/* overlayFadeIn animation and .studioOverlayImg rule merged into existing block above */

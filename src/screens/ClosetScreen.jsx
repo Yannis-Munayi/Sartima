@@ -6,9 +6,11 @@ import { useWishlist } from '../context/WishlistContext'
 import WardrobeUpload from '../components/WardrobeUpload'
 import CatalogSearchSheet from '../components/CatalogSearchSheet'
 import ClosetItemSheet from '../components/ClosetItemSheet'
+import TryOnSheet from '../components/TryOnSheet'
 import WardrobeScreen from './WardrobeScreen'
 import OutfitBoardScreen from './OutfitBoardScreen'
 import { CARE_SYMBOLS, WASH_FREQUENCIES } from '../data/careSymbols'
+import { TRYON_CATEGORIES } from '../services/tryOn'
 import styles from './ClosetScreen.module.css'
 
 const CATEGORY_EMOJI = {
@@ -63,7 +65,7 @@ const TABS = [
   { id: 'liked',   label: 'Liked'      },
 ]
 
-function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove }) {
+function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, onTryOn }) {
   const photoUrl   = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
   const formality  = inferFormality(item)
   const washStatus = washStatusText(item)
@@ -97,6 +99,15 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove })
           </div>
           <p className={styles.itemName}>{item.name}</p>
           {item.brand && <p className={styles.itemBrand}>{item.brand}</p>}
+          {!editMode && TRYON_CATEGORIES.includes(item.category) && (
+            <button
+              className={styles.tryOnBadge}
+              onClick={(e) => { e.stopPropagation(); onTryOn(item) }}
+              title="Try On"
+            >
+              Try On
+            </button>
+          )}
         </div>
 
         {/* ── BACK ── */}
@@ -186,6 +197,7 @@ function MyClosetTab() {
   const [showSearch, setShowSearch]       = useState(false)
   const [showAddSheet, setShowAddSheet]   = useState(false)
   const [selectedItem, setSelectedItem]   = useState(null)
+  const [tryOnItem, setTryOnItem]         = useState(null)
   const [editMode, setEditMode]           = useState(false)
   const [flippedId, setFlippedId]         = useState(null)
 
@@ -301,6 +313,7 @@ function MyClosetTab() {
               isFlipped={flippedId === item.id}
               onFlip={() => handleFlip(item.id)}
               onEdit={() => { setFlippedId(null); setSelectedItem(item) }}
+              onTryOn={(i) => setTryOnItem(i)}
               editMode={editMode}
               onRemove={(id) => { setFlippedId(null); removeFromCloset(id) }}
             />
@@ -362,6 +375,15 @@ function MyClosetTab() {
       <button className={styles.fab} onClick={() => setShowAddSheet(true)} aria-label="Add item">
         +
       </button>
+
+      {/* Try On sheet */}
+      {tryOnItem && (
+        <TryOnSheet
+          item={tryOnItem}
+          onClose={() => setTryOnItem(null)}
+          onSaved={() => setTryOnItem(null)}
+        />
+      )}
     </>
   )
 }

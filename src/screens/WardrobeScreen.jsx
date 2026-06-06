@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
+import TryOnSheet from '../components/TryOnSheet'
+import { TRYON_CATEGORIES } from '../services/tryOn'
 import styles from './WardrobeScreen.module.css'
 
 // Ordered category buckets for grouping liked items
@@ -34,7 +36,7 @@ function bucketFor(item) {
 }
 
 // Single card for any liked item (product or old quiz item)
-function LikedItemCard({ item, onSelect }) {
+function LikedItemCard({ item, onSelect, onTryOn }) {
   const [photo,  setPhoto]  = useState(null)
   const [loaded, setLoaded] = useState(false)
   const isProduct = item.type === 'product'
@@ -51,7 +53,7 @@ function LikedItemCard({ item, onSelect }) {
   }, [item.id])
 
   return (
-    <button className={styles.item} onClick={() => onSelect(item)}>
+    <div className={styles.item} onClick={() => onSelect(item)} role="button" tabIndex={0}>
       <div className={styles.itemPhoto} style={{ background: item.gradient }}>
         {photo && (
           <img
@@ -94,7 +96,16 @@ function LikedItemCard({ item, onSelect }) {
           Shop at {item.brand} ↗
         </a>
       )}
-    </button>
+
+      {TRYON_CATEGORIES.includes(bucketFor(item)) && (
+        <button
+          className={styles.tryOnBtn}
+          onClick={(e) => { e.stopPropagation(); onTryOn?.(item) }}
+        >
+          Try On
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -113,6 +124,7 @@ export default function WardrobeScreen() {
 
   const [activeItem, setActiveItem] = useState(null)
   const [shopItem,   setShopItem]   = useState(null)
+  const [tryOnItem,  setTryOnItem]  = useState(null)
 
   if (!user) {
     return (
@@ -206,7 +218,7 @@ export default function WardrobeScreen() {
             </div>
             <div className={styles.grid}>
               {items.map((item) => (
-                <LikedItemCard key={item.id} item={item} onSelect={setActiveItem} />
+                <LikedItemCard key={item.id} item={item} onSelect={setActiveItem} onTryOn={setTryOnItem} />
               ))}
             </div>
           </section>
@@ -226,6 +238,15 @@ export default function WardrobeScreen() {
       {/* Shop panel for old quiz items */}
       {shopItem && (
         <ShopPanel item={shopItem} onClose={() => setShopItem(null)} />
+      )}
+
+      {/* Try On sheet */}
+      {tryOnItem && (
+        <TryOnSheet
+          item={tryOnItem}
+          onClose={() => setTryOnItem(null)}
+          onSaved={() => setTryOnItem(null)}
+        />
       )}
 
     </div>
