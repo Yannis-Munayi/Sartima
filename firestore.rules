@@ -29,6 +29,17 @@ service cloud.firestore {
       }
     }
 
+    // Feedback submissions — written only via submitFeedback Firebase Function (admin SDK bypasses rules).
+    // Block all direct client access.
+    match /feedback/{docId} {
+      allow read, write: if false;
+    }
+
+    // Crash reports — written only via submitCrashReport Firebase Function.
+    match /crashReports/{docId} {
+      allow read, write: if false;
+    }
+
     // Deny every other path — no public reads, no cross-user access
     match /{document=**} {
       allow read, write: if false;

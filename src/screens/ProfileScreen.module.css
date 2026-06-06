@@ -568,6 +568,56 @@
 
 .signInBtn:hover { opacity: 0.9; }
 
+/* ── Support / Feedback ── */
+.supportSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.supportHeading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.supportRow {
+  display: flex;
+  gap: 10px;
+}
+
+.supportBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.supportBtn:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.supportIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
 /* ── Theme Toggle ── */
 .themeRow {
   display: flex;

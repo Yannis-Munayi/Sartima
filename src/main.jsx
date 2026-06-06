@@ -1,8 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
+import { initCrashReporter } from './services/crashReporter'
 import './index.css'
 import App from './App.jsx'
+
+initCrashReporter()
 
 if (import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({

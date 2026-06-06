@@ -1,6 +1,32 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import Anthropic from '@anthropic-ai/sdk'
 import dns from 'dns/promises'
+import admin from 'firebase-admin'
+import nodemailer from 'nodemailer'
+
+admin.initializeApp()
+
+// ─── Email helper ─────────────────────────────────────────────────────────────
+
+function getMailTransporter() {
+  const pass = process.env.GMAIL_APP_PASSWORD
+  if (!pass) return null
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: 'ytmunayi@gmail.com', pass },
+  })
+}
+
+async function sendEmail(subject, text) {
+  const transporter = getMailTransporter()
+  if (!transporter) return
+  await transporter.sendMail({
+    from: '"StyleLab" <ytmunayi@gmail.com>',
+    to: 'ytmunayi@gmail.com',
+    subject,
+    text,
+  })
+}
 
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001'
 
@@ -405,4 +431,77 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
   }
 
   return { outputUrl: currentPersonUrl }
+})
+
+// ─── User Feedback ────────────────────────────────────────────────────────────
+
+export const submitFeedback = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  const { category, message, contactEmail } = request.data
+  if (!message || typeof message !== 'string' || message.trim().length < 5) {
+    throw new HttpsError('invalid-argument', 'message is required')
+  }
+
+  const doc = {
+    category:     (category ?? 'General').slice(0, 50),
+    message:      message.trim().slice(0, 2000),
+    contactEmail: contactEmail ? String(contactEmail).slice(0, 200) : null,
+    uid:          request.auth?.uid ?? null,
+    submittedAt:  Date.now(),
+  }
+
+  await admin.firestore().collection('feedback').add(doc)
+
+  await sendEmail(
+    `[StyleLab Feedback] ${doc.category}`,
+    [
+      `Category: ${doc.category}`,
+      `From: ${doc.contactEmail ?? 'Anonymous'} (uid: ${doc.uid ?? 'none'})`,
+      '',
+      doc.message,
+    ].join('\n')
+  )
+
+  return { ok: true }
+})
+
+// ─── Crash Reports ────────────────────────────────────────────────────────────
+
+export const submitCrashReport = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  const { doing, saw, diagnostics } = request.data
+
+  const doc = {
+    doing:       doing ? String(doing).slice(0, 500) : null,
+    saw:         saw   ? String(saw).slice(0, 500)   : null,
+    diagnostics: diagnostics ?? null,
+    uid:         request.auth?.uid ?? null,
+    submittedAt: Date.now(),
+  }
+
+  await admin.firestore().collection('crashReports').add(doc)
+
+  const logs = diagnostics?.logs ?? []
+  const errors = logs.filter((l) => ['error', 'uncaught', 'unhandledRejection'].includes(l.type))
+  const recentErrors = errors
+    .slice(-5)
+    .map((e) => `  [${e.type}] ${e.message}${e.source ? ` (${e.source})` : ''}`)
+    .join('\n')
+
+  await sendEmail(
+    '[StyleLab] Problem Report',
+    [
+      `UID: ${doc.uid ?? 'anonymous'}`,
+      `Browser: ${diagnostics?.browser?.userAgent ?? 'unknown'}`,
+      `Screen: ${diagnostics?.browser?.url ?? 'unknown'}`,
+      '',
+      `What they were doing: ${doc.doing ?? '(not provided)'}`,
+      `What they saw: ${doc.saw ?? '(not provided)'}`,
+      '',
+      `Errors in session (${errors.length} total, last 5):`,
+      recentErrors || '  (none)',
+      '',
+      `Network failures: ${logs.filter((l) => l.type === 'networkError').length}`,
+    ].join('\n')
+  )
+
+  return { ok: true }
 })

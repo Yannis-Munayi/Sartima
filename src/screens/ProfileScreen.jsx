@@ -4,6 +4,8 @@ import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp, useTheme } from '../context/AppContext'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
+import FeedbackSheet from '../components/FeedbackSheet'
+import CrashReportSheet from '../components/CrashReportSheet'
 import styles from './ProfileScreen.module.css'
 
 function timeAgo(ts) {
@@ -175,6 +177,8 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [showCrashReport, setShowCrashReport] = useState(false)
   const quizSectionRef = useRef(null)
 
   useEffect(() => {
@@ -303,10 +307,34 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
               Sign in / Create account
             </button>
           </div>
+
+          <div className={styles.supportSection}>
+            <p className={styles.supportHeading}>Help &amp; Feedback</p>
+            <div className={styles.supportRow}>
+              <button className={styles.supportBtn} onClick={() => setShowFeedback(true)}>
+                <span className={styles.supportIcon}>💬</span>
+                Send Feedback
+              </button>
+              <button className={styles.supportBtn} onClick={() => setShowCrashReport(true)}>
+                <span className={styles.supportIcon}>🐛</span>
+                Report a Problem
+              </button>
+            </div>
+          </div>
         </div>
 
         {showSettings && (
           <SettingsSheet user={null} onClose={() => setShowSettings(false)} onLogout={null} />
+        )}
+        {showFeedback && (
+          <FeedbackSheet user={null} onClose={() => setShowFeedback(false)} />
+        )}
+        {showCrashReport && (
+          <CrashReportSheet
+            user={null}
+            appState={{ screen: state.screen, uid: null, email: null }}
+            onClose={() => setShowCrashReport(false)}
+          />
         )}
       </div>
     )
@@ -478,6 +506,20 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
         <button className={styles.retakeBtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); if (onBack) onBack() }}>
           Take quiz again
         </button>
+
+        <div className={styles.supportSection}>
+          <p className={styles.supportHeading}>Help &amp; Feedback</p>
+          <div className={styles.supportRow}>
+            <button className={styles.supportBtn} onClick={() => setShowFeedback(true)}>
+              <span className={styles.supportIcon}>💬</span>
+              Send Feedback
+            </button>
+            <button className={styles.supportBtn} onClick={() => setShowCrashReport(true)}>
+              <span className={styles.supportIcon}>🐛</span>
+              Report a Problem
+            </button>
+          </div>
+        </div>
       </div>
 
       {showSettings && (
@@ -485,6 +527,16 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
           user={user}
           onClose={() => setShowSettings(false)}
           onLogout={handleLogout}
+        />
+      )}
+      {showFeedback && (
+        <FeedbackSheet user={user} onClose={() => setShowFeedback(false)} />
+      )}
+      {showCrashReport && (
+        <CrashReportSheet
+          user={user}
+          appState={{ screen: state.screen, uid: user?.uid ?? null, email: user?.email ?? null }}
+          onClose={() => setShowCrashReport(false)}
         />
       )}
     </div>
