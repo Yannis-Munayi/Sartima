@@ -8,10 +8,11 @@ const ShopContext = createContext(null)
 export function ShopProvider({ children }) {
   const { user } = useAuth()
 
-  // Shop list starts empty — populated from Firestore on sign-in.
-  // Guest additions are session-only (cleared on sign-out).
-  const [shopList, setShopList] = useState([])
-  const [loadReady, setLoadReady] = useState(false)
+  // shopList — items saved via ShopPanel (item type + filters + retailer list)
+  // scoutedGroups — product groups saved by Shop Scout (piece + budget + up to 10 products)
+  const [shopList,      setShopList]      = useState([])
+  const [scoutedGroups, setScoutedGroups] = useState([])
+  const [loadReady,     setLoadReady]     = useState(false)
 
   const loadedUid = useRef(null)
 
@@ -19,6 +20,7 @@ export function ShopProvider({ children }) {
   useEffect(() => {
     if (!user) {
       setShopList([])
+      setScoutedGroups([])
       setLoadReady(false)
       loadedUid.current = null
       return
@@ -30,29 +32,39 @@ export function ShopProvider({ children }) {
 
     getDoc(doc(db, 'users', user.uid, 'prefs', 'shopList'))
       .then((snap) => {
-        const stored = snap.exists() ? (snap.data().items ?? []) : []
+        const data         = snap.exists() ? snap.data() : {}
+        const storedItems  = data.items         ?? []
+        const storedGroups = data.scoutedGroups ?? []
+
         setShopList((current) => {
-          const storedIds = new Set(stored.map((e) => e.item?.id))
+          const storedIds = new Set(storedItems.map((e) => e.item?.id))
           const pending   = current.filter((e) => !storedIds.has(e.item?.id))
-          return pending.length > 0 ? [...pending, ...stored] : stored
+          return pending.length > 0 ? [...pending, ...storedItems] : storedItems
+        })
+
+        setScoutedGroups((current) => {
+          const storedIds = new Set(storedGroups.map((g) => g.id))
+          const pending   = current.filter((g) => !storedIds.has(g.id))
+          return pending.length > 0 ? [...pending, ...storedGroups] : storedGroups
         })
       })
       .catch(() => {})
       .finally(() => setLoadReady(true))
   }, [user])
 
-  // Persist to Firestore — only after the initial load has completed
+  // Persist both lists to Firestore — only after initial load completes
   useEffect(() => {
     if (!user || !loadReady || loadedUid.current !== user.uid) return
     setDoc(
       doc(db, 'users', user.uid, 'prefs', 'shopList'),
-      { items: shopList },
+      { items: shopList, scoutedGroups },
       { merge: true }
     ).catch(() => {})
-  }, [shopList, user, loadReady])
+  }, [shopList, scoutedGroups, user, loadReady])
+
+  // ── ShopPanel items ───────────────────────────────────────────────────────
 
   const addToShop = useCallback((item, filters, retailers) => {
-    // Strip non-serializable / bulky fields before storing
     const safeItem = {
       id:          item.id,
       name:        item.name,
@@ -84,8 +96,31 @@ export function ShopProvider({ children }) {
     [shopList]
   )
 
+  // ── Scout result groups ───────────────────────────────────────────────────
+  // group shape: { id, pieceId, pieceName, emoji, budgetTier, budgetLabel, products, savedAt }
+  // products shape (stripped for Firestore): { id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange }
+
+  const addScoutedGroup = useCallback((group) => {
+    setScoutedGroups((prev) => {
+      const exists = prev.findIndex((g) => g.id === group.id)
+      if (exists !== -1) {
+        const next = [...prev]
+        next[exists] = group
+        return next
+      }
+      return [group, ...prev]
+    })
+  }, [])
+
+  const removeScoutedGroup = useCallback((groupId) => {
+    setScoutedGroups((prev) => prev.filter((g) => g.id !== groupId))
+  }, [])
+
   return (
-    <ShopContext.Provider value={{ shopList, addToShop, removeFromShop, isInShop }}>
+    <ShopContext.Provider value={{
+      shopList, addToShop, removeFromShop, isInShop,
+      scoutedGroups, addScoutedGroup, removeScoutedGroup,
+    }}>
       {children}
     </ShopContext.Provider>
   )

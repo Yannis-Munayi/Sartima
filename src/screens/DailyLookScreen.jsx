@@ -15,6 +15,7 @@ import OutfitCalendarScreen from './OutfitCalendarScreen'
 import TripPlannerScreen from './TripPlannerScreen'
 import ClosetScreen from './ClosetScreen'
 import LaundryTab from './LaundryTab'
+import WardrobeBuildScreen from './WardrobeBuildScreen'
 import styles from './DailyLookScreen.module.css'
 
 // Normalize a liked quiz/product item to the shape generateOutfit expects
@@ -608,6 +609,7 @@ function MyOutfitsTab() {
 const TABS = [
   { id: 'closet',   label: 'My Closet'       },
   { id: 'liked',    label: 'Liked'           },
+  { id: 'scout',    label: 'Shop Scout'      },
   { id: 'today',    label: "Today's Outfit"  },
   { id: 'outfits',  label: 'My Outfits'      },
   { id: 'calendar', label: 'Calendar'        },
@@ -634,6 +636,7 @@ export default function DailyLookScreen() {
 
       {activeTab === 'closet'   && <ClosetScreen singleTab="closet" />}
       {activeTab === 'liked'    && <ClosetScreen singleTab="liked"  />}
+      {activeTab === 'scout'    && <WardrobeBuildScreen onBack={() => setActiveTab('today')} />}
       {activeTab === 'today'    && <TodayTab />}
       {activeTab === 'outfits'  && <MyOutfitsTab />}
       {activeTab === 'calendar' && <OutfitCalendarScreen />}

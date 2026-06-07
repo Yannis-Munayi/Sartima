@@ -111,6 +111,66 @@ function StyleEvolutionChart({ quizzes, gender }) {
   )
 }
 
+function ScoutSettings() {
+  const [autoSave, setAutoSave] = useState(
+    () => localStorage.getItem('stylelab_scout_autosave') === 'true'
+  )
+  const [sizeSystem, setSizeSystemState] = useState(
+    () => localStorage.getItem('stylelab_size_system') || 'us'
+  )
+
+  function toggleAutoSave() {
+    const next = !autoSave
+    setAutoSave(next)
+    localStorage.setItem('stylelab_scout_autosave', String(next))
+  }
+
+  function pickSize(val) {
+    setSizeSystemState(val)
+    localStorage.setItem('stylelab_size_system', val)
+  }
+
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Shop Scout</h3>
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Auto-save results</p>
+          <p className={styles.settingsToggleSub}>Save Scout picks to My List automatically</p>
+        </div>
+        <button
+          className={`${styles.toggle} ${autoSave ? styles.toggleOn : ''}`}
+          onClick={toggleAutoSave}
+          aria-label={autoSave ? 'Disable auto-save' : 'Enable auto-save'}
+        >
+          <span className={styles.toggleThumb} />
+        </button>
+      </div>
+      <div style={{ height: 12 }} />
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Sizing system</p>
+          <p className={styles.settingsToggleSub}>US or EU sizes when scouting</p>
+        </div>
+        <div className={styles.sizeSystemPicker}>
+          <button
+            className={`${styles.sizeSystemOption} ${sizeSystem === 'us' ? styles.sizeSystemOptionActive : ''}`}
+            onClick={() => pickSize('us')}
+          >
+            US
+          </button>
+          <button
+            className={`${styles.sizeSystemOption} ${sizeSystem === 'eu' ? styles.sizeSystemOptionActive : ''}`}
+            onClick={() => pickSize('eu')}
+          >
+            EU
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   return (
@@ -155,6 +215,8 @@ function SettingsSheet({ user, onClose, onLogout }) {
           <GenderSelector />
           <div className={styles.settingsDivider} />
           <ThemeToggle />
+          <div className={styles.settingsDivider} />
+          <ScoutSettings />
           {user && onLogout && (
             <>
               <div className={styles.settingsDivider} />

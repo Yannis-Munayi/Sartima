@@ -7,17 +7,20 @@
   flex-direction: column;
 }
 
+/* ── Sticky top (header + tabs) ── */
+.stickyTop {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+}
+
 /* ── Header ── */
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px 20px 12px;
-  background: var(--bg);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .headerBack {
@@ -519,6 +522,38 @@
   flex-direction: row;
   overflow: hidden;
   min-height: 120px;
+  transition: opacity 0.15s;
+}
+
+.productCardDimmed {
+  opacity: 0.4;
+}
+
+.productSelectBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  border: 2px solid rgba(255,255,255,0.3);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.productSelectBtnOn {
+  background: #E8735A;
+  border-color: #E8735A;
 }
 
 .productPhoto {
@@ -701,6 +736,247 @@
   border-radius: 6px;
   align-self: flex-start;
   backdrop-filter: blur(4px);
+}
+
+/* ── View tabs ── */
+.viewTabsRow {
+  display: flex;
+  padding: 0 20px 12px;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.viewTab {
+  flex: 1;
+  padding: 9px 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.viewTabActive {
+  background: rgba(232,115,90,0.15);
+  border-color: rgba(232,115,90,0.4);
+  color: #E8735A;
+}
+
+.viewTabBadge {
+  background: #E8735A;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Per-piece budget step ── */
+.pieceBudgetSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+}
+
+.pieceBudgetTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pieceBudgetEmoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.budgetChipGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.budgetChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.budgetChip:active {
+  transform: scale(0.96);
+}
+
+.budgetChipSelected {
+  background: rgba(255,107,53,0.12);
+  border-color: #E8735A;
+}
+
+.budgetChipTag {
+  font-size: 13px;
+  font-weight: 800;
+  color: #E8735A;
+  font-family: 'Playfair Display', serif;
+}
+
+.budgetChipLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.budgetChipSelected .budgetChipLabel {
+  color: #D4896A;
+}
+
+/* ── Per-piece filters (color / material / size) ── */
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.filterLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 0 0 4px;
+}
+
+.filterLabelHint {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.18);
+}
+
+.filterChipScroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filterChipScroll::-webkit-scrollbar { display: none; }
+
+.filterChip {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filterChipSelected {
+  background: rgba(232, 115, 90, 0.15);
+  border-color: rgba(232, 115, 90, 0.5);
+  color: #E8735A;
+}
+
+.colorDot {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  padding: 0;
+}
+
+.colorDotSelected {
+  border-color: #E8735A;
+  box-shadow: 0 0 0 2px rgba(232, 115, 90, 0.35);
+}
+
+.colorDotCheck {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  line-height: 1;
+}
+
+/* ── Save to My List button + banner ── */
+.saveListBtn {
+  margin: 0 20px 16px;
+  padding: 14px;
+  background: #E8735A;
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: calc(100% - 40px);
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.saveListBtn:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+.savedBanner {
+  margin: 0 20px 16px;
+  padding: 12px 16px;
+  background: rgba(232, 115, 90, 0.12);
+  border: 1px solid rgba(232, 115, 90, 0.3);
+  border-radius: 14px;
+  color: #E8735A;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* Reset button */

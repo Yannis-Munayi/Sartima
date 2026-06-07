@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PRODUCTS } from '../data/products'
 import { LOOKS } from '../data/looks'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotos, fetchPhotosWithFallback } from '../services/pexels'
 import { useApp } from '../context/AppContext'
+import { useShop } from '../context/ShopContext'
+import ShopPanel from '../components/ShopPanel'
 import styles from './WardrobeBuildScreen.module.css'
+import listStyles from './ShopList.module.css'
 
 // ── Piece options shown in the wizard ────────────────────────────────────────
 
@@ -41,11 +44,13 @@ const STARTER_CAPSULE = ['plain-tee', 'slim-jeans', 'hoodie', 'clean-sneakers', 
 // ── Budget tiers ──────────────────────────────────────────────────────────────
 
 const BUDGET_TIERS = [
-  { id: 'budget',  label: 'Under $40',    sub: 'Affordable finds',      priceTag: '$' },
-  { id: 'mid',     label: '$40 – $100',   sub: 'Quality basics',        priceTag: '$$' },
-  { id: 'premium', label: '$100 – $250',  sub: 'Investment pieces',     priceTag: '$$$' },
-  { id: 'luxury',  label: '$250+',        sub: 'Designer quality',      priceTag: '$$$$' },
+  { id: 'budget',  label: 'Under $50',   sub: 'Affordable finds',  priceTag: '$',    priceRange: 'Under $50' },
+  { id: 'mid',     label: '$50 – $150',  sub: 'Quality basics',    priceTag: '$$',   priceRange: '$50 – $150' },
+  { id: 'premium', label: '$100 – $250', sub: 'Investment pieces', priceTag: '$$$',  priceRange: '$150 – $300' },
+  { id: 'luxury',  label: '$250+',       sub: 'Designer quality',  priceTag: '$$$$', priceRange: '$300+' },
 ]
+
+const BUDGET_BY_ID = Object.fromEntries(BUDGET_TIERS.map((t) => [t.id, t]))
 
 // ── Priority options ──────────────────────────────────────────────────────────
 
@@ -59,16 +64,46 @@ const PRIORITIES = [
   { id: 'affordable', label: 'Stretch my budget',      emoji: '💰', styleKeys: [] },
 ]
 
-// ── Recommendation engine ─────────────────────────────────────────────────────
+// ── Filter options ────────────────────────────────────────────────────────────
 
-const PRICE_FALLBACK_ORDER = {
-  budget:  ['budget', 'mid'],
-  mid:     ['mid', 'budget', 'premium'],
-  premium: ['premium', 'mid', 'luxury'],
-  luxury:  ['luxury', 'premium'],
+const COLOR_OPTIONS = [
+  { id: 'black',   label: 'Black',  hex: '#1a1a1a' },
+  { id: 'white',   label: 'White',  hex: '#f5f5f5' },
+  { id: 'grey',    label: 'Grey',   hex: '#888888' },
+  { id: 'navy',    label: 'Navy',   hex: '#1B2A4A' },
+  { id: 'brown',   label: 'Brown',  hex: '#7B4F2E' },
+  { id: 'beige',   label: 'Beige',  hex: '#C8A882' },
+  { id: 'red',     label: 'Red',    hex: '#C0392B' },
+  { id: 'blue',    label: 'Blue',   hex: '#2980B9' },
+  { id: 'green',   label: 'Green',  hex: '#27AE60' },
+  { id: 'olive',   label: 'Olive',  hex: '#6B7A2A' },
+]
+
+const MATERIAL_OPTIONS = [
+  { id: 'any',       label: 'Any'       },
+  { id: 'cotton',    label: 'Cotton'    },
+  { id: 'linen',     label: 'Linen'     },
+  { id: 'wool',      label: 'Wool'      },
+  { id: 'denim',     label: 'Denim'     },
+  { id: 'leather',   label: 'Leather'   },
+  { id: 'polyester', label: 'Polyester' },
+  { id: 'cashmere',  label: 'Cashmere'  },
+  { id: 'fleece',    label: 'Fleece'    },
+  { id: 'silk',      label: 'Silk'      },
+]
+
+const SIZE_BY_ROLE = {
+  tops:     { us: ['XS','S','M','L','XL','XXL'],            eu: ['34','36','38','40','42','44','46'] },
+  outerwear:{ us: ['XS','S','M','L','XL','XXL'],            eu: ['34','36','38','40','42','44','46'] },
+  bottoms:  { us: ['28','29','30','31','32','34','36','38'], eu: ['28','29','30','31','32','34','36','38'] },
+  shoes:    { us: ['6','7','8','9','10','11','12'],          eu: ['37','38','39','40','41','42','43','44'] },
 }
 
-function scoreProduct(product, priorities) {
+// ── Recommendation engine — returns up to 10 products ─────────────────────────
+// Products in the chosen budget tier are prioritised (+5 score boost).
+// Adjacent tiers fill remaining slots so we always aim for 10 results.
+
+function scoreProduct(product, priorities, budgetTier) {
   let score = 0
   const weights = product.styleWeights ?? {}
   for (const priorityId of priorities) {
@@ -78,38 +113,14 @@ function scoreProduct(product, priorities) {
       score += (weights[key] ?? 0) * 1.5
     }
   }
-  // Boost for affordable if that priority selected
   if (priorities.includes('affordable') && product.priceRange === 'budget') score += 3
   if (priorities.includes('brand') && ['premium', 'luxury'].includes(product.priceRange)) score += 2
+  // Boost products that match the chosen budget tier so they surface first
+  if (product.priceRange === budgetTier) score += 5
   return score
 }
 
-function getPriorityLabel(product, priorities) {
-  let best = null
-  let bestScore = -1
-  const weights = product.styleWeights ?? {}
-  for (const priorityId of priorities) {
-    const prio = PRIORITIES.find((p) => p.id === priorityId)
-    if (!prio || prio.styleKeys.length === 0) continue
-    const s = prio.styleKeys.reduce((acc, k) => acc + (weights[k] ?? 0), 0)
-    if (s > bestScore) { bestScore = s; best = prio }
-  }
-  if (!best) return null
-  const labelMap = {
-    comfort: 'Comfort pick',
-    clean: 'Clean & minimal',
-    fitted: 'Tailored fit',
-    versatile: 'Highly versatile',
-    durable: 'Built to last',
-    brand: 'Premium brand',
-    affordable: 'Budget-friendly',
-  }
-  return labelMap[best.id] ?? null
-}
-
-function recommendProducts(pieceOption, budgetTier, priorities, gender) {
-  const tierOrder = PRICE_FALLBACK_ORDER[budgetTier] ?? [budgetTier]
-
+function recommendProducts(pieceOption, budgetTier, priorities, gender, pieceFilters) {
   const genderMatch = (p) => {
     if (!gender || gender === 'nonbinary') return p.gender === 'unisex'
     if (gender === 'men')   return p.gender === 'mens'  || p.gender === 'unisex'
@@ -117,7 +128,7 @@ function recommendProducts(pieceOption, budgetTier, priorities, gender) {
     return p.gender === 'unisex'
   }
 
-  // Match by type first, fall back to parentType
+  // Match by specific type first, fall back to parentType for broader coverage
   let candidates = PRODUCTS.filter(
     (p) => pieceOption.productTypes.includes(p.type) && genderMatch(p)
   )
@@ -127,37 +138,27 @@ function recommendProducts(pieceOption, budgetTier, priorities, gender) {
     )
   }
 
-  // Try price tiers in fallback order
-  for (const tier of tierOrder) {
-    const tierCandidates = candidates.filter((p) => p.priceRange === tier)
-    if (tierCandidates.length > 0) {
-      return tierCandidates
-        .map((p) => ({ ...p, _score: scoreProduct(p, priorities) }))
-        .sort((a, b) => b._score - a._score)
-        .slice(0, 3)
-    }
-  }
+  const colorFilter = pieceFilters?.color ? pieceFilters.color.toLowerCase() : null
 
-  // Final fallback: return top 3 regardless of price
   return candidates
-    .map((p) => ({ ...p, _score: scoreProduct(p, priorities) }))
+    .map((p) => {
+      let score = scoreProduct(p, priorities, budgetTier)
+      if (colorFilter && p.color?.toLowerCase().includes(colorFilter)) score += 6
+      return { ...p, _score: score }
+    })
     .sort((a, b) => b._score - a._score)
-    .slice(0, 3)
+    .slice(0, 10)
 }
 
 function findComplements(selectedIds) {
   const selectedSet = new Set(selectedIds)
   const freq = {}
-
-  // Flatten all looks across all aesthetics
   const allLooks = Object.values(LOOKS).flat()
 
   for (const look of allLooks) {
     const pieces = look.pieces ?? []
-    // Count how many selected pieces appear in this look
     const matches = pieces.filter((p) => selectedSet.has(p)).length
     if (matches < 2) continue
-    // Collect non-selected pieces
     for (const p of pieces) {
       if (!selectedSet.has(p) && PIECE_BY_ID[p]) {
         freq[p] = (freq[p] ?? 0) + 1
@@ -172,17 +173,14 @@ function findComplements(selectedIds) {
 }
 
 function countOutfits(selectedIds) {
-  const tops     = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'tops').length
-  const bottoms  = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'bottoms').length
-  const shoes    = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'shoes').length
-  const outwear  = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'outerwear').length
-
+  const tops    = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'tops').length
+  const bottoms = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'bottoms').length
+  const shoes   = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'shoes').length
+  const outwear = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'outerwear').length
   const t = Math.max(tops, 1)
   const b = Math.max(bottoms, 1)
   const s = Math.max(shoes, 1)
-  const base = t * b * s
-  // Each outerwear piece multiplies outfit variety by ~1.5 (rough estimate)
-  return Math.round(base * (1 + outwear * 0.5))
+  return Math.round(t * b * s * (1 + outwear * 0.5))
 }
 
 // ── Price display helpers ─────────────────────────────────────────────────────
@@ -190,7 +188,7 @@ function countOutfits(selectedIds) {
 const PRICE_LABELS = { budget: 'Budget', mid: 'Mid-range', premium: 'Premium', luxury: 'Luxury' }
 const PRICE_COLORS = { budget: '#4CAF50', mid: '#2196F3', premium: '#FF9800', luxury: '#9C27B0' }
 
-// ── Step components ───────────────────────────────────────────────────────────
+// ── Step 1: Piece selection ───────────────────────────────────────────────────
 
 function PieceCard({ piece, isSelected, onToggle, gender }) {
   const [photo, setPhoto]   = useState(null)
@@ -225,20 +223,14 @@ function PieceCard({ piece, isSelected, onToggle, gender }) {
     >
       <div className={styles.pieceCardBg}>
         {photo && (
-          <img
-            src={photo}
-            alt={piece.name}
-            className={styles.pieceCardImg}
+          <img src={photo} alt={piece.name} className={styles.pieceCardImg}
             style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
+            onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
           />
         )}
         <div className={styles.pieceCardOverlay} />
       </div>
-      {isSelected && (
-        <div className={styles.pieceCardSelectedOverlay} />
-      )}
+      {isSelected && <div className={styles.pieceCardSelectedOverlay} />}
       {isSelected && <span className={styles.pieceCheck}>✓</span>}
       <div className={styles.pieceCardFooter}>
         <span className={styles.pieceName}>{piece.name}</span>
@@ -255,12 +247,9 @@ function StepPieces({ selected, onToggle, onNotSure, onNext, gender }) {
 
       <div className={styles.pieceGrid}>
         {PIECE_OPTIONS.map((piece) => (
-          <PieceCard
-            key={piece.id}
-            piece={piece}
+          <PieceCard key={piece.id} piece={piece}
             isSelected={selected.includes(piece.id)}
-            onToggle={onToggle}
-            gender={gender}
+            onToggle={onToggle} gender={gender}
           />
         ))}
       </div>
@@ -269,51 +258,121 @@ function StepPieces({ selected, onToggle, onNotSure, onNext, gender }) {
         ✨ Not sure yet? Show me a starter capsule
       </button>
 
-      <button
-        className={styles.nextBtn}
-        onClick={onNext}
-        disabled={selected.length === 0}
-      >
+      <button className={styles.nextBtn} onClick={onNext} disabled={selected.length === 0}>
         Next: Set your budget →
       </button>
     </div>
   )
 }
 
-function StepBudget({ selected, onSelect, onNext, onBack }) {
+// ── Step 2: Per-piece budget ──────────────────────────────────────────────────
+
+function StepBudget({ pieces, budgets, onSetBudget, filters, onSetFilter, sizeSystem, onNext, onBack }) {
+  const allSet = pieces.every((id) => budgets[id])
+
   return (
     <div className={styles.stepContent}>
-      <h2 className={styles.stepTitle}>What's your budget per item?</h2>
-      <p className={styles.stepSub}>We'll find the best quality within your range.</p>
+      <h2 className={styles.stepTitle}>Budget & filters</h2>
+      <p className={styles.stepSub}>Set price range and preferences per piece.</p>
 
-      <div className={styles.budgetGrid}>
-        {BUDGET_TIERS.map((tier) => (
-          <button
-            key={tier.id}
-            className={`${styles.budgetCard} ${selected === tier.id ? styles.budgetCardSelected : ''}`}
-            onClick={() => onSelect(tier.id)}
-          >
-            <span className={styles.budgetTag}>{tier.priceTag}</span>
-            <span className={styles.budgetLabel}>{tier.label}</span>
-            <span className={styles.budgetSub}>{tier.sub}</span>
-          </button>
-        ))}
-      </div>
+      {pieces.map((pieceId) => {
+        const piece    = PIECE_BY_ID[pieceId]
+        const selected = budgets[pieceId] ?? null
+        const pf       = filters[pieceId] ?? {}
+        const sizeOpts = (SIZE_BY_ROLE[piece.role] ?? SIZE_BY_ROLE.tops)[sizeSystem] ?? []
+
+        return (
+          <div key={pieceId} className={styles.pieceBudgetSection}>
+            <div className={styles.pieceBudgetTitle}>
+              <span className={styles.pieceBudgetEmoji}>{piece.emoji}</span>
+              <span>{piece.name}</span>
+            </div>
+
+            <div className={styles.budgetChipGrid}>
+              {BUDGET_TIERS.map((tier) => (
+                <button
+                  key={tier.id}
+                  className={`${styles.budgetChip} ${selected === tier.id ? styles.budgetChipSelected : ''}`}
+                  onClick={() => onSetBudget(pieceId, tier.id)}
+                >
+                  <span className={styles.budgetChipTag}>{tier.priceTag}</span>
+                  <span className={styles.budgetChipLabel}>{tier.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.filterSection}>
+              <p className={styles.filterLabel}>Color</p>
+              <div className={styles.filterChipScroll}>
+                <button
+                  className={`${styles.filterChip} ${!pf.color ? styles.filterChipSelected : ''}`}
+                  onClick={() => onSetFilter(pieceId, 'color', null)}
+                >
+                  Any
+                </button>
+                {COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c.id}
+                    className={`${styles.colorDot} ${pf.color === c.id ? styles.colorDotSelected : ''}`}
+                    style={{ background: c.hex }}
+                    onClick={() => onSetFilter(pieceId, 'color', c.id)}
+                    aria-label={c.label}
+                    title={c.label}
+                  >
+                    {pf.color === c.id && <span className={styles.colorDotCheck}>✓</span>}
+                  </button>
+                ))}
+              </div>
+
+              <p className={styles.filterLabel}>Material</p>
+              <div className={styles.filterChipScroll}>
+                {MATERIAL_OPTIONS.map((m) => (
+                  <button
+                    key={m.id}
+                    className={`${styles.filterChip} ${(pf.material ?? 'any') === m.id ? styles.filterChipSelected : ''}`}
+                    onClick={() => onSetFilter(pieceId, 'material', m.id)}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              <p className={styles.filterLabel}>
+                Size <span className={styles.filterLabelHint}>({sizeSystem.toUpperCase()})</span>
+              </p>
+              <div className={styles.filterChipScroll}>
+                <button
+                  className={`${styles.filterChip} ${!pf.size ? styles.filterChipSelected : ''}`}
+                  onClick={() => onSetFilter(pieceId, 'size', null)}
+                >
+                  Any
+                </button>
+                {sizeOpts.map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.filterChip} ${pf.size === s ? styles.filterChipSelected : ''}`}
+                    onClick={() => onSetFilter(pieceId, 'size', s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })}
 
       <div className={styles.navRow}>
         <button className={styles.backBtn} onClick={onBack}>← Back</button>
-        <button
-          className={styles.nextBtn}
-          onClick={onNext}
-          disabled={!selected}
-          style={{ flex: 1 }}
-        >
+        <button className={styles.nextBtn} onClick={onNext} disabled={!allSet} style={{ flex: 1 }}>
           Next: Your priorities →
         </button>
       </div>
     </div>
   )
 }
+
+// ── Step 3: Priorities ────────────────────────────────────────────────────────
 
 function StepPriorities({ selected, onToggle, onNext, onBack }) {
   const maxReached = selected.length >= 3
@@ -328,8 +387,7 @@ function StepPriorities({ selected, onToggle, onNext, onBack }) {
           const isSelected = selected.includes(p.id)
           const isDisabled = !isSelected && maxReached
           return (
-            <button
-              key={p.id}
+            <button key={p.id}
               className={`${styles.priorityChip} ${isSelected ? styles.priorityChipSelected : ''} ${isDisabled ? styles.priorityChipDisabled : ''}`}
               onClick={() => !isDisabled && onToggle(p.id)}
             >
@@ -343,19 +401,15 @@ function StepPriorities({ selected, onToggle, onNext, onBack }) {
 
       <div className={styles.navRow}>
         <button className={styles.backBtn} onClick={onBack}>← Back</button>
-        <button
-          className={styles.nextBtn}
-          onClick={onNext}
-          style={{ flex: 1 }}
-        >
-          Build my wardrobe →
+        <button className={styles.nextBtn} onClick={onNext} style={{ flex: 1 }}>
+          Find my picks →
         </button>
       </div>
     </div>
   )
 }
 
-// ── Product card ──────────────────────────────────────────────────────────────
+// ── Step 4: Results ───────────────────────────────────────────────────────────
 
 function ProductPhoto({ product }) {
   const [photo, setPhoto]   = useState(null)
@@ -382,50 +436,66 @@ function ProductPhoto({ product }) {
   }, [product.id])
 
   return (
-    <div
-      ref={ref}
-      className={styles.productPhoto}
+    <div ref={ref} className={styles.productPhoto}
       style={{ background: product.gradient ?? 'rgba(255,255,255,0.05)' }}
     >
       {photo && (
-        <img
-          src={photo}
-          alt={product.name}
-          className={styles.productPhotoImg}
+        <img src={photo} alt={product.name} className={styles.productPhotoImg}
           style={{ opacity: loaded ? 1 : 0 }}
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
         />
       )}
     </div>
   )
 }
 
-function ProductCard({ product, priorities }) {
-  const label      = getPriorityLabel(product, priorities)
+function ProductCard({ product, priorities, isSelected, onToggle }) {
   const priceColor = PRICE_COLORS[product.priceRange] ?? '#888'
   const priceLabel = PRICE_LABELS[product.priceRange] ?? ''
 
+  // Derive a priority label for display
+  let priorityLabel = null
+  {
+    let best = null; let bestScore = -1
+    const weights = product.styleWeights ?? {}
+    for (const pid of priorities) {
+      const prio = PRIORITIES.find((p) => p.id === pid)
+      if (!prio || prio.styleKeys.length === 0) continue
+      const s = prio.styleKeys.reduce((acc, k) => acc + (weights[k] ?? 0), 0)
+      if (s > bestScore) { bestScore = s; best = prio }
+    }
+    if (best) {
+      const labelMap = { comfort: 'Comfort pick', clean: 'Clean & minimal', fitted: 'Tailored fit', versatile: 'Highly versatile', durable: 'Built to last', brand: 'Premium brand', affordable: 'Budget-friendly' }
+      priorityLabel = labelMap[best.id] ?? null
+    }
+  }
+
   return (
-    <div className={styles.productCard}>
-      <ProductPhoto product={product} />
+    <div className={`${styles.productCard} ${onToggle && !isSelected ? styles.productCardDimmed : ''}`}>
+      <div style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
+        <ProductPhoto product={product} />
+        {onToggle && (
+          <button
+            className={`${styles.productSelectBtn} ${isSelected ? styles.productSelectBtnOn : ''}`}
+            onClick={onToggle}
+            aria-label={isSelected ? 'Deselect' : 'Select'}
+          >
+            {isSelected && '✓'}
+          </button>
+        )}
+      </div>
       <div className={styles.productCardBody}>
         <div className={styles.productCardTop}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className={styles.productBrand}>{product.brand}</p>
             <p className={styles.productName}>{product.name}</p>
           </div>
-          <span className={styles.productPriceTag} style={{ color: priceColor }}>
-            {priceLabel}
-          </span>
+          <span className={styles.productPriceTag} style={{ color: priceColor }}>{priceLabel}</span>
         </div>
         <p className={styles.productDesc}>{product.description}</p>
-        {label && <span className={styles.productLabel}>{label}</span>}
-        <a
-          href={product.shopUrl ?? product.shopFallbackUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.shopBtn}
+        {priorityLabel && <span className={styles.productLabel}>{priorityLabel}</span>}
+        <a href={product.shopUrl ?? product.shopFallbackUrl}
+          target="_blank" rel="noopener noreferrer" className={styles.shopBtn}
         >
           Shop {product.brand} →
         </a>
@@ -433,8 +503,6 @@ function ProductCard({ product, priorities }) {
     </div>
   )
 }
-
-// ── Complement card ───────────────────────────────────────────────────────────
 
 function ComplementCard({ id, onAddPiece, gender }) {
   const option = PIECE_BY_ID[id]
@@ -465,20 +533,12 @@ function ComplementCard({ id, onAddPiece, gender }) {
   if (!option) return null
 
   return (
-    <button
-      ref={cardRef}
-      className={styles.complementCard}
-      onClick={() => onAddPiece(id)}
-    >
+    <button ref={cardRef} className={styles.complementCard} onClick={() => onAddPiece(id)}>
       <div className={styles.complementCardBg}>
         {photo && (
-          <img
-            src={photo}
-            alt={option.name}
-            className={styles.complementCardImg}
+          <img src={photo} alt={option.name} className={styles.complementCardImg}
             style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
+            onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
           />
         )}
         <div className={styles.complementCardOverlay} />
@@ -491,25 +551,28 @@ function ComplementCard({ id, onAddPiece, gender }) {
   )
 }
 
-// ── Results view ──────────────────────────────────────────────────────────────
-
-function ResultsView({ pieces, budget, priorities, gender, onReset, onAddPiece }) {
+function ResultsView({ recommendations, complements, budgets, priorities, gender, onReset, onAddPiece, onSave, saved }) {
+  const pieces      = recommendations.map((r) => r.pieceId)
   const outfitCount = useMemo(() => countOutfits(pieces), [pieces])
 
-  const recommendations = useMemo(() => {
-    return pieces.map((pieceId) => {
-      const option = PIECE_BY_ID[pieceId]
-      if (!option) return null
-      const products = recommendProducts(option, budget, priorities, gender)
-      return { pieceId, option, products }
-    }).filter(Boolean)
-  }, [pieces, budget, priorities, gender])
+  // All products selected by default so users only need to deselect unwanted ones
+  const [selectedIds, setSelectedIds] = useState(
+    () => new Set(recommendations.flatMap((r) => r.products.map((p) => p.id)))
+  )
 
-  const complements = useMemo(() => findComplements(pieces), [pieces])
+  function toggleProduct(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectedCount = selectedIds.size
 
   return (
     <div className={styles.results}>
-      {/* Outfit count banner */}
       <div className={styles.outfitBanner}>
         <div className={styles.outfitCount}>{outfitCount}</div>
         <div className={styles.outfitText}>
@@ -518,11 +581,10 @@ function ResultsView({ pieces, budget, priorities, gender, onReset, onAddPiece }
         </div>
       </div>
 
-      {/* Core pieces */}
       <section className={styles.resultsSection}>
         <h3 className={styles.resultsSectionTitle}>Your Core Pieces</h3>
         <p className={styles.resultsSectionSub}>
-          Top picks for your budget and priorities
+          {onSave ? 'Tap a product to deselect it before saving' : 'Top picks for your budget and priorities'}
         </p>
 
         {recommendations.map(({ pieceId, option, products }) => (
@@ -530,48 +592,267 @@ function ResultsView({ pieces, budget, priorities, gender, onReset, onAddPiece }
             <div className={styles.pieceGroupHeader}>
               <span className={styles.pieceGroupEmoji}>{option.emoji}</span>
               <span className={styles.pieceGroupName}>{option.name}</span>
-              <span className={styles.pieceGroupBudget}>
-                {BUDGET_TIERS.find((t) => t.id === budget)?.label}
-              </span>
+              <span className={styles.pieceGroupBudget}>{BUDGET_BY_ID[budgets[pieceId]]?.label ?? ''}</span>
             </div>
             {products.length > 0 ? (
               <div className={styles.productList}>
                 {products.map((p) => (
-                  <ProductCard key={p.id} product={p} priorities={priorities} />
+                  <ProductCard key={p.id} product={p} priorities={priorities}
+                    isSelected={selectedIds.has(p.id)}
+                    onToggle={onSave ? () => toggleProduct(p.id) : null}
+                  />
                 ))}
               </div>
             ) : (
               <p className={styles.noProducts}>
-                No exact match in catalog — browse {option.name.toLowerCase()}s on your favourite retailer.
+                No matches in catalog — browse {option.name.toLowerCase()}s on your favourite retailer.
               </p>
             )}
           </div>
         ))}
       </section>
 
-      {/* Also consider */}
       {complements.length > 0 && (
         <section className={styles.resultsSection}>
           <h3 className={styles.resultsSectionTitle}>Also Consider</h3>
-          <p className={styles.resultsSectionSub}>
-            These pair well with your picks and boost your outfit count
-          </p>
+          <p className={styles.resultsSectionSub}>These pair well with your picks</p>
           <div className={styles.complementGrid}>
             {complements.map((id) => (
-              <ComplementCard
-                key={id}
-                id={id}
-                onAddPiece={onAddPiece}
-                gender={gender}
-              />
+              <ComplementCard key={id} id={id} onAddPiece={onAddPiece} gender={gender} />
             ))}
           </div>
         </section>
       )}
 
-      <button className={styles.resetBtn} onClick={onReset}>
-        Start over
+      {onSave && !saved && (
+        <button
+          className={styles.saveListBtn}
+          onClick={() => onSave(selectedIds)}
+          disabled={selectedCount === 0}
+        >
+          Save {selectedCount} {selectedCount === 1 ? 'product' : 'products'} to My List
+        </button>
+      )}
+      {saved && (
+        <div className={styles.savedBanner}>
+          ✓ Saved to My List — view in My List tab
+        </div>
+      )}
+
+      <button className={styles.resetBtn} onClick={onReset}>Start over</button>
+    </div>
+  )
+}
+
+// ── My List tab ───────────────────────────────────────────────────────────────
+
+function ProductRowPhoto({ product }) {
+  const [photo, setPhoto]   = useState(null)
+  const [loaded, setLoaded] = useState(false)
+  const ref     = useRef(null)
+  const fetched = useRef(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !fetched.current) {
+        fetched.current = true
+        fetchPhotosWithFallback([
+          product.googleQuery ?? `${product.brand} ${product.name} fashion`,
+          `${product.brand} ${product.name}`,
+        ], 1).then(([url] = []) => setPhoto(url ?? null))
+        obs.disconnect()
+      }
+    }, { rootMargin: '60px' })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [product.id])
+
+  return (
+    <div ref={ref} className={listStyles.productRowPhoto}>
+      {photo && (
+        <img src={photo} alt={product.name} className={listStyles.productRowImg}
+          style={{ opacity: loaded ? 1 : 0 }}
+          onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
+        />
+      )}
+    </div>
+  )
+}
+
+function ScoutedGroupCard({ group, onRemove }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className={listStyles.card}>
+      <button className={listStyles.cardHeader} onClick={() => setOpen(!open)}>
+        <div className={listStyles.cardPhoto} style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <span className={listStyles.cardEmoji}>{group.emoji}</span>
+        </div>
+        <div className={listStyles.cardInfo}>
+          <p className={listStyles.cardName}>{group.pieceName}</p>
+          <p className={listStyles.cardFilters}>
+            {[
+              group.budgetLabel,
+              group.filters?.color,
+              group.filters?.material && group.filters.material !== 'any' && group.filters.material,
+              group.filters?.size,
+            ].filter(Boolean).join(' · ')}
+          </p>
+          <p className={listStyles.cardCount}>{group.products.length} products</p>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" className={listStyles.chevron}
+          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
+
+      {open && (
+        <div className={listStyles.cardBody}>
+          <div className={listStyles.productRows}>
+            {group.products.map((product) => (
+              <div key={product.id} className={listStyles.productRow}>
+                <ProductRowPhoto product={product} />
+                <div className={listStyles.productRowBody}>
+                  <p className={listStyles.productRowBrand}>{product.brand}</p>
+                  <p className={listStyles.productRowName}>{product.name}</p>
+                  <p className={listStyles.productRowDesc}>{product.description}</p>
+                </div>
+                <a
+                  href={product.shopUrl ?? product.shopFallbackUrl}
+                  target="_blank" rel="noopener noreferrer"
+                  className={listStyles.productRowBuy}
+                >
+                  Buy →
+                </a>
+              </div>
+            ))}
+          </div>
+          <div className={listStyles.cardActions}>
+            <button className={listStyles.removeBtn} onClick={() => onRemove(group.id)}>
+              Remove
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ShopItemCard({ entry, onRemove, onReopen }) {
+  const { item, filters, retailers } = entry
+  const [photo, setPhoto]   = useState(null)
+  const [loaded, setLoaded] = useState(false)
+  const [open, setOpen]     = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchPhotos(`${item.name} fashion outfit`, 1).then(([url] = []) => {
+      if (!cancelled) setPhoto(url ?? null)
+    })
+    return () => { cancelled = true }
+  }, [item.id])
+
+  const filterSummary = [filters.colour, filters.material, filters.size, filters.fit, filters.priceRange]
+    .filter(Boolean).join(' · ')
+
+  return (
+    <div className={listStyles.card}>
+      <button className={listStyles.cardHeader} onClick={() => setOpen(!open)}>
+        <div className={listStyles.cardPhoto} style={{ background: item.gradient ?? 'rgba(255,255,255,0.06)' }}>
+          {photo && (
+            <img src={photo} alt={item.name} className={listStyles.cardImg}
+              style={{ opacity: loaded ? 1 : 0 }}
+              onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
+            />
+          )}
+          <span className={listStyles.cardEmoji}>{item.emoji}</span>
+        </div>
+        <div className={listStyles.cardInfo}>
+          <p className={listStyles.cardName}>{item.name}</p>
+          <p className={listStyles.cardFilters}>{filterSummary || 'No filters applied'}</p>
+          <p className={listStyles.cardCount}>{retailers.length} stores</p>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2.5" className={listStyles.chevron}
+          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className={listStyles.cardBody}>
+          <div className={listStyles.storeList}>
+            {retailers.map((r, i) => (
+              <a key={r.id} href={r.searchUrl} target="_blank" rel="noopener noreferrer"
+                className={listStyles.storeRow}
+              >
+                <span className={listStyles.storeRank}>#{i + 1}</span>
+                <span className={listStyles.storeName}>{r.emoji} {r.name}</span>
+                <span className={listStyles.storeTagline}>{r.tagline}</span>
+                <span className={listStyles.shopNow}>Shop →</span>
+              </a>
+            ))}
+          </div>
+          <div className={listStyles.cardActions}>
+            <button className={listStyles.reopenBtn} onClick={() => onReopen(entry)}>Update filters</button>
+            <button className={listStyles.removeBtn} onClick={() => onRemove(item.id)}>Remove</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MyListView() {
+  const { shopList, removeFromShop, scoutedGroups, removeScoutedGroup } = useShop()
+  const [reopenEntry, setReopenEntry] = useState(null)
+
+  const isEmpty = shopList.length === 0 && scoutedGroups.length === 0
+
+  return (
+    <div>
+      {isEmpty && (
+        <div className={listStyles.empty}>
+          <span className={listStyles.emptyIcon}>🛍️</span>
+          <p className={listStyles.emptyTitle}>Nothing here yet</p>
+          <p className={listStyles.emptySub}>
+            Complete a Scout search to save products here, or tap "Shop this item" anywhere in the app.
+          </p>
+        </div>
+      )}
+
+      {scoutedGroups.length > 0 && (
+        <>
+          <p className={listStyles.sectionTitle}>Scout Results</p>
+          <div className={listStyles.list}>
+            {scoutedGroups.map((group) => (
+              <ScoutedGroupCard key={group.id} group={group} onRemove={removeScoutedGroup} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {shopList.length > 0 && (
+        <>
+          <p className={listStyles.sectionTitle}>Saved Items</p>
+          <div className={listStyles.list}>
+            {shopList.map((entry) => (
+              <ShopItemCard key={entry.item.id} entry={entry}
+                onRemove={removeFromShop} onReopen={setReopenEntry}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {reopenEntry && (
+        <ShopPanel item={reopenEntry.item} onClose={() => setReopenEntry(null)} />
+      )}
     </div>
   )
 }
@@ -581,22 +862,33 @@ function ResultsView({ pieces, budget, priorities, gender, onReset, onAddPiece }
 export default function WardrobeBuildScreen({ onBack }) {
   const { state } = useApp()
   const gender    = state.gender
+  const { shopList, addScoutedGroup } = useShop()
 
-  const [step, setStep]           = useState(1) // 1 = pieces, 2 = budget, 3 = priorities, 4 = results
-  const [pieces, setPieces]       = useState([])
-  const [budget, setBudget]       = useState(null)
+  const [activeView, setActiveView] = useState('scout') // 'scout' | 'list'
+  const [step, setStep]             = useState(1)
+  const [pieces, setPieces]         = useState([])
+  const [budgets, setBudgets]       = useState({}) // { [pieceId]: tierId }
+  const [filters, setFilters]       = useState({}) // { [pieceId]: { color, material, size } }
   const [priorities, setPriorities] = useState([])
+  const [sizeSystem]                = useState(() => localStorage.getItem('stylelab_size_system') || 'us')
 
   function togglePiece(id) {
-    setPieces((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    )
+    setPieces((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id])
+  }
+
+  function setBudget(pieceId, tierId) {
+    setBudgets((prev) => ({ ...prev, [pieceId]: tierId }))
+  }
+
+  function setPieceFilter(pieceId, key, value) {
+    setFilters((prev) => ({
+      ...prev,
+      [pieceId]: { ...prev[pieceId], [key]: value },
+    }))
   }
 
   function togglePriority(id) {
-    setPriorities((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    )
+    setPriorities((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id])
   }
 
   function useStarterCapsule() {
@@ -605,42 +897,125 @@ export default function WardrobeBuildScreen({ onBack }) {
   }
 
   function handleAddComplement(id) {
-    if (!pieces.includes(id)) setPieces((prev) => [...prev, id])
+    if (!pieces.includes(id)) {
+      setPieces((prev) => [...prev, id])
+      setStep(2) // user must assign a budget for the new piece
+    }
   }
+
+  const [saved, setSaved]     = useState(false)
+  const [autoSave]            = useState(() => localStorage.getItem('stylelab_scout_autosave') === 'true')
 
   function reset() {
     setStep(1)
     setPieces([])
-    setBudget(null)
+    setBudgets({})
+    setFilters({})
     setPriorities([])
+    setSaved(false)
   }
+
+  // Compute recommendations when on step 4
+  const recommendations = useMemo(() => {
+    if (step < 4) return []
+    return pieces.map((pieceId) => {
+      const option       = PIECE_BY_ID[pieceId]
+      if (!option) return null
+      const budgetTier   = budgets[pieceId] ?? 'mid'
+      const pieceFilters = filters[pieceId] ?? {}
+      const products     = recommendProducts(option, budgetTier, priorities, gender, pieceFilters)
+      return { pieceId, option, products, budgetTier, pieceFilters }
+    }).filter(Boolean)
+  }, [step, pieces, budgets, filters, priorities, gender])
+
+  const complements = useMemo(
+    () => (step === 4 ? findComplements(pieces) : []),
+    [step, pieces]
+  )
+
+  const performSave = useCallback((selectedIds) => {
+    recommendations.forEach(({ pieceId, option, products, budgetTier, pieceFilters }) => {
+      const tier = BUDGET_BY_ID[budgetTier]
+      const safeProducts = products
+        .filter((p) => selectedIds.has(p.id))
+        .map(({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange }) =>
+          ({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange })
+        )
+      if (safeProducts.length === 0) return
+      addScoutedGroup({
+        id:          `${pieceId}_${budgetTier}`,
+        pieceId,
+        pieceName:   option.name,
+        emoji:       option.emoji,
+        budgetTier,
+        budgetLabel: tier?.label ?? '',
+        filters:     pieceFilters ?? {},
+        products:    safeProducts,
+        savedAt:     Date.now(),
+      })
+    })
+    setSaved(true)
+  }, [recommendations, addScoutedGroup])
+
+  // Auto-save when the setting is enabled — saves all products (opt-in, default off)
+  useEffect(() => {
+    if (!autoSave || step !== 4 || recommendations.length === 0 || saved) return
+    const allIds = new Set(recommendations.flatMap((r) => r.products.map((p) => p.id)))
+    performSave(allIds)
+  }, [autoSave, step, recommendations.length, saved, performSave])
+
+  // Clear saved flag when user goes back to earlier steps
+  useEffect(() => {
+    if (step < 4) setSaved(false)
+  }, [step])
+
+  const { scoutedGroups } = useShop()
+  const totalListCount    = shopList.length + scoutedGroups.length
 
   const STEP_LABELS = ['Pieces', 'Budget', 'Priorities', 'Results']
 
   return (
     <div className={styles.screen}>
-      {/* Header */}
-      <div className={styles.header}>
-        <button className={styles.headerBack} onClick={onBack} aria-label="Back">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <div className={styles.headerCenter}>
-          <h1 className={styles.headerTitle}>Shop Scout</h1>
-          {step < 4 && (
-            <p className={styles.headerSub}>Step {step} of 3</p>
-          )}
+      {/* Sticky header + tabs */}
+      <div className={styles.stickyTop}>
+        <div className={styles.header}>
+          <button className={styles.headerBack} onClick={onBack} aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <div className={styles.headerCenter}>
+            <h1 className={styles.headerTitle}>Shop Scout</h1>
+            {activeView === 'scout' && step < 4 && (
+              <p className={styles.headerSub}>Step {step} of 3</p>
+            )}
+          </div>
+          <div className={styles.headerSpacer} />
         </div>
-        <div className={styles.headerSpacer} />
+
+        <div className={styles.viewTabsRow}>
+          <button
+            className={`${styles.viewTab} ${activeView === 'scout' ? styles.viewTabActive : ''}`}
+            onClick={() => setActiveView('scout')}
+          >
+            Scout
+          </button>
+          <button
+            className={`${styles.viewTab} ${activeView === 'list' ? styles.viewTabActive : ''}`}
+            onClick={() => setActiveView('list')}
+          >
+            My List
+            {totalListCount > 0 && (
+              <span className={styles.viewTabBadge}>{totalListCount}</span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Step indicator */}
-      {step < 4 && (
+      {activeView === 'scout' && step < 4 && (
         <div className={styles.stepIndicator}>
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
+            <div key={s}
               className={`${styles.stepDot} ${s < step ? styles.stepDotDone : ''} ${s === step ? styles.stepDotActive : ''}`}
             >
               <div className={styles.stepDotInner} />
@@ -651,42 +1026,37 @@ export default function WardrobeBuildScreen({ onBack }) {
         </div>
       )}
 
-      {/* Content */}
       <div className={styles.content}>
-        {step === 1 && (
-          <StepPieces
-            selected={pieces}
-            onToggle={togglePiece}
-            onNotSure={useStarterCapsule}
-            onNext={() => setStep(2)}
-            gender={gender}
-          />
-        )}
-        {step === 2 && (
-          <StepBudget
-            selected={budget}
-            onSelect={setBudget}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && (
-          <StepPriorities
-            selected={priorities}
-            onToggle={togglePriority}
-            onNext={() => setStep(4)}
-            onBack={() => setStep(2)}
-          />
-        )}
-        {step === 4 && (
-          <ResultsView
-            pieces={pieces}
-            budget={budget ?? 'mid'}
-            priorities={priorities}
-            gender={gender}
-            onReset={reset}
-            onAddPiece={handleAddComplement}
-          />
+        {activeView === 'list' && <MyListView />}
+        {activeView === 'scout' && (
+          <>
+            {step === 1 && (
+              <StepPieces selected={pieces} onToggle={togglePiece}
+                onNotSure={useStarterCapsule} onNext={() => setStep(2)} gender={gender}
+              />
+            )}
+            {step === 2 && (
+              <StepBudget pieces={pieces} budgets={budgets}
+                onSetBudget={setBudget} filters={filters} onSetFilter={setPieceFilter}
+                sizeSystem={sizeSystem}
+                onNext={() => setStep(3)} onBack={() => setStep(1)}
+              />
+            )}
+            {step === 3 && (
+              <StepPriorities selected={priorities} onToggle={togglePriority}
+                onNext={() => setStep(4)} onBack={() => setStep(2)}
+              />
+            )}
+            {step === 4 && (
+              <ResultsView
+                recommendations={recommendations} complements={complements}
+                budgets={budgets} priorities={priorities} gender={gender}
+                onReset={reset} onAddPiece={handleAddComplement}
+                onSave={autoSave ? null : performSave}
+                saved={saved}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
