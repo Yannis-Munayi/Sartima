@@ -618,7 +618,7 @@ const TABS = [
 ]
 
 export default function DailyLookScreen() {
-  const [activeTab, setActiveTab] = useState('today')
+  const [activeTab, setActiveTab] = useState('scout')
 
   return (
     <div className={styles.screen}>
