@@ -232,7 +232,6 @@ export const getWeather = onCall({ timeoutSeconds: 30, cors: true, invoker: 'pub
 // ─── Image Search Proxy ───────────────────────────────────────────────────────
 
 export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
-  requireAuth(request)
   const { query, count = 3, source = 'pexels' } = request.data
   if (!query) throw new HttpsError('invalid-argument', 'query required')
 
