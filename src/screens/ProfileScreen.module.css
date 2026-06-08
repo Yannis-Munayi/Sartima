@@ -725,3 +725,240 @@
   color: #E8735A;
 }
 
+/* ── Scrollable settings sheet ── */
+.settingsSheet {
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.settingsSheetBody {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 20px;
+}
+
+/* ── Occasion pills (compact) ── */
+.occasionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.occasionPill {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-card);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.occasionPillActive {
+  background: #E8735A;
+  border-color: #E8735A;
+  color: #fff;
+}
+
+/* ── Season multi-select pills ── */
+.seasonRow {
+  display: flex;
+  gap: 6px;
+}
+
+.seasonPill {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: center;
+}
+
+.seasonPillActive {
+  background: rgba(232, 115, 90, 0.15);
+  border-color: rgba(232, 115, 90, 0.5);
+  color: #E8735A;
+}
+
+/* ── Sort pills ── */
+.sortRow {
+  display: flex;
+  gap: 6px;
+}
+
+.sortPill {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: center;
+}
+
+.sortPillActive {
+  background: rgba(232, 115, 90, 0.15);
+  border-color: rgba(232, 115, 90, 0.5);
+  color: #E8735A;
+}
+
+/* ── Small action button (Enable, Clear) ── */
+.permBtn {
+  padding: 7px 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.permBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+/* ── Time input ── */
+.timeInput {
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  flex-shrink: 0;
+  color-scheme: dark;
+}
+
+.timeInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+
+/* ── Shopping email row ── */
+.emailRow {
+  display: flex;
+  gap: 8px;
+}
+
+.emailInput {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+}
+
+.emailInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+.emailInput::placeholder { color: rgba(255, 255, 255, 0.25); }
+
+.emailSaveBtn {
+  padding: 10px 18px;
+  background: #E8735A;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.emailSaveBtn:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Locale row ── */
+.localeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.localePill {
+  display: inline-block;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── Data & Privacy buttons ── */
+.privacyBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exportBtn {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.exportBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.deleteBtn {
+  width: 100%;
+  padding: 11px 14px;
+  background: transparent;
+  border: 1px solid rgba(220, 60, 60, 0.25);
+  border-radius: 10px;
+  color: #e06060;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.deleteBtnConfirm {
+  background: rgba(220, 60, 60, 0.1);
+  border-color: #e06060;
+}
+
+.deleteBtn:disabled { opacity: 0.6; cursor: default; }
+

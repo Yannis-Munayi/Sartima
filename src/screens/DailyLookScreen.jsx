@@ -56,6 +56,12 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function formatTemp(tempC) {
+  const unit = localStorage.getItem('stylelab_temp_unit') ?? 'c'
+  if (unit === 'f') return `${Math.round(tempC * 9 / 5 + 32)}°F`
+  return `${tempC}°C`
+}
+
 function OutfitCard({ item }) {
   const storedUrl = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
   const [fetchedUrl, setFetchedUrl] = useState(null)
@@ -95,7 +101,7 @@ function TodayTab() {
   const { liked }       = useWishlist()
 
   const [source, setSource]           = useState('closet')
-  const [occasion, setOccasion]       = useState('casual')
+  const [occasion, setOccasion]       = useState(() => localStorage.getItem('stylelab_default_occasion') ?? 'casual')
   const [outfit, setOutfit]           = useState(null)
   const [generating, setGenerating]   = useState(false)
   const [genError, setGenError]       = useState(null)
@@ -557,7 +563,7 @@ function MyOutfitsTab() {
                     <span className={styles.logOccasion}>{entry.occasion}</span>
                     {entry.weather && (
                       <span className={styles.logWeather}>
-                        {getWeatherEmoji(entry.weather.condition)} {entry.weather.temp}°C
+                        {getWeatherEmoji(entry.weather.condition)} {formatTemp(entry.weather.temp)}
                       </span>
                     )}
                   </div>

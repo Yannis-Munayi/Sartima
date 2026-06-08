@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, orderBy, query, setDoc } from 'firebase/firestore'
+import { deleteUser } from 'firebase/auth'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
-import { useApp, useTheme } from '../context/AppContext'
+import { useApp, useTheme, useTempUnit, useDefaultOccasion, usePreferredSeasons, useShowQuizTab, useClosetSort } from '../context/AppContext'
+import { useCloset } from '../context/ClosetContext'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import FeedbackSheet from '../components/FeedbackSheet'
 import CrashReportSheet from '../components/CrashReportSheet'
@@ -194,6 +196,311 @@ function ThemeToggle() {
   )
 }
 
+const DAILY_OCCASIONS = [
+  { id: 'casual', label: 'Casual' },
+  { id: 'work',   label: 'Work'   },
+  { id: 'date',   label: 'Date'   },
+  { id: 'gym',    label: 'Gym'    },
+  { id: 'errand', label: 'Errand' },
+]
+
+const ALL_SEASONS = ['spring', 'summer', 'fall', 'winter']
+
+const SORT_OPTIONS = [
+  { id: 'date',      label: 'Date added' },
+  { id: 'category',  label: 'Category'   },
+  { id: 'favorites', label: 'Favorites'  },
+]
+
+function DailySettings() {
+  const { unit, setUnit }         = useTempUnit()
+  const { occasion, setOccasion } = useDefaultOccasion()
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Daily</h3>
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Temperature</p>
+          <p className={styles.settingsToggleSub}>Unit for weather display</p>
+        </div>
+        <div className={styles.sizeSystemPicker}>
+          <button
+            className={`${styles.sizeSystemOption} ${unit === 'c' ? styles.sizeSystemOptionActive : ''}`}
+            onClick={() => setUnit('c')}
+          >°C</button>
+          <button
+            className={`${styles.sizeSystemOption} ${unit === 'f' ? styles.sizeSystemOptionActive : ''}`}
+            onClick={() => setUnit('f')}
+          >°F</button>
+        </div>
+      </div>
+      <div style={{ height: 12 }} />
+      <p className={styles.settingsToggleLabel}>Default occasion</p>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>Pre-selected when generating your daily outfit</p>
+      <div className={styles.occasionRow}>
+        {DAILY_OCCASIONS.map((occ) => (
+          <button
+            key={occ.id}
+            className={`${styles.occasionPill} ${occasion === occ.id ? styles.occasionPillActive : ''}`}
+            onClick={() => setOccasion(occ.id)}
+          >{occ.label}</button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PreferredSeasonsSettings() {
+  const { preferredSeasons, toggleSeason } = usePreferredSeasons()
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Preferred seasons</h3>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 10 }}>
+        Filters outfit suggestions and content
+      </p>
+      <div className={styles.seasonRow}>
+        {ALL_SEASONS.map((s) => (
+          <button
+            key={s}
+            className={`${styles.seasonPill} ${preferredSeasons.includes(s) ? styles.seasonPillActive : ''}`}
+            onClick={() => toggleSeason(s)}
+          >
+            {s[0].toUpperCase() + s.slice(1)}
+          </button>
+        ))}
+      </div>
+      {preferredSeasons.length === 0 && (
+        <p className={styles.settingsToggleSub} style={{ marginTop: 8 }}>All seasons (no filter)</p>
+      )}
+    </section>
+  )
+}
+
+function AppBehaviorSettings() {
+  const { showQuizTab, setShowQuizTab } = useShowQuizTab()
+  const { closetSort, setClosetSort }   = useClosetSort()
+  const [cleared, setCleared]           = useState(false)
+
+  function handleClearCache() {
+    sessionStorage.clear()
+    setCleared(true)
+    setTimeout(() => setCleared(false), 2000)
+  }
+
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>App</h3>
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Show Swipe tab</p>
+          <p className={styles.settingsToggleSub}>Discover button in the bottom bar</p>
+        </div>
+        <button
+          className={`${styles.toggle} ${showQuizTab ? styles.toggleOn : ''}`}
+          onClick={() => setShowQuizTab(!showQuizTab)}
+          aria-label={showQuizTab ? 'Hide Swipe tab' : 'Show Swipe tab'}
+        >
+          <span className={styles.toggleThumb} />
+        </button>
+      </div>
+      <div style={{ height: 14 }} />
+      <p className={styles.settingsToggleLabel}>Closet sort order</p>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>Default order in My Closet</p>
+      <div className={styles.sortRow}>
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            className={`${styles.sortPill} ${closetSort === opt.id ? styles.sortPillActive : ''}`}
+            onClick={() => setClosetSort(opt.id)}
+          >{opt.label}</button>
+        ))}
+      </div>
+      <div style={{ height: 14 }} />
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Clear cache</p>
+          <p className={styles.settingsToggleSub}>Resets outfit and weather cache</p>
+        </div>
+        <button className={styles.permBtn} onClick={handleClearCache}>
+          {cleared ? '✓ Done' : 'Clear'}
+        </button>
+      </div>
+    </section>
+  )
+}
+
+function NotificationSettings() {
+  const supported = 'Notification' in window
+  const [permission, setPermission] = useState(supported ? Notification.permission : 'unavailable')
+  const [reminderTime, setReminderTime] = useState(
+    () => localStorage.getItem('stylelab_reminder_time') ?? '08:00'
+  )
+
+  async function requestPermission() {
+    const result = await Notification.requestPermission()
+    setPermission(result)
+  }
+
+  function handleTimeChange(t) {
+    setReminderTime(t)
+    localStorage.setItem('stylelab_reminder_time', t)
+  }
+
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Daily reminder</h3>
+      {!supported && (
+        <p className={styles.settingsToggleSub}>Not supported in this browser</p>
+      )}
+      {supported && permission === 'default' && (
+        <div className={styles.settingsToggleRow}>
+          <p className={styles.settingsToggleSub}>Morning nudge to plan your outfit</p>
+          <button className={styles.permBtn} onClick={requestPermission}>Enable</button>
+        </div>
+      )}
+      {supported && permission === 'granted' && (
+        <div className={styles.settingsToggleRow}>
+          <div>
+            <p className={styles.settingsToggleLabel}>Reminder time</p>
+            <p className={styles.settingsToggleSub}>Daily outfit nudge</p>
+          </div>
+          <input
+            type="time"
+            className={styles.timeInput}
+            value={reminderTime}
+            onChange={(e) => handleTimeChange(e.target.value)}
+          />
+        </div>
+      )}
+      {supported && permission === 'denied' && (
+        <p className={styles.settingsToggleSub}>
+          Blocked — enable in your browser settings to receive reminders
+        </p>
+      )}
+    </section>
+  )
+}
+
+function ShoppingEmailSettings() {
+  const { user } = useAuth()
+  const [email, setEmail]   = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    getDoc(doc(db, 'users', user.uid))
+      .then((snap) => { if (snap.exists()) setEmail(snap.data().shoppingEmail ?? '') })
+      .finally(() => setLoading(false))
+  }, [user])
+
+  if (!user) return null
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await setDoc(doc(db, 'users', user.uid), { shoppingEmail: email.trim() }, { merge: true })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Shopping digest</h3>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 10 }}>
+        Email for curated shopping picks
+      </p>
+      {loading ? (
+        <p className={styles.settingsToggleSub}>Loading…</p>
+      ) : (
+        <div className={styles.emailRow}>
+          <input
+            type="email"
+            className={styles.emailInput}
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setSaved(false) }}
+          />
+          <button className={styles.emailSaveBtn} onClick={handleSave} disabled={saving}>
+            {saved ? '✓' : saving ? '…' : 'Save'}
+          </button>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function LocaleSettings() {
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Language</h3>
+      <div className={styles.localeRow}>
+        <span className={styles.localePill}>🇬🇧 English</span>
+        <span className={styles.settingsToggleSub}>More languages coming soon</span>
+      </div>
+    </section>
+  )
+}
+
+function DataPrivacySettings({ user, onLogout }) {
+  const { closetItems }             = useCloset()
+  const { user: authUser }          = useAuth()
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting]     = useState(false)
+
+  function exportCloset() {
+    const data = JSON.stringify(
+      { closet: closetItems, exportedAt: new Date().toISOString() },
+      null, 2
+    )
+    const blob = new Blob([data], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `stylelab-closet-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleDeleteAccount() {
+    if (!deleteConfirm) { setDeleteConfirm(true); return }
+    setDeleting(true)
+    try {
+      await deleteUser(authUser)
+      localStorage.removeItem('stylelab_saved_aesthetics')
+      localStorage.removeItem('stylelab_shoplist')
+      if (onLogout) onLogout()
+    } catch {
+      setDeleting(false)
+      setDeleteConfirm(false)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className={styles.sectionTitle}>Data &amp; Privacy</h3>
+      <div className={styles.privacyBtns}>
+        <button className={styles.exportBtn} onClick={exportCloset}>
+          ↓ Export closet data
+        </button>
+        {user && (
+          <button
+            className={`${styles.deleteBtn} ${deleteConfirm ? styles.deleteBtnConfirm : ''}`}
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : deleteConfirm ? 'Tap again to confirm deletion' : 'Delete account'}
+          </button>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function GearIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -216,7 +523,25 @@ function SettingsSheet({ user, onClose, onLogout }) {
           <div className={styles.settingsDivider} />
           <ThemeToggle />
           <div className={styles.settingsDivider} />
+          <DailySettings />
+          <div className={styles.settingsDivider} />
+          <PreferredSeasonsSettings />
+          <div className={styles.settingsDivider} />
+          <AppBehaviorSettings />
+          <div className={styles.settingsDivider} />
+          <NotificationSettings />
+          <div className={styles.settingsDivider} />
           <ScoutSettings />
+          {user && (
+            <>
+              <div style={{ height: 4 }} />
+              <ShoppingEmailSettings />
+            </>
+          )}
+          <div className={styles.settingsDivider} />
+          <LocaleSettings />
+          <div className={styles.settingsDivider} />
+          <DataPrivacySettings user={user} onLogout={onLogout} />
           {user && onLogout && (
             <>
               <div className={styles.settingsDivider} />

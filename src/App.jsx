@@ -1,4 +1,18 @@
 ﻿import { useEffect, useRef, useState } from 'react'
+import Sidebar from './components/Sidebar'
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    () => window.matchMedia('(min-width: 768px)').matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const handler = (e) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isDesktop
+}
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
 import { AppProvider, useApp, SCREENS } from './context/AppContext'
@@ -154,6 +168,7 @@ function AppShell() {
   const { guideStep, startGuide, guideNext, guideBack, guideSkip, guideContextValue } = useGuideController({
     openAestheticTab, setActiveTab,
   })
+  const isDesktop = useIsDesktop()
 
   function handleTabChange(tabId) {
     if (tabId === 'quiz' && sessionInProgress) {
@@ -209,68 +224,85 @@ function AppShell() {
   const aestheticId      = isAestheticTab ? activeTab.replace('aesthetic:', '') : null
   const guideForceSubTab = guideContextValue.currentStep?.subTab ?? null
 
+  const outerStyle = isDesktop
+    ? { display: 'flex', height: '100dvh', overflow: 'hidden', background: 'var(--bg)' }
+    : { paddingBottom: showTabs ? 64 : 0 }
+
+  const mainStyle = isDesktop
+    ? { flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }
+    : {}
+
   return (
     <NavigationProvider navigate={handleTabChange}>
     <GuideProvider value={guideContextValue}>
-    <div style={{ paddingBottom: showTabs ? 64 : 0 }}>
-      {/* Quiz flow */}
-      {(!showTabs || activeTab === 'quiz') && <QuizRouter />}
-
-      {/* Main tabs */}
-      {showTabs && activeTab === 'home' && (
-        <HomeScreen startGuide={startGuide} />
-      )}
-      {showTabs && activeTab === 'explore' && (
-        <ExploreScreen />
-      )}
-      {showTabs && activeTab === 'wardrobe-builder' && (
-        <WardrobeBuildScreen onBack={() => handleTabChange('home')} />
-      )}
-      {showTabs && isAestheticTab && (
-        <AestheticScreen
-          aestheticId={aestheticId ?? openAesthetic}
-          forceSubTab={guideForceSubTab}
-        />
-      )}
-      {showTabs && activeTab === 'mystyle' && (
-        <MyStyleScreen forceSubTab={myStyleSubTab} />
-      )}
-      {showTabs && activeTab === 'daily' && (
-        <DailyLookScreen />
-      )}
-      {showTabs && activeTab === 'profile'  && (
-        <ProfileScreen
-          onBack={() => handleTabChange('quiz')}
-          scrollToQuiz={profileScrollTarget === 'quiz-history'}
-          onScrollComplete={() => setProfileScrollTarget(null)}
-        />
+    <div style={outerStyle}>
+      {/* Desktop sidebar — only shown once main tabs are visible */}
+      {isDesktop && showTabs && (
+        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       )}
 
-      {showTabs && (
-        <TabBar activeTab={activeTab} setActiveTab={handleTabChange} />
-      )}
+      {/* Scrollable content area */}
+      <div style={mainStyle}>
+        {/* Quiz flow */}
+        {(!showTabs || activeTab === 'quiz') && <QuizRouter />}
 
-      {/* Interactive guide tour */}
-      {guideStep !== null && (
-        <GuideTour
-          step={guideStep}
-          onNext={guideNext}
-          onBack={guideBack}
-          onSkip={guideSkip}
-        />
-      )}
+        {/* Main tabs */}
+        {showTabs && activeTab === 'home' && (
+          <HomeScreen startGuide={startGuide} />
+        )}
+        {showTabs && activeTab === 'explore' && (
+          <ExploreScreen />
+        )}
+        {showTabs && activeTab === 'wardrobe-builder' && (
+          <WardrobeBuildScreen onBack={() => handleTabChange('home')} />
+        )}
+        {showTabs && isAestheticTab && (
+          <AestheticScreen
+            aestheticId={aestheticId ?? openAesthetic}
+            forceSubTab={guideForceSubTab}
+          />
+        )}
+        {showTabs && activeTab === 'mystyle' && (
+          <MyStyleScreen forceSubTab={myStyleSubTab} />
+        )}
+        {showTabs && activeTab === 'daily' && (
+          <DailyLookScreen />
+        )}
+        {showTabs && activeTab === 'profile' && (
+          <ProfileScreen
+            onBack={() => handleTabChange('quiz')}
+            scrollToQuiz={profileScrollTarget === 'quiz-history'}
+            onScrollComplete={() => setProfileScrollTarget(null)}
+          />
+        )}
 
-      {/* Resume / restart modal */}
-      {showResumeModal && (
-        <ResumeModal
-          progress={answeredCount}
-          total={40}
-          onContinue={handleContinue}
-          onDiscover={handleDiscover}
-        />
-      )}
+        {/* Mobile tab bar — hidden on desktop */}
+        {!isDesktop && showTabs && (
+          <TabBar activeTab={activeTab} setActiveTab={handleTabChange} />
+        )}
 
-      <Toast />
+        {/* Interactive guide tour */}
+        {guideStep !== null && (
+          <GuideTour
+            step={guideStep}
+            onNext={guideNext}
+            onBack={guideBack}
+            onSkip={guideSkip}
+          />
+        )}
+
+        {/* Resume / restart modal */}
+        {showResumeModal && (
+          <ResumeModal
+            progress={answeredCount}
+            total={40}
+            onContinue={handleContinue}
+            onDiscover={handleDiscover}
+          />
+        )}
+
+        <Toast />
+      </div>
     </div>
     </GuideProvider>
     </NavigationProvider>

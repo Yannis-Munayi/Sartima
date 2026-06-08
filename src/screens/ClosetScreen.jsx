@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useClosetSort } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import LockedOverlay from '../components/LockedOverlay'
 import { useCloset } from '../context/ClosetContext'
@@ -192,6 +193,7 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
 function MyClosetTab() {
   const { user }                   = useAuth()
   const { closetItems, closetLoading, closetError, retryLoadCloset, closetByCategory, addToCloset, removeFromCloset } = useCloset()
+  const { closetSort }             = useClosetSort()
   const [activeFilter, setFilter]  = useState('all')
   const [showUpload, setShowUpload]       = useState(false)
   const [showSearch, setShowSearch]       = useState(false)
@@ -205,9 +207,12 @@ function MyClosetTab() {
     setFlippedId((prev) => (prev === id ? null : id))
   }
 
-  const displayed = activeFilter === 'all'
-    ? closetItems
-    : (closetByCategory[activeFilter] ?? [])
+  const displayed = useMemo(() => {
+    const raw = activeFilter === 'all' ? closetItems : (closetByCategory[activeFilter] ?? [])
+    if (closetSort === 'favorites') return [...raw].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
+    if (closetSort === 'category')  return [...raw].sort((a, b) => (a.category ?? '').localeCompare(b.category ?? ''))
+    return raw // 'date' — already newest-first from insertion order
+  }, [activeFilter, closetItems, closetByCategory, closetSort])
 
   async function handleSave(item) {
     await addToCloset(item)

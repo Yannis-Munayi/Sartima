@@ -288,3 +288,68 @@ export function useTheme() {
 
   return { theme, setTheme }
 }
+
+// ── Temperature unit hook ─────────────────────────────────────────────────────
+export function useTempUnit() {
+  const [unit, setUnitState] = useState(() => localStorage.getItem('stylelab_temp_unit') ?? 'c')
+  function setUnit(u) {
+    localStorage.setItem('stylelab_temp_unit', u)
+    setUnitState(u)
+  }
+  return { unit, setUnit }
+}
+
+// ── Default occasion hook ─────────────────────────────────────────────────────
+export function useDefaultOccasion() {
+  const [occasion, setOccasionState] = useState(
+    () => localStorage.getItem('stylelab_default_occasion') ?? 'casual'
+  )
+  function setOccasion(o) {
+    localStorage.setItem('stylelab_default_occasion', o)
+    setOccasionState(o)
+  }
+  return { occasion, setOccasion }
+}
+
+// ── Preferred seasons hook ────────────────────────────────────────────────────
+export function usePreferredSeasons() {
+  const [seasons, setSeasonsState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('stylelab_preferred_seasons') ?? '[]') } catch { return [] }
+  })
+  function toggleSeason(s) {
+    const next = seasons.includes(s) ? seasons.filter((x) => x !== s) : [...seasons, s]
+    localStorage.setItem('stylelab_preferred_seasons', JSON.stringify(next))
+    setSeasonsState(next)
+  }
+  return { preferredSeasons: seasons, toggleSeason }
+}
+
+// ── Show quiz tab hook (cross-component reactive via custom event) ─────────────
+const QUIZ_TAB_EVENT = 'stylelab:quiz-tab-change'
+
+export function useShowQuizTab() {
+  const [show, setShowState] = useState(() => localStorage.getItem('stylelab_show_quiz_tab') !== 'false')
+
+  useEffect(() => {
+    function onUpdate(e) { setShowState(e.detail !== false) }
+    window.addEventListener(QUIZ_TAB_EVENT, onUpdate)
+    return () => window.removeEventListener(QUIZ_TAB_EVENT, onUpdate)
+  }, [])
+
+  function setShow(v) {
+    localStorage.setItem('stylelab_show_quiz_tab', String(v))
+    setShowState(v)
+    window.dispatchEvent(new CustomEvent(QUIZ_TAB_EVENT, { detail: v }))
+  }
+  return { showQuizTab: show, setShowQuizTab: setShow }
+}
+
+// ── Closet sort hook ──────────────────────────────────────────────────────────
+export function useClosetSort() {
+  const [sort, setSortState] = useState(() => localStorage.getItem('stylelab_closet_sort') ?? 'date')
+  function setSort(s) {
+    localStorage.setItem('stylelab_closet_sort', s)
+    setSortState(s)
+  }
+  return { closetSort: sort, setClosetSort: setSort }
+}

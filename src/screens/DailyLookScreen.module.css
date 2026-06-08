@@ -162,6 +162,10 @@
   .outfitGrid { grid-template-columns: repeat(4, 1fr); }
 }
 
+@media (min-width: 768px) {
+  .screen { padding-bottom: 24px; }
+}
+
 .outfitItem {
   background: var(--card);
   border: 1px solid var(--border);

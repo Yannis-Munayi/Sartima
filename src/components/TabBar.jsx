@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
+import { useShowQuizTab } from '../context/AppContext'
 import styles from './TabBar.module.css'
 
 /* ── Icons ── */
@@ -59,8 +60,9 @@ function ProfileIcon({ active }) {
 
 /* ── TabBar ── */
 export default function TabBar({ activeTab, setActiveTab }) {
-  const { user }             = useAuth()
-  const { totalClosetCount } = useCloset()
+  const { user }               = useAuth()
+  const { totalClosetCount }   = useCloset()
+  const { showQuizTab }        = useShowQuizTab()
 
   const [bounceTab, setBounceTab] = useState(null)
   const prevTabRef = useRef(activeTab)
@@ -100,17 +102,19 @@ export default function TabBar({ activeTab, setActiveTab }) {
         </button>
 
         {/* ── Center Discover button ── */}
-        <div className={styles.discoverWrap}>
-          <button
-            className={`${styles.discoverBtn} ${activeTab === 'quiz' ? styles.discoverActive : ''} ${bounceTab === 'quiz' ? styles.iconBounce : ''}`}
-            onClick={() => setActiveTab('quiz')}
-          >
-            <DiscoverIcon />
-          </button>
-          <span className={`${styles.discoverLabel} ${activeTab === 'quiz' ? styles.discoverLabelActive : ''}`}>
-            Swipe
-          </span>
-        </div>
+        {showQuizTab && (
+          <div className={styles.discoverWrap}>
+            <button
+              className={`${styles.discoverBtn} ${activeTab === 'quiz' ? styles.discoverActive : ''} ${bounceTab === 'quiz' ? styles.iconBounce : ''}`}
+              onClick={() => setActiveTab('quiz')}
+            >
+              <DiscoverIcon />
+            </button>
+            <span className={`${styles.discoverLabel} ${activeTab === 'quiz' ? styles.discoverLabelActive : ''}`}>
+              Swipe
+            </span>
+          </div>
+        )}
 
         {/* Outfits (combined Closet + Daily) */}
         <button
