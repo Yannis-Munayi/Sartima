@@ -1,4 +1,4 @@
-import styles from './OnboardingStep.module.css'
+﻿import styles from './OnboardingStep.module.css'
 
 const SOURCES = [
   { id: 'instagram',  label: 'Instagram',  emoji: '📸' },

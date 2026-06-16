@@ -15,7 +15,7 @@ function useIsDesktop() {
 }
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
-import { AppProvider, useApp, SCREENS } from './context/AppContext'
+import { AppProvider, useApp, useTheme, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NavigationProvider } from './context/NavigationContext'
 import { ShopProvider } from './context/ShopContext'
@@ -75,17 +75,17 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
     }}>
       <div style={{
         width: '100%', maxWidth: 480,
-        background: '#1a1a1a',
-        borderRadius: '20px 20px 0 0',
+        background: 'var(--bg-elevated)',
+        borderRadius: '8px 8px 0 0',
         padding: '28px 24px 40px',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
+        borderTop: '1px solid var(--border)',
       }}>
-        <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 24px' }} />
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>
+        <div style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.12)', borderRadius: 2, margin: '0 auto 28px' }} />
+        <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px', letterSpacing: '0.01em' }}>
           Quiz in progress
         </h2>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', margin: '0 0 28px', lineHeight: 1.6 }}>
-          You've rated <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{progress} of {total}</strong> items.
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 28px', lineHeight: 1.65 }}>
+          You've rated <strong style={{ color: 'var(--text-dim)', fontWeight: 600 }}>{progress} of {total}</strong> items.
           Continue the quiz to get your results, or switch to free discovery.
         </p>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -93,10 +93,11 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
             onClick={onDiscover}
             style={{
               flex: 1, padding: '13px 0',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 12, color: 'rgba(255,255,255,0.6)',
-              fontSize: 14, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+              background: 'transparent',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 4, color: 'var(--text-muted)',
+              fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+              letterSpacing: '1.5px', textTransform: 'uppercase',
             }}
           >
             Just Discover
@@ -105,13 +106,14 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
             onClick={onContinue}
             style={{
               flex: 1, padding: '13px 0',
-              background: 'linear-gradient(135deg, #E8735A, #D4896A)',
+              background: 'var(--accent)',
               border: 'none',
-              borderRadius: 12, color: '#fff',
-              fontSize: 14, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+              borderRadius: 4, color: '#0B0907',
+              fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+              letterSpacing: '1.5px', textTransform: 'uppercase',
             }}
           >
-            Continue Quiz →
+            Continue Quiz
           </button>
         </div>
       </div>
@@ -122,6 +124,7 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
 function AppShell() {
   const { state, dispatch } = useApp()
   const { user }            = useAuth()
+  useTheme()
   const { openAesthetic, openAestheticTab } = useExplore()
   const [activeTab, setActiveTab]           = useState('home')
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)

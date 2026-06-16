@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { sendEmailVerification } from 'firebase/auth'
 import { httpsCallable } from 'firebase/functions'
 import { auth, functions } from '../services/firebase'

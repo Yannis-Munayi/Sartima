@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { STYLES } from '../data/styles'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'

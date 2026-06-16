@@ -3,66 +3,20 @@ import { useCloset } from '../context/ClosetContext'
 import { useShowQuizTab } from '../context/AppContext'
 import styles from './Sidebar.module.css'
 
-function HomeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
-      <path d="M9 21V12h6v9" />
-    </svg>
-  )
-}
-
-function ExploreIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-    </svg>
-  )
-}
-
-function DiscoverIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
-    </svg>
-  )
-}
-
-function OutfitsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="4" r="1.5" />
-      <path d="M12 5.5V8.5M12 8.5L3 17H21L12 8.5" />
-    </svg>
-  )
-}
-
-function ProfileIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  )
-}
-
 export default function Sidebar({ activeTab, onTabChange }) {
   const { user }             = useAuth()
   const { totalClosetCount } = useCloset()
   const { showQuizTab }      = useShowQuizTab()
 
   const navItems = [
-    { id: 'home',    label: 'Home',       icon: <HomeIcon />    },
-    { id: 'explore', label: 'Aesthetics', icon: <ExploreIcon /> },
-    ...(showQuizTab ? [{ id: 'quiz', label: 'Discover', icon: <DiscoverIcon /> }] : []),
+    { id: 'home',    label: 'Home'       },
+    { id: 'explore', label: 'Aesthetics' },
+    ...(showQuizTab ? [{ id: 'quiz', label: 'Discover' }] : []),
     {
-      id: 'daily', label: 'Outfits', icon: <OutfitsIcon />,
+      id: 'daily', label: 'Outfits',
       badge: totalClosetCount > 0 ? (totalClosetCount > 9 ? '9+' : totalClosetCount) : null,
     },
-    { id: 'profile', label: 'Profile', icon: <ProfileIcon /> },
+    { id: 'profile', label: 'Profile' },
   ]
 
   return (
@@ -72,6 +26,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
           Style<span className={styles.logoAccent}>Lab</span>
         </span>
       </div>
+      <div className={styles.navDivider} />
 
       <nav className={styles.nav}>
         {navItems.map((item) => {
@@ -85,7 +40,6 @@ export default function Sidebar({ activeTab, onTabChange }) {
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
               onClick={() => onTabChange(item.id)}
             >
-              <span className={styles.navIcon}>{item.icon}</span>
               <span className={styles.navLabel}>{item.label}</span>
               {item.badge && (
                 <span className={styles.navBadge}>{item.badge}</span>

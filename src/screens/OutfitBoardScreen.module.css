@@ -1,4 +1,4 @@
-/* ── Screen ── */
+﻿/* ── Screen ── */
 .screen {
   min-height: 100dvh;
   background: var(--bg);
@@ -21,7 +21,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -34,13 +34,13 @@
 }
 
 .modeBtnActive {
-  background: rgba(232, 115, 90, 0.12);
-  border-color: rgba(232, 115, 90, 0.4);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.12);
+  border-color: rgba(184, 149, 106, 0.4);
+  color: var(--accent);
 }
 
 .modeBadge {
-  background: #E8735A;
+  background: var(--accent);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -94,7 +94,7 @@
 
 .avatarHint {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
   text-align: center;
   padding: 0 32px;
@@ -103,7 +103,7 @@
 
 .uploadAvatarBtn {
   padding: 11px 22px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 24px;
   color: #fff;
@@ -129,7 +129,7 @@
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-dim);
   font-size: 14px;
   cursor: pointer;
   display: flex;
@@ -219,7 +219,7 @@
 .heroPrompt p {
   margin: 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   text-align: center;
 }
 
@@ -252,7 +252,7 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   font-size: 11px;
   font-weight: 600;
   font-family: inherit;
@@ -263,12 +263,12 @@
 }
 
 .catTabActive {
-  color: #E8735A;
-  border-bottom-color: #E8735A;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .catTabPicked:not(.catTabActive) {
-  color: rgba(232, 115, 90, 0.6);
+  color: rgba(184, 149, 106, 0.6);
 }
 
 .catEmoji {
@@ -288,7 +288,7 @@
   right: 8px;
   width: 6px;
   height: 6px;
-  background: #E8735A;
+  background: var(--accent);
   border-radius: 50%;
 }
 
@@ -317,13 +317,13 @@
 
 .emptyPickerText {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0 0 4px;
 }
 
 .emptyPickerSub {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.22);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -359,8 +359,8 @@
 }
 
 .itemCardSelected .itemPhoto {
-  border-color: #E8735A;
-  box-shadow: 0 0 0 1px #E8735A;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .itemImg {
@@ -380,7 +380,7 @@
   right: 4px;
   width: 20px;
   height: 20px;
-  background: #E8735A;
+  background: var(--accent);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -392,7 +392,7 @@
 
 .itemLabel {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-faint);
   margin: 0;
   text-align: center;
   white-space: nowrap;
@@ -403,7 +403,7 @@
 }
 
 .itemCardSelected .itemLabel {
-  color: rgba(232, 115, 90, 0.9);
+  color: rgba(184, 149, 106, 0.9);
 }
 
 /* ── Action bar ── */
@@ -417,7 +417,7 @@
 .saveOutfitBtn {
   flex: 1;
   padding: 14px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -438,7 +438,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -499,8 +499,8 @@
   transition: border-color 0.15s;
 }
 
-.sheetInput::placeholder { color: rgba(255, 255, 255, 0.25); }
-.sheetInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+.sheetInput::placeholder { color: var(--text-faint); }
+.sheetInput:focus { border-color: rgba(184, 149, 106, 0.5); }
 
 .sheetActions {
   display: flex;
@@ -513,7 +513,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -523,7 +523,7 @@
 .sheetSave {
   flex: 2;
   padding: 13px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 12px;
   color: #fff;
@@ -544,7 +544,7 @@
 
 .boardsHint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 0 0 12px;
   padding: 0 16px;
 }
@@ -577,13 +577,13 @@
 
 .emptyBoardsSub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0 0 16px;
 }
 
 .goStudioBtn {
   padding: 13px 28px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -641,7 +641,7 @@
 .boardMore {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
 }
 
 .boardInfo {
@@ -661,7 +661,7 @@
 
 .boardMeta {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -715,7 +715,7 @@
 .lockLabel {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dim);
   margin: 0;
 }
 

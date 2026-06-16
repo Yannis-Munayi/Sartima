@@ -1,4 +1,4 @@
-﻿.row {
+.row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -10,7 +10,8 @@
   align-items: center;
   gap: 7px;
   padding: 5px 11px 5px 5px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #F7F4EE;
+  border: 1px solid rgba(247, 244, 238, 0.18);
   border-radius: 20px;
 }
 
@@ -18,7 +19,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E8735A, #C4A882);
+  background: linear-gradient(135deg, var(--accent), #C4A882);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +33,7 @@
 .name {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: #1A1611;
   max-width: 80px;
   white-space: nowrap;
   overflow: hidden;
@@ -41,10 +43,10 @@
 /* ── Sign out button ── */
 .signOutBtn {
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #F7F4EE;
+  border: 1px solid rgba(247, 244, 238, 0.18);
   border-radius: 16px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(26, 22, 17, 0.65);
   font-size: 12px;
   font-family: inherit;
   font-weight: 600;
@@ -62,7 +64,7 @@
 /* ── Sign in button ── */
 .signInBtn {
   padding: 9px 18px;
-  background: linear-gradient(135deg, #E8735A, #C4A882);
+  background: linear-gradient(135deg, var(--accent), #C4A882);
   border: none;
   border-radius: 20px;
   color: #fff;

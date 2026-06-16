@@ -1,4 +1,4 @@
-.root {
+﻿.root {
   padding: 16px 16px 80px;
   display: flex;
   flex-direction: column;
@@ -107,8 +107,8 @@
 }
 
 .statusDueSoon {
-  background: rgba(232, 115, 90, 0.15);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  color: var(--accent);
 }
 
 .statusClean {
@@ -199,9 +199,9 @@
 
 .conflictWarning {
   font-size: 12px;
-  color: #E8735A;
-  background: rgba(232, 115, 90, 0.1);
-  border: 1px solid rgba(232, 115, 90, 0.25);
+  color: var(--accent);
+  background: rgba(184, 149, 106, 0.1);
+  border: 1px solid rgba(184, 149, 106, 0.25);
   border-radius: 8px;
   padding: 6px 10px;
   margin-bottom: 10px;
@@ -230,8 +230,8 @@
 }
 
 .moreChip:hover {
-  border-color: #E8735A;
-  color: #E8735A;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Laundry day card ── */
@@ -252,7 +252,7 @@
 
 .laundryDueNote {
   font-size: 13px;
-  color: #E8735A;
+  color: var(--accent);
   margin: 0 0 14px;
   font-weight: 600;
 }
@@ -276,11 +276,11 @@
   box-sizing: border-box;
 }
 
-.dateInput:focus { border-color: #E8735A; }
+.dateInput:focus { border-color: var(--accent); }
 
 .planBtn {
   padding: 11px 18px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 10px;
   color: #fff;
@@ -329,6 +329,6 @@
 }
 
 .changeDateBtn:hover {
-  border-color: #E8735A;
-  color: #E8735A;
+  border-color: var(--accent);
+  color: var(--accent);
 }

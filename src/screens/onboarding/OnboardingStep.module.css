@@ -60,11 +60,11 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
-.tile:hover { border-color: rgba(232,115,90,0.5); }
+.tile:hover { border-color: rgba(184, 149, 106,0.5); }
 
 .tileActive {
-  background: rgba(232,115,90,0.12);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: var(--accent);
 }
 
 .tileEmoji { font-size: 22px; }
@@ -91,7 +91,7 @@
   margin-bottom: 14px;
 }
 
-.searchInput:focus, .emailInput:focus { border-color: #E8735A; }
+.searchInput:focus, .emailInput:focus { border-color: var(--accent); }
 
 .chipGrid {
   display: flex;
@@ -119,14 +119,14 @@
 }
 
 .brandChipActive {
-  background: rgba(232,115,90,0.15);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.15);
+  border-color: var(--accent);
   color: var(--text);
   font-weight: 700;
 }
 
 .brandCheck {
-  color: #E8735A;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 800;
 }
@@ -152,8 +152,8 @@
 }
 
 .sourceBtn:hover {
-  border-color: #E8735A;
-  background: rgba(232,115,90,0.06);
+  border-color: var(--accent);
+  background: rgba(184, 149, 106,0.06);
 }
 
 .sourceEmoji { font-size: 20px; flex-shrink: 0; }
@@ -182,7 +182,7 @@
 
 .nextBtn:disabled {
   background: rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.3);
+  color: var(--text-faint);
   cursor: not-allowed;
 }
 

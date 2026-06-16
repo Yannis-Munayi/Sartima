@@ -1,30 +1,30 @@
-﻿*, *::before, *::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 :root {
-  /* Backgrounds */
-  --bg:              #0f0f0f;
-  --bg-elevated:     #1a1a1a;
-  --bg-card:         rgba(255, 255, 255, 0.04);
+  /* Backgrounds — warm deep charcoal */
+  --bg:              #0C0A08;
+  --bg-elevated:     #161310;
+  --bg-card:         rgba(255, 255, 255, 0.03);
   /* Surfaces & borders */
-  --surface:         rgba(255, 255, 255, 0.05);
-  --surface-hover:   rgba(255, 255, 255, 0.08);
-  --border:          rgba(255, 255, 255, 0.08);
-  --border-strong:   rgba(255, 255, 255, 0.18);
-  /* Text */
-  --text:            #ffffff;
-  --text-dim:        rgba(255, 255, 255, 0.7);
-  --text-muted:      rgba(255, 255, 255, 0.45);
-  --text-faint:      rgba(255, 255, 255, 0.25);
-  /* Accent — unchanged in both themes */
-  --accent:          #E8735A;
-  --accent-dim:      rgba(232, 115, 90, 0.15);
-  --accent-border:   rgba(232, 115, 90, 0.4);
+  --surface:         rgba(255, 255, 255, 0.04);
+  --surface-hover:   rgba(255, 255, 255, 0.07);
+  --border:          rgba(255, 255, 255, 0.07);
+  --border-strong:   rgba(255, 255, 255, 0.14);
+  /* Text — warm ivory, not pure white */
+  --text:            #EDE9E1;
+  --text-dim:        rgba(237, 233, 225, 0.72);
+  --text-muted:      rgba(237, 233, 225, 0.42);
+  --text-faint:      rgba(237, 233, 225, 0.24);
+  /* Accent — champagne / caramel gold */
+  --accent:          #B8956A;
+  --accent-dim:      rgba(184, 149, 106, 0.12);
+  --accent-border:   rgba(184, 149, 106, 0.32);
   --accent-secondary: #C4A882;
-  --accent-gold:     #D4AF7A;
+  --accent-gold:     #C4A86A;
   /* Type scale — minimum 12px */
   --text-2xs:        12px;
   --text-xs:         12px;
@@ -36,26 +36,29 @@
   --text-2xl:        24px;
   --text-3xl:        28px;
   --text-hero:       32px;
-  /* Border radius scale */
-  --radius-sm:       8px;
-  --radius-md:       14px;
-  --radius-lg:       20px;
-  --radius-xl:       24px;
+  /* Border radius — tighter, more architectural */
+  --radius-sm:       3px;
+  --radius-md:       6px;
+  --radius-lg:       10px;
+  --radius-xl:       14px;
   --radius-full:     9999px;
 }
 
 :root[data-theme="light"] {
-  --bg:              #f5f4f0;
-  --bg-elevated:     #ffffff;
-  --bg-card:         rgba(0, 0, 0, 0.03);
-  --surface:         rgba(0, 0, 0, 0.04);
-  --surface-hover:   rgba(0, 0, 0, 0.07);
-  --border:          rgba(0, 0, 0, 0.09);
+  --bg:              #F7F4EE;
+  --bg-elevated:     #FEFCF8;
+  --bg-card:         rgba(0, 0, 0, 0.04);
+  --surface:         rgba(0, 0, 0, 0.05);
+  --surface-hover:   rgba(0, 0, 0, 0.08);
+  --border:          rgba(0, 0, 0, 0.1);
   --border-strong:   rgba(0, 0, 0, 0.18);
-  --text:            #111111;
-  --text-dim:        rgba(0, 0, 0, 0.7);
-  --text-muted:      rgba(0, 0, 0, 0.45);
-  --text-faint:      rgba(0, 0, 0, 0.25);
+  --text:            #1A1611;
+  --text-dim:        rgba(26, 22, 17, 0.82);
+  --text-muted:      rgba(26, 22, 17, 0.60);
+  --text-faint:      rgba(26, 22, 17, 0.42);
+  --accent:          #8B6840;
+  --accent-dim:      rgba(139, 104, 64, 0.1);
+  --accent-border:   rgba(139, 104, 64, 0.3);
 }
 
 :root[data-theme="light"] body {
@@ -64,11 +67,11 @@
 }
 
 :root[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.22);
 }
 
 html {
@@ -99,44 +102,40 @@ img {
   display: block;
 }
 
-/* Subtle grain texture via pseudo-element */
+/* Subtle grain texture */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.03;
+  opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
   background-size: 256px 256px;
 }
 
-/* Focus visible */
 :focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 1px solid rgba(184, 149, 106, 0.6);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
-/* ── Light mode global overrides ──────────────────────────────────────────────
-   These selectors catch the hardcoded colour values used in CSS Modules that
-   couldn't be replaced by CSS custom properties at the module level.           */
+/* ── Light mode global overrides ── */
 
 [data-theme="light"] :focus-visible {
-  outline-color: rgba(0, 0, 0, 0.4);
+  outline-color: rgba(139, 104, 64, 0.5);
 }
 
-/* Inputs & textareas everywhere */
 [data-theme="light"] input,
 [data-theme="light"] textarea,
 [data-theme="light"] select {
-  color: #111;
+  color: #1A1611;
   background: rgba(0, 0, 0, 0.04) !important;
   border-color: rgba(0, 0, 0, 0.1) !important;
 }
@@ -146,27 +145,45 @@ body::after {
   color: rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Nav / Tab bar */
 [data-theme="light"] nav {
-  background: rgba(245, 244, 240, 0.92);
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(247, 244, 238, 0.96);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-/* Generic heading colours — let CSS modules' own color properties win
-   for coloured gradient text, so we only override pure white */
 [data-theme="light"] h1,
 [data-theme="light"] h2,
 [data-theme="light"] h3 {
   color: var(--text);
 }
 
-/* Plain buttons that are styled with white text on a dark base */
 [data-theme="light"] .tabBar button,
 [data-theme="light"] nav button {
   color: var(--text-muted);
 }
 
-/* Grain texture is less visible on light bg — keep it subtle */
 [data-theme="light"] body::after {
-  opacity: 0.015;
+  opacity: 0.012;
+}
+
+/* ── Light mode: make sure tab bar icons + labels are legible ── */
+[data-theme="light"] nav svg {
+  color: currentColor;
+}
+
+/* ── Light mode: AestheticScreen & content screens ──
+   Override hardcoded section labels and body text that still use
+   white-only colours not yet mapped to variables.              */
+[data-theme="light"] article h2,
+[data-theme="light"] article h3,
+[data-theme="light"] article p,
+[data-theme="light"] section h2,
+[data-theme="light"] section h3 {
+  color: var(--text);
+}
+
+/* Hardcoded #fff that appears on page-level elements (not image overlays) */
+[data-theme="light"] main p,
+[data-theme="light"] main span,
+[data-theme="light"] main label {
+  color: inherit;
 }

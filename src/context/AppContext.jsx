@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useState } from 'react'
+﻿import { createContext, useContext, useEffect, useReducer, useState } from 'react'
 import { STYLES } from '../data/styles'
 import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_QUIZ_ITEMS } from '../data/aestheticItems'
@@ -275,7 +275,7 @@ export function useApp() {
 // ── Theme hook ────────────────────────────────────────────────────────────────
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
-    const t = localStorage.getItem('stylelab_theme') ?? 'dark'
+    const t = localStorage.getItem('stylelab_theme') ?? 'light'
     document.documentElement.setAttribute('data-theme', t)
     return t
   })

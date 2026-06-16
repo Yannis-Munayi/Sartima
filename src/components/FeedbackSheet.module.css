@@ -1,4 +1,4 @@
-.backdrop {
+﻿.backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -51,7 +51,7 @@
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   font-size: 16px;
   cursor: pointer;
   padding: 4px 8px;
@@ -85,7 +85,7 @@
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--text-faint);
 }
 
 /* Category pills */
@@ -100,7 +100,7 @@
   border-radius: 99px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -109,13 +109,13 @@
   white-space: nowrap;
 }
 .categoryPill:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.8);
+  border-color: var(--text-faint);
+  color: var(--text-dim);
 }
 .categoryPillActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.5);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.5);
+  color: var(--accent);
 }
 
 /* Inputs */
@@ -135,14 +135,14 @@
   box-sizing: border-box;
 }
 .textarea::placeholder,
-.input::placeholder { color: rgba(255, 255, 255, 0.25); }
+.input::placeholder { color: var(--text-faint); }
 .textarea:focus,
-.input:focus { border-color: rgba(232, 115, 90, 0.5); }
+.input:focus { border-color: rgba(184, 149, 106, 0.5); }
 
 /* Error */
 .error {
   font-size: 13px;
-  color: #E8735A;
+  color: var(--accent);
   margin: 0;
 }
 
@@ -150,7 +150,7 @@
 .submitBtn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 13px;
   color: #fff;
@@ -159,7 +159,7 @@
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.15s;
-  box-shadow: 0 4px 20px rgba(232, 115, 90, 0.3);
+  box-shadow: 0 4px 20px rgba(184, 149, 106, 0.3);
 }
 .submitBtn:hover:not(:disabled) { opacity: 0.88; }
 .submitBtn:disabled { opacity: 0.4; cursor: not-allowed; }

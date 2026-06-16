@@ -27,7 +27,7 @@
   transition: border-color 0.15s;
 }
 
-.navBtn:hover { border-color: #E8735A; }
+.navBtn:hover { border-color: var(--accent); }
 
 .monthLabel {
   font-size: 18px;
@@ -82,15 +82,15 @@
   position: relative;
 }
 
-.dayCell:hover { border-color: rgba(232,115,90,0.4); }
+.dayCell:hover { border-color: rgba(184, 149, 106,0.4); }
 
 .dayCellToday {
-  border-color: #E8735A;
-  background: rgba(232,115,90,0.08);
+  border-color: var(--accent);
+  background: rgba(184, 149, 106,0.08);
 }
 
 .dayCellPlanned {
-  background: rgba(232,115,90,0.05);
+  background: rgba(184, 149, 106,0.05);
 }
 
 .dayNum {
@@ -100,7 +100,7 @@
   line-height: 1;
 }
 
-.dayCellToday .dayNum { color: #E8735A; }
+.dayCellToday .dayNum { color: var(--accent); }
 
 .dayThumbs {
   display: flex;
@@ -230,7 +230,7 @@
   padding: 0 0 8px;
 }
 
-.pickerItemActive { border-color: #E8735A; }
+.pickerItemActive { border-color: var(--accent); }
 
 .pickerPhoto {
   aspect-ratio: 3/4;
@@ -266,7 +266,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #E8735A;
+  background: var(--accent);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
@@ -298,7 +298,7 @@
 .saveSheetBtn {
   flex: 1;
   padding: 13px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 12px;
   color: #fff;
@@ -337,13 +337,13 @@
 }
 
 .sheetTabActive {
-  background: rgba(232,115,90,0.12);
-  border-color: rgba(232,115,90,0.4);
-  color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: rgba(184, 149, 106,0.4);
+  color: var(--accent);
 }
 
 .logBadge {
-  background: #E8735A;
+  background: var(--accent);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -376,7 +376,7 @@
   font-family: inherit;
 }
 
-.logEntry:hover { border-color: rgba(232,115,90,0.4); }
+.logEntry:hover { border-color: rgba(184, 149, 106,0.4); }
 
 .logEntryMeta {
   display: flex;

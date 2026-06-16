@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PRODUCTS } from '../data/products'
 import { LOOKS } from '../data/looks'
 import { fetchPhotos, fetchPhotosWithFallback } from '../services/pexels'

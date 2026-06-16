@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+﻿import { useRef, useState } from 'react'
 import { fetchPhotos as fetchPexels } from '../services/pexels'
 import { fetchPhotos as fetchGoogle } from '../services/google'
 import styles from './CatalogSearchSheet.module.css'

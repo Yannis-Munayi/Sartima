@@ -62,8 +62,8 @@
   background: rgba(0, 0, 0, 0.5);
 }
 .saveBtnActive {
-  background: rgba(232, 115, 90, 0.35);
-  border-color: rgba(232, 115, 90, 0.6);
+  background: rgba(184, 149, 106, 0.35);
+  border-color: rgba(184, 149, 106, 0.6);
 }
 
 .heroContent {
@@ -93,14 +93,14 @@
 .heroTagline {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-dim);
   margin: 0 0 8px;
   text-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 
 .heroDesc {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dim);
   margin: 0;
   line-height: 1.6;
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
@@ -150,7 +150,7 @@
   background: none;
   border: none;
   border-radius: 20px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-faint);
   font-size: 13px;
   font-family: inherit;
   font-weight: 600;
@@ -182,7 +182,7 @@
   border-radius: 20px;
   border: 1.5px solid rgba(255, 255, 255, 0.15);
   background: transparent;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -204,7 +204,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 0 0 12px;
 }
 
@@ -291,7 +291,7 @@
 .itemName {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-dim);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -311,7 +311,7 @@
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 12px;
   font-family: inherit;
   font-weight: 500;
@@ -322,13 +322,13 @@
 
 .filterPill:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-dim);
 }
 
 .filterActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.45);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.45);
+  color: var(--accent);
 }
 
 .pieceFilter {
@@ -340,7 +340,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 0 0 10px;
 }
 
@@ -405,7 +405,7 @@
 
 .lookVibe {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0 0 6px;
 }
 
@@ -420,7 +420,7 @@
   background: rgba(255, 255, 255, 0.07);
   border-radius: 10px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   text-transform: capitalize;
 }
 
@@ -434,7 +434,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 10px 0 8px;
 }
 
@@ -449,7 +449,7 @@
   background: rgba(255, 255, 255, 0.06);
   border-radius: 10px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
 }
 
 /* ── Wishlist heart button (ItemCard + OutfitPhoto) ── */
@@ -467,13 +467,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   padding: 0;
   transition: background 0.14s, color 0.14s, transform 0.14s;
 }
 .heartBtn:hover { background: rgba(0, 0, 0, 0.65); transform: scale(1.12); }
-.heartBtnActive { color: #E8735A; background: rgba(232, 115, 90, 0.2); }
-.heartBtnActive:hover { background: rgba(232, 115, 90, 0.3); }
+.heartBtnActive { color: var(--accent); background: rgba(184, 149, 106, 0.2); }
+.heartBtnActive:hover { background: rgba(184, 149, 106, 0.3); }
 
 /* ── Outfit photo grid (inside expanded look card) ── */
 .outfitGrid {
@@ -500,7 +500,7 @@
 
 .outfitGridLoading {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   padding: 12px 0;
   text-align: center;
 }
@@ -512,7 +512,7 @@
 
 .emptyText {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   text-align: center;
   padding: 32px 0;
   line-height: 1.6;
@@ -522,16 +522,16 @@
   display: inline-block;
   margin-top: 16px;
   padding: 10px 18px;
-  background: rgba(232, 115, 90, 0.12);
-  border: 1px solid rgba(232, 115, 90, 0.3);
+  background: rgba(184, 149, 106, 0.12);
+  border: 1px solid rgba(184, 149, 106, 0.3);
   border-radius: 12px;
-  color: #E8735A;
+  color: var(--accent);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
   transition: background 0.14s;
 }
-.pinterestLink:hover { background: rgba(232, 115, 90, 0.2); }
+.pinterestLink:hover { background: rgba(184, 149, 106, 0.2); }
 
 /* ── Guide ── */
 .guideList {
@@ -569,7 +569,7 @@
 
 .guideSectionIntro {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0;
   line-height: 1.5;
 }
@@ -597,7 +597,7 @@
 .guideItemName {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-dim);
 }
 
 .guideItemBody {
@@ -609,20 +609,20 @@
 
 .guideItemDesc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.6;
 }
 
 .guideItemIconic {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
 }
 
 .guideIconicLabel {
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-faint);
 }
 
 /* ── Story tab ── */
@@ -646,7 +646,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   letter-spacing: 0.3px;
 }
 
@@ -671,7 +671,7 @@
 .storySectionTitle {
   font-size: 13px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-dim);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -679,7 +679,7 @@
 
 .storyBody {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   line-height: 1.7;
   margin: 0;
 }
@@ -706,14 +706,14 @@
 .garmentName {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-dim);
   flex-shrink: 0;
   min-width: 0;
 }
 
 .garmentDesc {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   flex: 1;
 }
 
@@ -738,12 +738,12 @@
 .personName {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-dim);
 }
 
 .personMeta {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   text-align: right;
   flex-shrink: 0;
 }
@@ -762,7 +762,7 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-dim);
 }
 
 /* ── Product grid card (Items tab) ── */
@@ -787,7 +787,7 @@
   left: 6px;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(4px);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-dim);
   font-size: 0.5rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -800,7 +800,7 @@
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
   text-decoration: none;
   padding: 0 2px;
   overflow: hidden;
@@ -822,14 +822,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dim);
   padding: 0;
   transition: background 0.14s, color 0.14s, transform 0.14s;
   z-index: 2;
 }
 .heartBtnSmall:hover { background: rgba(0, 0, 0, 0.7); transform: scale(1.12); }
-.heartBtnSmallActive { color: #E8735A; background: rgba(232, 115, 90, 0.2); }
-.heartBtnSmallActive:hover { background: rgba(232, 115, 90, 0.3); }
+.heartBtnSmallActive { color: var(--accent); background: rgba(184, 149, 106, 0.2); }
+.heartBtnSmallActive:hover { background: rgba(184, 149, 106, 0.3); }
 
 /* ── Guide product picks ── */
 .guideProductRow {
@@ -853,7 +853,7 @@
 .guidePickBrand {
   font-size: 12px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0 0 2px;
@@ -869,8 +869,58 @@
 .guidePickShop {
   font-size: 12px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
   text-decoration: none;
   flex-shrink: 0;
 }
 .guidePickShop:hover { opacity: 0.75; }
+
+/* ── Light mode overrides ── */
+:global([data-theme="light"]) .subTabGroup {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+:global([data-theme="light"]) .subTab {
+  color: rgba(26, 22, 17, 0.50);
+}
+
+:global([data-theme="light"]) .subTabActive {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1A1611;
+}
+
+:global([data-theme="light"]) .screen {
+  background: var(--bg);
+}
+
+:global([data-theme="light"]) .tabContent {
+  background: var(--bg);
+}
+
+:global([data-theme="light"]) .guidePickName {
+  color: var(--text);
+}
+
+:global([data-theme="light"]) .garmentName {
+  color: var(--text);
+}
+
+:global([data-theme="light"]) .genderPill {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-muted);
+}
+
+:global([data-theme="light"]) .genderPillActive {
+  border-color: var(--accent);
+  background: rgba(139, 104, 64, 0.1);
+  color: var(--accent);
+}
+
+:global([data-theme="light"]) .guideSectionTitle {
+  color: var(--text);
+}
+
+:global([data-theme="light"]) .guideAccordionBtn {
+  color: var(--text);
+  border-top-color: var(--border);
+}

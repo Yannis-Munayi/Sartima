@@ -1,4 +1,4 @@
-.flow {
+﻿.flow {
   min-height: 100dvh;
   background: var(--bg);
   display: flex;
@@ -23,7 +23,7 @@
 }
 
 .dotActive {
-  background: #E8735A;
+  background: var(--accent);
 }
 
 .skipAll {

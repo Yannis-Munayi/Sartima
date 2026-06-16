@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_ITEMS, TYPE_EMOJI, inferCat, inferSeasons, inferGender } from '../data/aestheticItems'

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import LockedOverlay from '../components/LockedOverlay'
 import { useAvatar } from '../hooks/useAvatar'
 import { doc, getDoc, setDoc } from 'firebase/firestore'

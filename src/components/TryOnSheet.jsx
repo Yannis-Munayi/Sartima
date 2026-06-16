@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { useAvatar } from '../hooks/useAvatar'

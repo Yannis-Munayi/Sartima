@@ -382,7 +382,7 @@ function AestheticProfile({ navigate, gender }) {
               <div className={styles.aestheticBarTrack}>
                 <div
                   className={styles.aestheticBarFill}
-                  style={{ width: `${pct}%`, background: s.gradient ?? 'linear-gradient(135deg, #E8735A, #D4896A)' }}
+                  style={{ width: `${pct}%`, background: s.gradient ?? 'linear-gradient(135deg, var(--accent), var(--accent-secondary))' }}
                 />
               </div>
             </button>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../services/firebase'
 import { collectDiagnostics, getLogBuffer } from '../services/crashReporter'

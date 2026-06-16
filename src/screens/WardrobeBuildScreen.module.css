@@ -100,14 +100,14 @@
 }
 
 .stepDotActive .stepDotInner {
-  background: #E8735A;
-  border-color: #E8735A;
-  box-shadow: 0 0 0 4px rgba(255,107,53,0.2);
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(184, 149, 106,0.2);
 }
 
 .stepDotDone .stepDotInner {
-  background: rgba(255,107,53,0.4);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.4);
+  border-color: var(--accent);
 }
 
 .stepDotLabel {
@@ -117,7 +117,7 @@
 }
 
 .stepDotActive .stepDotLabel {
-  color: #E8735A;
+  color: var(--accent);
 }
 
 /* ── Content area ── */
@@ -173,7 +173,7 @@
 }
 
 .pieceCardSelected {
-  border-color: #E8735A;
+  border-color: var(--accent);
 }
 
 .pieceCardBg {
@@ -202,7 +202,7 @@
 .pieceCardSelectedOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(255,107,53,0.2);
+  background: rgba(184, 149, 106,0.2);
   z-index: 1;
 }
 
@@ -231,7 +231,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #E8735A;
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -267,14 +267,14 @@
 }
 
 .budgetCardSelected {
-  background: rgba(255,107,53,0.12);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: var(--accent);
 }
 
 .budgetTag {
   font-size: 18px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
   min-width: 42px;
   font-family: 'Playfair Display', serif;
 }
@@ -287,7 +287,7 @@
 }
 
 .budgetCardSelected .budgetLabel {
-  color: #D4896A;
+  color: var(--accent-secondary);
 }
 
 .budgetSub {
@@ -321,8 +321,8 @@
 }
 
 .priorityChipSelected {
-  background: rgba(255,107,53,0.12);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: var(--accent);
 }
 
 .priorityChipDisabled {
@@ -342,13 +342,13 @@
 }
 
 .priorityChipSelected .priorityLabel {
-  color: #D4896A;
+  color: var(--accent-secondary);
 }
 
 .priorityCheck {
   font-size: 13px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
 }
 
 /* ── Nav buttons ── */
@@ -360,7 +360,7 @@
 
 .nextBtn {
   padding: 15px 20px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -391,10 +391,10 @@
 
 .notSureBtn {
   padding: 14px 16px;
-  background: rgba(255,107,53,0.06);
-  border: 2px dashed rgba(255,107,53,0.45);
+  background: rgba(184, 149, 106,0.06);
+  border: 2px dashed rgba(184, 149, 106,0.45);
   border-radius: 12px;
-  color: #D4896A;
+  color: var(--accent-secondary);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -404,9 +404,9 @@
 }
 
 .notSureBtn:hover {
-  border-color: #E8735A;
-  background: rgba(255,107,53,0.1);
-  color: #E8735A;
+  border-color: var(--accent);
+  background: rgba(184, 149, 106,0.1);
+  color: var(--accent);
 }
 
 /* ── Results ── */
@@ -423,8 +423,8 @@
   align-items: center;
   gap: 18px;
   padding: 20px 22px;
-  background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,140,66,0.08));
-  border: 1px solid rgba(255,107,53,0.25);
+  background: linear-gradient(135deg, rgba(184, 149, 106,0.15), rgba(255,140,66,0.08));
+  border: 1px solid rgba(184, 149, 106,0.25);
   border-radius: 18px;
 }
 
@@ -432,7 +432,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 52px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
   line-height: 1;
 }
 
@@ -552,8 +552,8 @@
 }
 
 .productSelectBtnOn {
-  background: #E8735A;
-  border-color: #E8735A;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .productPhoto {
@@ -624,8 +624,8 @@
 .productLabel {
   font-size: 12px;
   font-weight: 700;
-  color: #D4896A;
-  background: rgba(255,107,53,0.1);
+  color: var(--accent-secondary);
+  background: rgba(184, 149, 106,0.1);
   padding: 3px 8px;
   border-radius: 6px;
   align-self: flex-start;
@@ -680,7 +680,7 @@
 
 .complementCard:active {
   transform: scale(0.97);
-  border-color: #E8735A;
+  border-color: var(--accent);
   border-style: solid;
 }
 
@@ -730,7 +730,7 @@
 .complementAdd {
   font-size: 12px;
   font-weight: 700;
-  color: #E8735A;
+  color: var(--accent);
   background: rgba(0,0,0,0.45);
   padding: 3px 8px;
   border-radius: 6px;
@@ -765,13 +765,13 @@
 }
 
 .viewTabActive {
-  background: rgba(232,115,90,0.15);
-  border-color: rgba(232,115,90,0.4);
-  color: #E8735A;
+  background: rgba(184, 149, 106,0.15);
+  border-color: rgba(184, 149, 106,0.4);
+  color: var(--accent);
 }
 
 .viewTabBadge {
-  background: #E8735A;
+  background: var(--accent);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -833,14 +833,14 @@
 }
 
 .budgetChipSelected {
-  background: rgba(255,107,53,0.12);
-  border-color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: var(--accent);
 }
 
 .budgetChipTag {
   font-size: 13px;
   font-weight: 800;
-  color: #E8735A;
+  color: var(--accent);
   font-family: 'Playfair Display', serif;
 }
 
@@ -853,7 +853,7 @@
 }
 
 .budgetChipSelected .budgetChipLabel {
-  color: #D4896A;
+  color: var(--accent-secondary);
 }
 
 /* ── Per-piece filters (color / material / size) ── */
@@ -871,7 +871,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
   margin: 0 0 4px;
 }
 
@@ -900,7 +900,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -909,9 +909,9 @@
 }
 
 .filterChipSelected {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.5);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.5);
+  color: var(--accent);
 }
 
 .colorDot {
@@ -930,8 +930,8 @@
 }
 
 .colorDotSelected {
-  border-color: #E8735A;
-  box-shadow: 0 0 0 2px rgba(232, 115, 90, 0.35);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(184, 149, 106, 0.35);
 }
 
 .colorDotCheck {
@@ -946,7 +946,7 @@
 .saveListBtn {
   margin: 0 20px 16px;
   padding: 14px;
-  background: #E8735A;
+  background: var(--accent);
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -966,10 +966,10 @@
 .savedBanner {
   margin: 0 20px 16px;
   padding: 12px 16px;
-  background: rgba(232, 115, 90, 0.12);
-  border: 1px solid rgba(232, 115, 90, 0.3);
+  background: rgba(184, 149, 106, 0.12);
+  border: 1px solid rgba(184, 149, 106, 0.3);
   border-radius: 14px;
-  color: #E8735A;
+  color: var(--accent);
   font-size: 14px;
   font-weight: 600;
   text-align: center;

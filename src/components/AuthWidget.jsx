@@ -1,4 +1,4 @@
-import { useAuth } from '../context/AuthContext'
+﻿import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import styles from './AuthWidget.module.css'
 

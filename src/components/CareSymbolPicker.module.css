@@ -1,4 +1,4 @@
-.picker {
+﻿.picker {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -44,8 +44,8 @@
 }
 
 .guideBtn:hover {
-  border-color: #E8735A;
-  color: #E8735A;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .guide {
@@ -114,12 +114,12 @@
 }
 
 .chip:hover {
-  border-color: rgba(232, 115, 90, 0.5);
+  border-color: rgba(184, 149, 106, 0.5);
 }
 
 .chipActive {
-  border-color: #E8735A;
-  background: rgba(232, 115, 90, 0.1);
+  border-color: var(--accent);
+  background: rgba(184, 149, 106, 0.1);
 }
 
 .symbolBox {
@@ -137,8 +137,8 @@
 }
 
 .chipActive .symbolBox {
-  color: #E8735A;
-  border-color: #E8735A;
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .chipLabel {
@@ -150,5 +150,5 @@
 }
 
 .chipActive .chipLabel {
-  color: #E8735A;
+  color: var(--accent);
 }

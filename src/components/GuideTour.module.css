@@ -49,7 +49,7 @@
 .interactiveHint {
   font-size: 12px;
   font-weight: 600;
-  color: #E8735A;
+  color: var(--accent);
   text-align: center;
   margin: 4px 0 0;
   letter-spacing: 0.2px;
@@ -77,12 +77,12 @@
 }
 
 .dotDone {
-  background: rgba(232, 115, 90, 0.5);
+  background: rgba(184, 149, 106, 0.5);
   width: 6px;
 }
 
 .dotActive {
-  background: #E8735A;
+  background: var(--accent);
   width: 18px;
   border-radius: 3px;
 }
@@ -97,14 +97,14 @@
 .counter {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   letter-spacing: 0.4px;
 }
 
 .skipBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   font-size: 13px;
   font-family: inherit;
   cursor: pointer;
@@ -112,7 +112,7 @@
   transition: color 0.2s;
 }
 
-.skipBtn:hover { color: rgba(255, 255, 255, 0.65); }
+.skipBtn:hover { color: var(--text-muted); }
 
 /* Content */
 .title {
@@ -125,7 +125,7 @@
 
 .desc {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.6;
 }
@@ -143,7 +143,7 @@
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -159,7 +159,7 @@
 .nextBtn {
   flex: 2;
   padding: 12px 0;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 12px;
   color: #fff;

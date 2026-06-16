@@ -1,4 +1,4 @@
-/* ── Full-screen layout (matches OnboardingFlow) ── */
+﻿/* ── Full-screen layout (matches OnboardingFlow) ── */
 .flow {
   min-height: 100dvh;
   background: var(--bg);
@@ -23,7 +23,7 @@
 }
 
 .dotActive {
-  background: #E8735A;
+  background: var(--accent);
 }
 
 /* ── Header ── */
@@ -101,7 +101,7 @@
 }
 
 .field input:focus {
-  border-color: #E8735A;
+  border-color: var(--accent);
 }
 
 /* ── Password with eye toggle ── */
@@ -181,14 +181,14 @@
 }
 
 .genderPill:hover {
-  border-color: rgba(232,115,90,0.4);
+  border-color: rgba(184, 149, 106,0.4);
   color: var(--text);
 }
 
 .genderPillActive {
-  background: rgba(232,115,90,0.12);
-  border-color: #E8735A;
-  color: #E8735A;
+  background: rgba(184, 149, 106,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Error ── */
@@ -268,7 +268,7 @@
 }
 
 .googleBtn:hover:not(:disabled) {
-  border-color: rgba(255,255,255,0.22);
+  border-color: var(--text-faint);
   color: var(--text);
 }
 
@@ -288,7 +288,7 @@
 .switchBtn {
   background: none;
   border: none;
-  color: #E8735A;
+  color: var(--accent);
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;

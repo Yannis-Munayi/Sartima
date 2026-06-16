@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: center;
   height: 100dvh;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   font-size: 14px;
 }
 
@@ -33,7 +33,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s, color 0.15s;
@@ -89,7 +89,7 @@
 
 .quizProgressFill {
   height: 100%;
-  background: linear-gradient(90deg, #E8735A, #D4896A);
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -110,7 +110,7 @@
 .ctaBtn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -119,12 +119,12 @@
   font-family: inherit;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(232, 115, 90, 0.35);
+  box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
 }
 
 .ctaBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(232, 115, 90, 0.45);
+  box-shadow: 0 6px 20px rgba(184, 149, 106, 0.45);
 }
 
 /* ── Filter sheet ── */
@@ -194,14 +194,14 @@
 }
 
 .chipActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.4);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.4);
+  color: var(--accent);
 }
 
 .applyBtn {
   padding: 14px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;

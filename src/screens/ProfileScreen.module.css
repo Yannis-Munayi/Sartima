@@ -19,7 +19,7 @@
 .backBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -41,7 +41,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E8735A, #C4A882);
+  background: linear-gradient(135deg, var(--accent), #C4A882);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,7 +67,7 @@
 .gearBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.45);
+  color: var(--text-faint);
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -171,7 +171,7 @@
 }
 
 .toggleOn {
-  background: #E8735A;
+  background: var(--accent);
 }
 
 .toggleThumb {
@@ -194,16 +194,16 @@
   width: 100%;
   padding: 13px;
   border-radius: 12px;
-  border: 1px solid rgba(232, 115, 90, 0.25);
+  border: 1px solid rgba(184, 149, 106, 0.25);
   background: transparent;
-  color: #E8735A;
+  color: var(--accent);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s;
 }
-.settingsSignOut:hover { background: rgba(232, 115, 90, 0.08); }
+.settingsSignOut:hover { background: rgba(184, 149, 106, 0.08); }
 
 /* ── Size system segmented control ── */
 .sizeSystemPicker {
@@ -260,7 +260,7 @@
 
 .quizCount {
   font-weight: 500;
-  color: rgba(255,255,255,0.25);
+  color: var(--text-faint);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -349,7 +349,7 @@
 
 .quizMeta {
   font-size: 12px;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -376,7 +376,7 @@
 
 .quizStyleName {
   font-size: 13px;
-  color: rgba(255,255,255,0.7);
+  color: var(--text-dim);
   min-width: 160px;
   flex-shrink: 0;
 }
@@ -400,7 +400,7 @@
 .likedLabel {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255,255,255,0.35);
+  color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 8px;
@@ -418,7 +418,7 @@
   border-radius: 99px;
   padding: 4px 10px;
   font-size: 12px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-muted);
 }
 
 .exploreBtn {
@@ -438,7 +438,7 @@
 /* ── Empty / loading ── */
 .empty {
   font-size: 14px;
-  color: rgba(255,255,255,0.3);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -454,7 +454,7 @@
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.1);
   background: var(--bg-card);
-  color: rgba(255,255,255,0.5);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -462,11 +462,11 @@
   transition: all 0.18s;
 }
 
-.genderPill:hover { border-color: rgba(255,255,255,0.22); color: rgba(255,255,255,0.8); }
+.genderPill:hover { border-color: var(--text-faint); color: var(--text-dim); }
 
 .genderPillActive {
-  background: #E8735A;
-  border-color: #E8735A;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -476,7 +476,7 @@
   background: none;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 12px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-muted);
   font-size: 14px;
   font-family: inherit;
   padding: 12px 24px;
@@ -485,14 +485,14 @@
 }
 
 .retakeBtn:hover {
-  border-color: rgba(255,255,255,0.3);
+  border-color: var(--text-faint);
   color: #fff;
 }
 
 /* ── Style Evolution ── */
 .evolutionInsight {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: 0 0 16px;
   line-height: 1.5;
 }
@@ -556,7 +556,7 @@
 .evolutionLabel {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   margin: 4px 0 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -600,7 +600,7 @@
 .lockLabel {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   margin: 0;
   text-align: center;
   padding: 0 16px;
@@ -635,7 +635,7 @@
 .signInBtn {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -644,7 +644,7 @@
   font-family: inherit;
   cursor: pointer;
   transition: opacity 0.2s;
-  box-shadow: 0 4px 20px rgba(232, 115, 90, 0.35);
+  box-shadow: 0 4px 20px rgba(184, 149, 106, 0.35);
 }
 
 .signInBtn:hover { opacity: 0.9; }
@@ -680,7 +680,7 @@
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 13px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -711,7 +711,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -720,9 +720,9 @@
 }
 
 .themePillActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.4);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.4);
+  color: var(--accent);
 }
 
 /* ── Scrollable settings sheet ── */
@@ -751,7 +751,7 @@
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -760,8 +760,8 @@
 }
 
 .occasionPillActive {
-  background: #E8735A;
-  border-color: #E8735A;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -777,7 +777,7 @@
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -787,9 +787,9 @@
 }
 
 .seasonPillActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.5);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.5);
+  color: var(--accent);
 }
 
 /* ── Sort pills ── */
@@ -804,7 +804,7 @@
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -814,9 +814,9 @@
 }
 
 .sortPillActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.5);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.5);
+  color: var(--accent);
 }
 
 /* ── Small action button (Enable, Clear) ── */
@@ -825,7 +825,7 @@
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-dim);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -854,7 +854,7 @@
   color-scheme: dark;
 }
 
-.timeInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+.timeInput:focus { border-color: rgba(184, 149, 106, 0.5); }
 
 /* ── Shopping email row ── */
 .emailRow {
@@ -875,12 +875,12 @@
   min-width: 0;
 }
 
-.emailInput:focus { border-color: rgba(232, 115, 90, 0.5); }
-.emailInput::placeholder { color: rgba(255, 255, 255, 0.25); }
+.emailInput:focus { border-color: rgba(184, 149, 106, 0.5); }
+.emailInput::placeholder { color: var(--text-faint); }
 
 .emailSaveBtn {
   padding: 10px 18px;
-  background: #E8735A;
+  background: var(--accent);
   border: none;
   border-radius: 10px;
   color: #fff;
@@ -907,7 +907,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   flex-shrink: 0;
@@ -926,7 +926,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -961,4 +961,29 @@
 }
 
 .deleteBtn:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Light mode overrides ── */
+:global([data-theme="light"]) .themePill {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.22);
+  color: var(--text-muted);
+}
+
+:global([data-theme="light"]) .aestheticChip {
+  position: relative;
+  overflow: hidden;
+}
+
+:global([data-theme="light"]) .aestheticChip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 25%, rgba(0, 0, 0, 0.52) 100%);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+:global([data-theme="light"]) .quizCardHeader {
+  color: var(--text);
+}
 

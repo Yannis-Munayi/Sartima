@@ -1,4 +1,4 @@
-/* ── Screen ── */
+﻿/* ── Screen ── */
 .screen {
   min-height: 100dvh;
   background: var(--bg);
@@ -40,7 +40,7 @@
 
 .subTabActive {
   color: var(--text);
-  border-bottom-color: #E8735A;
+  border-bottom-color: var(--accent);
 }
 
 .subCount {
@@ -57,7 +57,7 @@
 }
 
 .subCountActive {
-  background: #E8735A;
+  background: var(--accent);
   color: #fff;
 }
 
@@ -96,12 +96,12 @@
   margin-bottom: 4px;
 }
 
-.editToggle:hover { border-color: #E8735A; color: #E8735A; }
+.editToggle:hover { border-color: var(--accent); color: var(--accent); }
 
 .editToggleActive {
-  border-color: #E8735A;
-  color: #E8735A;
-  background: rgba(232, 115, 90, 0.08);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(184, 149, 106, 0.08);
 }
 
 .filterChip {
@@ -125,9 +125,9 @@
 .filterChip:hover { color: var(--text-dim); }
 
 .filterChipActive {
-  background: rgba(232, 115, 90, 0.12);
-  border-color: rgba(232, 115, 90, 0.5);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.12);
+  border-color: rgba(184, 149, 106, 0.5);
+  color: var(--accent);
 }
 
 .filterEmoji { font-size: 14px; }
@@ -275,7 +275,7 @@
   line-height: 1;
   transition: color 0.15s;
 }
-.flipBackBtn:hover { color: #E8735A; }
+.flipBackBtn:hover { color: var(--accent); }
 
 .backBody {
   flex: 1;
@@ -364,7 +364,7 @@
 }
 
 .backWashWarn {
-  color: #E8735A;
+  color: var(--accent);
 }
 
 .backActions {
@@ -388,7 +388,7 @@
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
-.backEditBtn:hover { border-color: #E8735A; color: #E8735A; }
+.backEditBtn:hover { border-color: var(--accent); color: var(--accent); }
 
 .backRemoveBtn {
   flex: 1;
@@ -452,7 +452,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(232, 115, 90, 0.9);
+  background: rgba(184, 149, 106, 0.9);
   color: #fff;
   font-size: 12px;
   font-weight: 800;
@@ -528,7 +528,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #E8735A;
+  background: var(--accent);
   animation: dotPulse 1.2s infinite ease-in-out;
 }
 .loadingDots span:nth-child(2) { animation-delay: 0.2s; }
@@ -647,14 +647,14 @@
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E8735A, #D4896A);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   color: #fff;
   font-size: 28px;
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(232, 115, 90, 0.5);
+  box-shadow: 0 4px 20px rgba(184, 149, 106, 0.5);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -664,5 +664,5 @@
 
 .fab:hover {
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 24px rgba(232, 115, 90, 0.65);
+  box-shadow: 0 6px 24px rgba(184, 149, 106, 0.65);
 }

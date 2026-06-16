@@ -50,7 +50,7 @@
 
 .modeSub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0 0 12px;
 }
 
@@ -88,7 +88,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: rgba(232, 115, 90, 0.12);
+  background: rgba(184, 149, 106, 0.12);
   border-radius: 12px;
 }
 
@@ -100,13 +100,13 @@
 
 .modeBtnSub {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
 }
 
 .cancelBtn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
@@ -115,7 +115,7 @@
   margin-top: 4px;
   transition: color 0.15s;
 }
-.cancelBtn:hover { color: rgba(255, 255, 255, 0.7); }
+.cancelBtn:hover { color: var(--text-dim); }
 
 /* ── Shared pane ── */
 .pane {
@@ -134,7 +134,7 @@
 
 .paneSub {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0;
   line-height: 1.5;
 }
@@ -155,8 +155,8 @@
 }
 
 .photoZone:hover {
-  border-color: rgba(232, 115, 90, 0.4);
-  background: rgba(232, 115, 90, 0.04);
+  border-color: rgba(184, 149, 106, 0.4);
+  background: rgba(184, 149, 106, 0.04);
 }
 
 .photoPreview {
@@ -167,7 +167,7 @@
 
 .photoPlaceholder {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-faint);
 }
 
 /* ── Name input ── */
@@ -184,8 +184,8 @@
   transition: border-color 0.15s;
 }
 
-.nameInput::placeholder { color: rgba(255, 255, 255, 0.25); }
-.nameInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+.nameInput::placeholder { color: var(--text-faint); }
+.nameInput:focus { border-color: rgba(184, 149, 106, 0.5); }
 
 /* ── Category grid ── */
 .catGrid {
@@ -199,7 +199,7 @@
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--bg-card);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   font-size: 13px;
   font-family: inherit;
   font-weight: 500;
@@ -208,16 +208,16 @@
 }
 
 .catPillActive {
-  background: rgba(232, 115, 90, 0.15);
-  border-color: rgba(232, 115, 90, 0.45);
-  color: #E8735A;
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.45);
+  color: var(--accent);
 }
 
 /* ── Analyze button ── */
 .analyzeBtn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #E8735A, #C4A882);
+  background: linear-gradient(135deg, var(--accent), #C4A882);
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -253,7 +253,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   margin: 0;
 }
 
@@ -282,9 +282,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid rgba(232, 115, 90, 0.5);
-  background: rgba(232, 115, 90, 0.1);
-  color: #E8735A;
+  border: 2px solid rgba(184, 149, 106, 0.5);
+  background: rgba(184, 149, 106, 0.1);
+  color: var(--accent);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -294,7 +294,7 @@
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.checkBtn:hover { background: rgba(232, 115, 90, 0.2); }
+.checkBtn:hover { background: rgba(184, 149, 106, 0.2); }
 
 .detectedBody {
   flex: 1;
@@ -316,11 +316,11 @@
   outline: none;
 }
 
-.detectedName:disabled { color: rgba(255, 255, 255, 0.3); }
+.detectedName:disabled { color: var(--text-faint); }
 
 .detectedMeta {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-faint);
   text-transform: capitalize;
 }
 
@@ -362,7 +362,7 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px dashed rgba(255, 255, 255, 0.15);
   border-radius: 10px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-muted);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -371,8 +371,8 @@
 }
 
 .careToggle:hover {
-  border-color: rgba(232, 115, 90, 0.45);
-  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(184, 149, 106, 0.45);
+  color: var(--text-dim);
 }
 
 .careToggleChevron {
@@ -392,7 +392,7 @@
 
 .careSectionHint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
   margin: 0;
   line-height: 1.5;
 }
@@ -402,7 +402,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-faint);
 }
 
 .careInput {
@@ -418,5 +418,5 @@
   box-sizing: border-box;
 }
 
-.careInput::placeholder { color: rgba(255, 255, 255, 0.25); }
-.careInput:focus { border-color: rgba(232, 115, 90, 0.5); }
+.careInput::placeholder { color: var(--text-faint); }
+.careInput:focus { border-color: rgba(184, 149, 106, 0.5); }

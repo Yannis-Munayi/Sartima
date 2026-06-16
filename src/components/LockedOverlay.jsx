@@ -1,4 +1,4 @@
-const wrap  = { position: 'relative' }
+﻿const wrap  = { position: 'relative' }
 const blur  = { filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none' }
 const overlay = {
   position: 'absolute', inset: 0,

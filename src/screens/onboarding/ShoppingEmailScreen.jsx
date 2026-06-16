@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import styles from './OnboardingStep.module.css'
 
 export default function ShoppingEmailScreen({ userEmail, onFinish, saving }) {

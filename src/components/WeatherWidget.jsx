@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { getWeather, getWeatherEmoji } from '../services/weather'
 import styles from './WeatherWidget.module.css'
 

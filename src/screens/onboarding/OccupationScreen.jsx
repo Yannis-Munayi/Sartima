@@ -1,4 +1,4 @@
-import styles from './OnboardingStep.module.css'
+﻿import styles from './OnboardingStep.module.css'
 
 const OCCUPATIONS = [
   { id: 'student',    label: 'Student',           emoji: '📚' },

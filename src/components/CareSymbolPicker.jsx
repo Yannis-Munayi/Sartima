@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { CARE_SYMBOLS, SYMBOL_CATEGORY_LABELS, SYMBOL_EXCLUSIONS } from '../data/careSymbols'
 import styles from './CareSymbolPicker.module.css'
 
