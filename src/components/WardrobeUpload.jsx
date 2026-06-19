@@ -1,4 +1,5 @@
 ﻿import { useRef, useState } from 'react'
+import { useSubscription } from '../context/SubscriptionContext'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../services/firebase'
 import { analyzeOutfit } from '../services/claudeVision'
@@ -207,6 +208,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
 
 // ── Outfit photo analysis ────────────────────────────────────────────────────
 function AnalyzeOutfitPane({ uid, onSave, onClose }) {
+  const { isAtLimit, openPaywall } = useSubscription()
   const fileRef = useRef(null)
   const [preview,   setPreview]   = useState(null)
   const [file,      setFile]      = useState(null)
@@ -227,6 +229,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
 
   async function handleAnalyze() {
     if (!file) return
+    if (isAtLimit('visionUploads')) { openPaywall('visionUploads'); return }
     setAnalyzing(true)
     setCooldown(true)
     setError(null)

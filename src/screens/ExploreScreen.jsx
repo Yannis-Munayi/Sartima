@@ -187,14 +187,14 @@ export default function ExploreScreen() {
   const [search, setSearch]   = useState('')
   const [filter, setFilter]   = useState('all')
   const [showPinHint, setShowPinHint] = useState(
-    () => !localStorage.getItem('stylelab_pin_hint_shown')
+    () => !localStorage.getItem('sartima_pin_hint_shown')
   )
 
   useEffect(() => {
     if (!showPinHint) return
     const t = setTimeout(() => {
       setShowPinHint(false)
-      localStorage.setItem('stylelab_pin_hint_shown', '1')
+      localStorage.setItem('sartima_pin_hint_shown', '1')
     }, 4000)
     return () => clearTimeout(t)
   }, [showPinHint])
@@ -278,7 +278,7 @@ export default function ExploreScreen() {
               className={styles.pinHintDismiss}
               onClick={() => {
                 setShowPinHint(false)
-                localStorage.setItem('stylelab_pin_hint_shown', '1')
+                localStorage.setItem('sartima_pin_hint_shown', '1')
               }}
             >
               ×

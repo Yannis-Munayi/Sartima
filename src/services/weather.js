@@ -2,7 +2,7 @@ import { httpsCallable } from 'firebase/functions'
 import { functions } from './firebase'
 import { logError } from './logger'
 
-const CACHE_KEY = 'stylelab_weather'
+const CACHE_KEY = 'sartima_weather'
 const CACHE_TTL  = 30 * 60 * 1000 // 30 minutes
 
 function getCached() {
@@ -29,7 +29,7 @@ function getCoords() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject(new Error('no-geolocation')); return }
 
-    const cached = sessionStorage.getItem('stylelab_coords')
+    const cached = sessionStorage.getItem('sartima_coords')
     if (cached) { resolve(JSON.parse(cached)); return }
 
     navigator.geolocation.getCurrentPosition(
@@ -39,7 +39,7 @@ function getCoords() {
           lat: Math.round(pos.coords.latitude  * 100) / 100,
           lon: Math.round(pos.coords.longitude * 100) / 100,
         }
-        try { sessionStorage.setItem('stylelab_coords', JSON.stringify(coords)) } catch {}
+        try { sessionStorage.setItem('sartima_coords', JSON.stringify(coords)) } catch {}
         resolve(coords)
       },
       () => reject(new Error('permission-denied')),

@@ -174,7 +174,7 @@ function HeroCarousel({ navigate, gender }) {
       <div className={styles.heroOverlay} />
 
       <div className={styles.heroTopBar}>
-        <span className={styles.heroWordmark}>StyleLab</span>
+        <span className={styles.heroWordmark}>Sartima</span>
         <AuthWidget />
       </div>
 

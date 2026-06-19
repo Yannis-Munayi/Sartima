@@ -1,4 +1,5 @@
 ﻿import { useMemo, useState } from 'react'
+import { useSubscription } from '../context/SubscriptionContext'
 import { useClosetSort } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import LockedOverlay from '../components/LockedOverlay'
@@ -67,6 +68,7 @@ const TABS = [
 ]
 
 function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, onTryOn }) {
+  const { isPro } = useSubscription()
   const photoUrl   = item.prettifiedUrl ?? item.imageUrl ?? item.thumbnailUrl
   const formality  = inferFormality(item)
   const washStatus = washStatusText(item)
@@ -100,7 +102,7 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
           </div>
           <p className={styles.itemName}>{item.name}</p>
           {item.brand && <p className={styles.itemBrand}>{item.brand}</p>}
-          {!editMode && TRYON_CATEGORIES.includes(item.category) && (
+          {!editMode && isPro && TRYON_CATEGORIES.includes(item.category) && (
             <button
               className={styles.tryOnBadge}
               onClick={(e) => { e.stopPropagation(); onTryOn(item) }}
@@ -191,9 +193,10 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
 }
 
 function MyClosetTab() {
-  const { user }                   = useAuth()
+  const { user }                        = useAuth()
   const { closetItems, closetLoading, closetError, retryLoadCloset, closetByCategory, addToCloset, removeFromCloset } = useCloset()
-  const { closetSort }             = useClosetSort()
+  const { closetSort }                  = useClosetSort()
+  const { isPro, limits, openPaywall }  = useSubscription()
   const [activeFilter, setFilter]  = useState('all')
   const [showUpload, setShowUpload]       = useState(false)
   const [showSearch, setShowSearch]       = useState(false)
@@ -215,6 +218,7 @@ function MyClosetTab() {
   }, [activeFilter, closetItems, closetByCategory, closetSort])
 
   async function handleSave(item) {
+    if (!isPro && closetItems.length >= limits.closetItems) { openPaywall('closetItems'); return }
     await addToCloset(item)
   }
 

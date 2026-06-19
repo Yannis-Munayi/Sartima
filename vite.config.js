@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'StyleLab',
-        short_name: 'StyleLab',
+        name: 'Sartima',
+        short_name: 'Sartima',
         description: 'Discover your personal fashion aesthetic',
         theme_color: '#0f0f0f',
         background_color: '#0f0f0f',

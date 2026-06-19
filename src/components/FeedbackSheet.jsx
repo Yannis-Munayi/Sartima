@@ -27,7 +27,7 @@ export default function FeedbackSheet({ user, onClose }) {
           contactEmail: contactEmail.trim() || null,
         })
       } else {
-        window.location.href = `mailto:ytmunayi@gmail.com?subject=${encodeURIComponent(`[StyleLab] ${category}`)}&body=${encodeURIComponent(message.trim())}`
+        window.location.href = `mailto:ytmunayi@gmail.com?subject=${encodeURIComponent(`[Sartima] ${category}`)}&body=${encodeURIComponent(message.trim())}`
       }
       setDone(true)
     } catch {
@@ -51,7 +51,7 @@ export default function FeedbackSheet({ user, onClose }) {
           <div className={styles.success}>
             <span className={styles.successIcon}>✓</span>
             <p className={styles.successTitle}>Thanks for your feedback!</p>
-            <p className={styles.successSub}>We read every message and use it to make StyleLab better.</p>
+            <p className={styles.successSub}>We read every message and use it to make Sartima better.</p>
             <button className={styles.doneBtn} onClick={onClose}>Done</button>
           </div>
         ) : (

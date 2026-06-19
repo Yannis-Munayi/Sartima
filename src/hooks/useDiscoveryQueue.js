@@ -4,7 +4,7 @@ import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
 const QUIZ_SIZE        = 40
-const QUIZ_STORAGE_KEY = 'stylelab_quiz_progress'
+const QUIZ_STORAGE_KEY = 'sartima_quiz_progress'
 
 function saveQuizProgress(queue, index, scores, likedItems) {
   try {

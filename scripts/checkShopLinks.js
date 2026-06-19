@@ -24,7 +24,7 @@ async function checkUrl(url) {
       method: 'HEAD',
       redirect: 'follow',
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; StyleLabLinkChecker/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SartimaLinkChecker/1.0)' },
     })
     clearTimeout(timer)
     return { ok: res.ok, status: res.status }

@@ -275,13 +275,13 @@ export function useApp() {
 // ── Theme hook ────────────────────────────────────────────────────────────────
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
-    const t = localStorage.getItem('stylelab_theme') ?? 'light'
+    const t = localStorage.getItem('sartima_theme') ?? 'light'
     document.documentElement.setAttribute('data-theme', t)
     return t
   })
 
   function setTheme(t) {
-    localStorage.setItem('stylelab_theme', t)
+    localStorage.setItem('sartima_theme', t)
     document.documentElement.setAttribute('data-theme', t)
     setThemeState(t)
   }
@@ -291,9 +291,9 @@ export function useTheme() {
 
 // ── Temperature unit hook ─────────────────────────────────────────────────────
 export function useTempUnit() {
-  const [unit, setUnitState] = useState(() => localStorage.getItem('stylelab_temp_unit') ?? 'c')
+  const [unit, setUnitState] = useState(() => localStorage.getItem('sartima_temp_unit') ?? 'c')
   function setUnit(u) {
-    localStorage.setItem('stylelab_temp_unit', u)
+    localStorage.setItem('sartima_temp_unit', u)
     setUnitState(u)
   }
   return { unit, setUnit }
@@ -302,10 +302,10 @@ export function useTempUnit() {
 // ── Default occasion hook ─────────────────────────────────────────────────────
 export function useDefaultOccasion() {
   const [occasion, setOccasionState] = useState(
-    () => localStorage.getItem('stylelab_default_occasion') ?? 'casual'
+    () => localStorage.getItem('sartima_default_occasion') ?? 'casual'
   )
   function setOccasion(o) {
-    localStorage.setItem('stylelab_default_occasion', o)
+    localStorage.setItem('sartima_default_occasion', o)
     setOccasionState(o)
   }
   return { occasion, setOccasion }
@@ -314,21 +314,21 @@ export function useDefaultOccasion() {
 // ── Preferred seasons hook ────────────────────────────────────────────────────
 export function usePreferredSeasons() {
   const [seasons, setSeasonsState] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('stylelab_preferred_seasons') ?? '[]') } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('sartima_preferred_seasons') ?? '[]') } catch { return [] }
   })
   function toggleSeason(s) {
     const next = seasons.includes(s) ? seasons.filter((x) => x !== s) : [...seasons, s]
-    localStorage.setItem('stylelab_preferred_seasons', JSON.stringify(next))
+    localStorage.setItem('sartima_preferred_seasons', JSON.stringify(next))
     setSeasonsState(next)
   }
   return { preferredSeasons: seasons, toggleSeason }
 }
 
 // ── Show quiz tab hook (cross-component reactive via custom event) ─────────────
-const QUIZ_TAB_EVENT = 'stylelab:quiz-tab-change'
+const QUIZ_TAB_EVENT = 'sartima:quiz-tab-change'
 
 export function useShowQuizTab() {
-  const [show, setShowState] = useState(() => localStorage.getItem('stylelab_show_quiz_tab') !== 'false')
+  const [show, setShowState] = useState(() => localStorage.getItem('sartima_show_quiz_tab') !== 'false')
 
   useEffect(() => {
     function onUpdate(e) { setShowState(e.detail !== false) }
@@ -337,7 +337,7 @@ export function useShowQuizTab() {
   }, [])
 
   function setShow(v) {
-    localStorage.setItem('stylelab_show_quiz_tab', String(v))
+    localStorage.setItem('sartima_show_quiz_tab', String(v))
     setShowState(v)
     window.dispatchEvent(new CustomEvent(QUIZ_TAB_EVENT, { detail: v }))
   }
@@ -346,9 +346,9 @@ export function useShowQuizTab() {
 
 // ── Closet sort hook ──────────────────────────────────────────────────────────
 export function useClosetSort() {
-  const [sort, setSortState] = useState(() => localStorage.getItem('stylelab_closet_sort') ?? 'date')
+  const [sort, setSortState] = useState(() => localStorage.getItem('sartima_closet_sort') ?? 'date')
   function setSort(s) {
-    localStorage.setItem('stylelab_closet_sort', s)
+    localStorage.setItem('sartima_closet_sort', s)
     setSortState(s)
   }
   return { closetSort: sort, setClosetSort: setSort }

@@ -23,7 +23,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
     <aside className={styles.sidebar}>
       <div className={styles.logoWrap}>
         <span className={styles.logo}>
-          Style<span className={styles.logoAccent}>Lab</span>
+          Sar<span className={styles.logoAccent}>tima</span>
         </span>
       </div>
       <div className={styles.navDivider} />

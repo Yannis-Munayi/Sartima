@@ -41,7 +41,9 @@ import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
 import TabBar          from './components/TabBar'
 import GuideTour from './components/GuideTour'
 import Toast           from './components/Toast'
+import PaywallModal    from './components/PaywallModal'
 import { GuideProvider } from './context/GuideContext'
+import { SubscriptionProvider } from './context/SubscriptionContext'
 
 // Screens where the tab bar is hidden (focused setup flow)
 const HIDE_TABS_ON = new Set([
@@ -305,6 +307,7 @@ function AppShell() {
         )}
 
         <Toast />
+        <PaywallModal />
       </div>
     </div>
     </GuideProvider>
@@ -315,6 +318,7 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
+      <SubscriptionProvider>
       <AppProvider>
         <ShopProvider>
           <WishlistProvider>
@@ -326,6 +330,7 @@ export default function App() {
           </WishlistProvider>
         </ShopProvider>
       </AppProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   )
 }

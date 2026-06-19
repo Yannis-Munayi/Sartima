@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from './AuthContext'
 import { showToast } from '../components/Toast'
+import { useSubscription } from './SubscriptionContext'
 
 const WishlistContext = createContext(null)
 
@@ -39,6 +40,7 @@ function usePersistedList(user, docId) {
 
 export function WishlistProvider({ children }) {
   const { user } = useAuth()
+  const { isPro, limits, openPaywall } = useSubscription()
   const [wishlist,      setWishlist]      = usePersistedList(user, 'wishlist')
   const [liked,         setLiked]         = usePersistedList(user, 'liked')
   const [outfitBoards,  setOutfitBoards]  = usePersistedList(user, 'outfitBoards')
@@ -59,12 +61,13 @@ export function WishlistProvider({ children }) {
   const isWishlisted = useCallback((id) => wishlist.some((e) => e.id === id), [wishlist])
 
   const addToLiked = useCallback((entry) => {
+    if (!isPro && liked.length >= limits.likedItems) { openPaywall('likedItems'); return }
     setLiked((prev) => {
       if (prev.some((e) => e.id === entry.id)) return prev
       showToast('Liked ❤️')
       return [{ ...entry, addedAt: Date.now() }, ...prev]
     })
-  }, [setLiked])
+  }, [setLiked, isPro, liked, limits, openPaywall])
 
   const removeFromLiked = useCallback((id) => {
     setLiked((prev) => prev.filter((e) => e.id !== id))
@@ -77,13 +80,16 @@ export function WishlistProvider({ children }) {
     setOutfitBoards((prev) => {
       const exists = prev.findIndex((b) => b.id === board.id)
       if (exists >= 0) {
+        // updating existing board — always allowed
         const next = [...prev]
         next[exists] = board
         return next
       }
+      // creating a new board — check limit
+      if (!isPro && prev.length >= limits.outfitBoards) { openPaywall('outfitBoards'); return prev }
       return [board, ...prev]
     })
-  }, [setOutfitBoards])
+  }, [setOutfitBoards, isPro, limits, openPaywall])
 
   const deleteOutfitBoard = useCallback((id) => {
     setOutfitBoards((prev) => prev.filter((b) => b.id !== id))

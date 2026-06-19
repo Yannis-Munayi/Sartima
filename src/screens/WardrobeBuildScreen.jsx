@@ -870,7 +870,7 @@ export default function WardrobeBuildScreen({ onBack }) {
   const [budgets, setBudgets]       = useState({}) // { [pieceId]: tierId }
   const [filters, setFilters]       = useState({}) // { [pieceId]: { color, material, size } }
   const [priorities, setPriorities] = useState([])
-  const [sizeSystem]                = useState(() => localStorage.getItem('stylelab_size_system') || 'us')
+  const [sizeSystem]                = useState(() => localStorage.getItem('sartima_size_system') || 'us')
 
   function togglePiece(id) {
     setPieces((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id])
@@ -904,7 +904,7 @@ export default function WardrobeBuildScreen({ onBack }) {
   }
 
   const [saved, setSaved]     = useState(false)
-  const [autoSave]            = useState(() => localStorage.getItem('stylelab_scout_autosave') === 'true')
+  const [autoSave]            = useState(() => localStorage.getItem('sartima_scout_autosave') === 'true')
 
   function reset() {
     setStep(1)

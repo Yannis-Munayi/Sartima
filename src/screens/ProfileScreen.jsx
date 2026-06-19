@@ -1,4 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSubscription } from '../context/SubscriptionContext'
+import { openBillingPortal } from '../services/subscriptionService'
 import { collection, doc, getDoc, getDocs, orderBy, query, setDoc } from 'firebase/firestore'
 import { deleteUser } from 'firebase/auth'
 import { db } from '../services/firebase'
@@ -115,21 +117,21 @@ function StyleEvolutionChart({ quizzes, gender }) {
 
 function ScoutSettings() {
   const [autoSave, setAutoSave] = useState(
-    () => localStorage.getItem('stylelab_scout_autosave') === 'true'
+    () => localStorage.getItem('sartima_scout_autosave') === 'true'
   )
   const [sizeSystem, setSizeSystemState] = useState(
-    () => localStorage.getItem('stylelab_size_system') || 'us'
+    () => localStorage.getItem('sartima_size_system') || 'us'
   )
 
   function toggleAutoSave() {
     const next = !autoSave
     setAutoSave(next)
-    localStorage.setItem('stylelab_scout_autosave', String(next))
+    localStorage.setItem('sartima_scout_autosave', String(next))
   }
 
   function pickSize(val) {
     setSizeSystemState(val)
-    localStorage.setItem('stylelab_size_system', val)
+    localStorage.setItem('sartima_size_system', val)
   }
 
   return (
@@ -333,7 +335,7 @@ function NotificationSettings() {
   const supported = 'Notification' in window
   const [permission, setPermission] = useState(supported ? Notification.permission : 'unavailable')
   const [reminderTime, setReminderTime] = useState(
-    () => localStorage.getItem('stylelab_reminder_time') ?? '08:00'
+    () => localStorage.getItem('sartima_reminder_time') ?? '08:00'
   )
 
   async function requestPermission() {
@@ -343,7 +345,7 @@ function NotificationSettings() {
 
   function handleTimeChange(t) {
     setReminderTime(t)
-    localStorage.setItem('stylelab_reminder_time', t)
+    localStorage.setItem('sartima_reminder_time', t)
   }
 
   return (
@@ -461,7 +463,7 @@ function DataPrivacySettings({ user, onLogout }) {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `stylelab-closet-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `sartima-closet-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -471,8 +473,8 @@ function DataPrivacySettings({ user, onLogout }) {
     setDeleting(true)
     try {
       await deleteUser(authUser)
-      localStorage.removeItem('stylelab_saved_aesthetics')
-      localStorage.removeItem('stylelab_shoplist')
+      localStorage.removeItem('sartima_saved_aesthetics')
+      localStorage.removeItem('sartima_shoplist')
       if (onLogout) onLogout()
     } catch {
       setDeleting(false)
@@ -559,6 +561,7 @@ function SettingsSheet({ user, onClose, onLogout }) {
 export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }) {
   const { user, logout }  = useAuth()
   const { state, dispatch } = useApp()
+  const { tier, isPro, usage, openPaywall } = useSubscription()
   const gender = state.gender
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -749,6 +752,37 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
       </div>
 
       <div className={styles.body}>
+
+        {/* Subscription */}
+        <section className={styles.section}>
+          {isPro ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)' }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Sartima Pro</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+                  {usage.tryOns != null ? `${usage.tryOns ?? 0} / 30 try-ons used this month` : 'Active'}
+                </p>
+              </div>
+              <button
+                onClick={() => openBillingPortal()}
+                style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.5px' }}
+              >
+                Manage billing
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => openPaywall('upgrade')}
+              style={{ width: '100%', padding: '16px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <div>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Upgrade to Pro</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>Unlimited outfits, try-on, trip packer &amp; more</p>
+              </div>
+              <span style={{ fontSize: 18, color: 'var(--text-muted)' }}>›</span>
+            </button>
+          )}
+        </section>
 
         {/* Overall top aesthetics */}
         {topOverall.length > 0 && (

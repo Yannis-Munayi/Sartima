@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSubscription } from '../context/SubscriptionContext'
 import LockedOverlay from '../components/LockedOverlay'
 import { useAvatar } from '../hooks/useAvatar'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
@@ -57,7 +58,7 @@ function todayStr() {
 }
 
 function formatTemp(tempC) {
-  const unit = localStorage.getItem('stylelab_temp_unit') ?? 'c'
+  const unit = localStorage.getItem('sartima_temp_unit') ?? 'c'
   if (unit === 'f') return `${Math.round(tempC * 9 / 5 + 32)}°F`
   return `${tempC}°C`
 }
@@ -95,13 +96,14 @@ function OutfitCard({ item }) {
 }
 
 function TodayTab() {
-  const { user }        = useAuth()
-  const { state }       = useApp()
-  const { closetItems } = useCloset()
-  const { liked }       = useWishlist()
+  const { user }              = useAuth()
+  const { state }             = useApp()
+  const { closetItems }       = useCloset()
+  const { liked }             = useWishlist()
+  const { isAtLimit, openPaywall } = useSubscription()
 
   const [source, setSource]           = useState('closet')
-  const [occasion, setOccasion]       = useState(() => localStorage.getItem('stylelab_default_occasion') ?? 'casual')
+  const [occasion, setOccasion]       = useState(() => localStorage.getItem('sartima_default_occasion') ?? 'casual')
   const [outfit, setOutfit]           = useState(null)
   const [generating, setGenerating]   = useState(false)
   const [genError, setGenError]       = useState(null)
@@ -140,13 +142,14 @@ function TodayTab() {
   }, [itemPool.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function runGenerate(occ, force) {
+    if (isAtLimit('outfitGenerations')) { openPaywall('outfitGenerations'); return }
     const pool = poolRef.current
     if (pool.length < 3) return
     setGenerating(true)
     setGenError(null)
 
     if (force) {
-      const prefix = `stylelab_outfit_${todayStr()}_${occ}_`
+      const prefix = `sartima_outfit_${todayStr()}_${occ}_`
       Object.keys(sessionStorage)
         .filter((k) => k.startsWith(prefix))
         .forEach((k) => sessionStorage.removeItem(k))
@@ -624,7 +627,14 @@ const TABS = [
 ]
 
 export default function DailyLookScreen() {
-  const [activeTab, setActiveTab] = useState('scout')
+  const [activeTab, setActiveTab]          = useState('scout')
+  const { isPro, openPaywall }             = useSubscription()
+
+  function handleTabChange(id) {
+    if (!isPro && id === 'calendar') { openPaywall('outfitCalendar'); return }
+    if (!isPro && id === 'trip')     { openPaywall('tripPlans');       return }
+    setActiveTab(id)
+  }
 
   return (
     <div className={styles.screen}>
@@ -633,7 +643,7 @@ export default function DailyLookScreen() {
           <button
             key={t.id}
             className={`${styles.subTab} ${activeTab === t.id ? styles.subTabActive : ''}`}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => handleTabChange(t.id)}
           >
             {t.label}
           </button>

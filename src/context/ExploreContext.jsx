@@ -2,11 +2,13 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from './AuthContext'
+import { useSubscription } from './SubscriptionContext'
 
 const ExploreContext = createContext(null)
 
 export function ExploreProvider({ children }) {
   const { user } = useAuth()
+  const { isPro, limits, openPaywall } = useSubscription()
 
   // IDs of aesthetics the user has pinned as permanent tabs.
   // Starts empty — populated from Firestore when a user signs in.
@@ -68,9 +70,13 @@ export function ExploreProvider({ children }) {
   }, [])
 
   const saveAesthetic = useCallback((id) => {
-    setSavedAesthetics((prev) => (prev.includes(id) ? prev : [...prev, id]))
+    setSavedAesthetics((prev) => {
+      if (prev.includes(id)) return prev
+      if (!isPro && prev.length >= limits.aestheticPins) { openPaywall('aestheticPins'); return prev }
+      return [...prev, id]
+    })
     setOpenAesthetic(id)
-  }, [])
+  }, [isPro, limits, openPaywall])
 
   const unsaveAesthetic = useCallback((id) => {
     setSavedAesthetics((prev) => prev.filter((s) => s !== id))

@@ -48,7 +48,7 @@ const outfitFn = httpsCallable(functions, 'anthropicOutfit')
 export async function generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation }) {
   if (!closetItems || closetItems.length < 3) return null
 
-  const cacheKey = `stylelab_outfit_${dateStr}_${occasion}_${closetHash(closetItems)}`
+  const cacheKey = `sartima_outfit_${dateStr}_${occasion}_${closetHash(closetItems)}`
   const cached   = getCached(cacheKey)
   if (cached) {
     const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))

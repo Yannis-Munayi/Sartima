@@ -5,8 +5,8 @@ export const GUIDE_STEPS = [
   // ── Welcome ───────────────────────────────────────────────────────────────
   {
     tab:   'home',
-    title: 'Welcome to StyleLab ✦',
-    desc:  'StyleLab is your personal style engine — discover your aesthetic identity, build a digital wardrobe, and get AI-powered daily outfit suggestions. This tour covers every key feature.',
+    title: 'Welcome to Sartima ✦',
+    desc:  'Sartima is your personal style engine — discover your aesthetic identity, build a digital wardrobe, and get AI-powered daily outfit suggestions. This tour covers every key feature.',
   },
 
   // ── Swipe ─────────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export const GUIDE_STEPS = [
   {
     tab:   'home',
     title: 'Shop Scout 🛍️',
-    desc:  'Tap the Shop Scout card on Home to get brand recommendations tailored to what you want to buy. Pick the clothing categories you\'re after, set a budget, and choose your priorities. StyleLab matches you to the best brands to shop from.',
+    desc:  'Tap the Shop Scout card on Home to get brand recommendations tailored to what you want to buy. Pick the clothing categories you\'re after, set a budget, and choose your priorities. Sartima matches you to the best brands to shop from.',
   },
 
   // ── Profile ───────────────────────────────────────────────────────────────

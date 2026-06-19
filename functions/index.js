@@ -1,7 +1,8 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https'
 import Anthropic from '@anthropic-ai/sdk'
 import dns from 'dns/promises'
 import admin from 'firebase-admin'
+import { FieldValue } from 'firebase-admin/firestore'
 import nodemailer from 'nodemailer'
 
 admin.initializeApp()
@@ -21,7 +22,7 @@ async function sendEmail(subject, text) {
   const transporter = getMailTransporter()
   if (!transporter) return
   await transporter.sendMail({
-    from: '"StyleLab" <ytmunayi@gmail.com>',
+    from: '"Sartima" <ytmunayi@gmail.com>',
     to: 'ytmunayi@gmail.com',
     subject,
     text,
@@ -38,6 +39,38 @@ function getAnthropic() {
 
 function requireAuth(request) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required')
+}
+
+// ─── Subscription / Usage ─────────────────────────────────────────────────────
+
+const TIER_LIMITS = {
+  free:  { visionUploads: 3,    tripPlans: 0,    tryOns: 0  },
+  pro:   { visionUploads: 30,   tripPlans: 3,    tryOns: 30 },
+  admin: { visionUploads: null, tripPlans: null, tryOns: null }, // null = no limit
+}
+
+async function getUserTier(uid) {
+  const user = await admin.auth().getUser(uid)
+  if (user.customClaims?.sartima_role === 'admin') return 'admin'
+  return user.customClaims?.sartima_tier === 'pro' ? 'pro' : 'free'
+}
+
+// Usage doc: users/{uid}/prefs/usage
+// tryOns + visionUploads + tripPlans reset monthly via periodKey; tryOnCredits never resets
+async function checkAndIncrementUsage(uid, field, limit) {
+  const ref    = admin.firestore().doc(`users/${uid}/prefs/usage`)
+  const period = new Date().toISOString().slice(0, 7)
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap  = await tx.get(ref)
+    const data  = snap.exists ? snap.data() : {}
+    const isNew = data.periodKey !== period
+    const count = isNew ? 0 : (data[field] ?? 0)
+    if (limit !== null && count >= limit) throw new HttpsError('resource-exhausted', `limit_${field}`)
+    tx.set(ref,
+      isNew ? { periodKey: period, [field]: 1 } : { [field]: FieldValue.increment(1) },
+      { merge: true })
+    return count + 1
+  })
 }
 
 // ─── Email Validation (no auth — called pre-signup) ──────────────────────────
@@ -59,6 +92,10 @@ export const validateEmail = onCall({ timeoutSeconds: 10, cors: true, invoker: '
 
 export const anthropicVision = onCall({ timeoutSeconds: 90, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
+  const uid  = request.auth.uid
+  const tier = await getUserTier(uid)
+  await checkAndIncrementUsage(uid, 'visionUploads', TIER_LIMITS[tier].visionUploads)
+
   const { imageBase64, mimeType = 'image/jpeg' } = request.data
   if (!imageBase64) throw new HttpsError('invalid-argument', 'imageBase64 required')
 
@@ -113,6 +150,21 @@ Rules:
 
 export const anthropicOutfit = onCall({ timeoutSeconds: 60, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
+  const uid  = request.auth.uid
+  const tier = await getUserTier(uid)
+  if (tier === 'free') {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const ref      = admin.firestore().doc(`users/${uid}/prefs/usage`)
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap = await tx.get(ref)
+      const data = snap.exists ? snap.data() : {}
+      if (data.lastOutfitDate === todayStr) {
+        throw new HttpsError('resource-exhausted', 'limit_outfitGenerations')
+      }
+      tx.set(ref, { lastOutfitDate: todayStr }, { merge: true })
+    })
+  }
+
   const { items, weather, occasion, dateStr, occupation } = request.data
   if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
 
@@ -157,6 +209,10 @@ Return ONLY valid JSON, no markdown:
 
 export const anthropicTrip = onCall({ timeoutSeconds: 120, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
+  const uid  = request.auth.uid
+  const tier = await getUserTier(uid)
+  await checkAndIncrementUsage(uid, 'tripPlans', TIER_LIMITS[tier].tripPlans)
+
   const { destination, nights, items, gender } = request.data
   if (!destination) throw new HttpsError('invalid-argument', 'destination required')
   if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
@@ -392,6 +448,30 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
   }
   tryOnCooldown.set(uid, Date.now())
 
+  const tier = await getUserTier(uid)
+  if (tier === 'free') throw new HttpsError('permission-denied', 'limit_tryOns')
+  if (tier !== 'admin') {
+    // Pro: drain monthly allowance first, then purchased credits
+    const ref    = admin.firestore().doc(`users/${uid}/prefs/usage`)
+    const period = new Date().toISOString().slice(0, 7)
+    await admin.firestore().runTransaction(async (tx) => {
+      const snap         = await tx.get(ref)
+      const data         = snap.exists ? snap.data() : {}
+      const isNew        = data.periodKey !== period
+      const monthlyUsed  = isNew ? 0 : (data.tryOns ?? 0)
+      const credits      = data.tryOnCredits ?? 0
+      if (monthlyUsed < TIER_LIMITS.pro.tryOns) {
+        tx.set(ref,
+          isNew ? { periodKey: period, tryOns: 1 } : { tryOns: FieldValue.increment(1) },
+          { merge: true })
+      } else if (credits > 0) {
+        tx.set(ref, { tryOnCredits: FieldValue.increment(-1) }, { merge: true })
+      } else {
+        throw new HttpsError('resource-exhausted', 'limit_tryOns')
+      }
+    })
+  }
+
   const { personImageUrl, garments } = request.data
 
   if (typeof personImageUrl !== 'string' || !personImageUrl.startsWith('https://')) {
@@ -451,7 +531,7 @@ export const submitFeedback = onCall({ timeoutSeconds: 30, cors: true, invoker: 
   await admin.firestore().collection('feedback').add(doc)
 
   await sendEmail(
-    `[StyleLab Feedback] ${doc.category}`,
+    `[Sartima Feedback] ${doc.category}`,
     [
       `Category: ${doc.category}`,
       `From: ${doc.contactEmail ?? 'Anonymous'} (uid: ${doc.uid ?? 'none'})`,
@@ -486,7 +566,7 @@ export const submitCrashReport = onCall({ timeoutSeconds: 30, cors: true, invoke
     .join('\n')
 
   await sendEmail(
-    '[StyleLab] Problem Report',
+    '[Sartima] Problem Report',
     [
       `UID: ${doc.uid ?? 'anonymous'}`,
       `Browser: ${diagnostics?.browser?.userAgent ?? 'unknown'}`,
@@ -503,4 +583,154 @@ export const submitCrashReport = onCall({ timeoutSeconds: 30, cors: true, invoke
   )
 
   return { ok: true }
+})
+
+// ─── Stripe ───────────────────────────────────────────────────────────────────
+
+import Stripe from 'stripe'
+
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY)
+}
+
+// Resolve or create a Stripe customer for the given uid
+async function getOrCreateCustomer(stripe, uid) {
+  const subSnap = await admin.firestore().doc(`users/${uid}/prefs/subscription`).get()
+  if (subSnap.exists && subSnap.data().stripeCustomerId) {
+    return subSnap.data().stripeCustomerId
+  }
+  const user     = await admin.auth().getUser(uid)
+  const customer = await stripe.customers.create({ email: user.email, metadata: { uid } })
+  return customer.id
+}
+
+export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid    = request.auth.uid
+  const plan   = request.data.plan === 'annual' ? 'annual' : 'monthly'
+  const stripe = getStripe()
+
+  const priceId    = plan === 'annual' ? process.env.STRIPE_PRICE_ID_ANNUAL : process.env.STRIPE_PRICE_ID_MONTHLY
+  const customerId = await getOrCreateCustomer(stripe, uid)
+  const appUrl     = process.env.APP_URL ?? 'https://sartima.ca'
+
+  const session = await stripe.checkout.sessions.create({
+    customer:        customerId,
+    mode:            'subscription',
+    line_items:      [{ price: priceId, quantity: 1 }],
+    success_url:     `${appUrl}?upgrade=success`,
+    cancel_url:      appUrl,
+    metadata:        { uid },
+    automatic_tax:   { enabled: true },
+    customer_update: { address: 'auto' },
+  })
+
+  return { url: session.url }
+})
+
+export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid    = request.auth.uid
+  const subDoc = await admin.firestore().doc(`users/${uid}/prefs/subscription`).get()
+  if (!subDoc.exists || !subDoc.data().stripeCustomerId) {
+    throw new HttpsError('not-found', 'No active subscription found')
+  }
+  const stripe  = getStripe()
+  const appUrl  = process.env.APP_URL ?? 'https://sartima.ca'
+  const session = await stripe.billingPortal.sessions.create({
+    customer:   subDoc.data().stripeCustomerId,
+    return_url: appUrl,
+  })
+  return { url: session.url }
+})
+
+export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid  = request.auth.uid
+  const tier = await getUserTier(uid)
+  if (tier === 'free') throw new HttpsError('permission-denied', 'Pro subscription required')
+
+  const stripe     = getStripe()
+  const customerId = await getOrCreateCustomer(stripe, uid)
+  const appUrl     = process.env.APP_URL ?? 'https://sartima.ca'
+
+  const session = await stripe.checkout.sessions.create({
+    customer:        customerId,
+    mode:            'payment',
+    line_items:      [{ price: process.env.STRIPE_PRICE_ID_TRYON_PACK, quantity: 1 }],
+    success_url:     `${appUrl}?pack=success`,
+    cancel_url:      appUrl,
+    metadata:        { uid, type: 'tryon_pack', qty: '30' },
+    automatic_tax:   { enabled: true },
+    customer_update: { address: 'auto' },
+  })
+
+  return { url: session.url }
+})
+
+export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public' }, async (req, res) => {
+  const sig = req.headers['stripe-signature']
+  let event
+  try {
+    event = getStripe().webhooks.constructEvent(
+      req.rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    )
+  } catch (err) {
+    res.status(400).send(`Webhook error: ${err.message}`)
+    return
+  }
+
+  const db = admin.firestore()
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object
+    const uid     = session.metadata?.uid
+    if (!uid) { res.json({ ok: true }); return }
+
+    if (session.mode === 'subscription') {
+      await admin.auth().setCustomUserClaims(uid, { sartima_tier: 'pro' })
+      await db.doc(`users/${uid}/prefs/subscription`).set({
+        stripeCustomerId:     session.customer,
+        stripeSubscriptionId: session.subscription,
+        status:               'active',
+        updatedAt:            FieldValue.serverTimestamp(),
+      }, { merge: true })
+    } else if (session.mode === 'payment' && session.metadata?.type === 'tryon_pack') {
+      await db.doc(`users/${uid}/prefs/usage`).set(
+        { tryOnCredits: FieldValue.increment(30) },
+        { merge: true }
+      )
+    }
+  }
+
+  if (event.type === 'customer.subscription.updated') {
+    const sub      = event.data.object
+    const customer = await getStripe().customers.retrieve(sub.customer)
+    const uid      = customer.metadata?.uid
+    if (!uid) { res.json({ ok: true }); return }
+
+    await db.doc(`users/${uid}/prefs/subscription`).set({
+      status:            sub.status,
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      currentPeriodEnd:  sub.current_period_end,
+      updatedAt:         FieldValue.serverTimestamp(),
+    }, { merge: true })
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const sub      = event.data.object
+    const customer = await getStripe().customers.retrieve(sub.customer)
+    const uid      = customer.metadata?.uid
+    if (!uid) { res.json({ ok: true }); return }
+
+    await admin.auth().setCustomUserClaims(uid, { sartima_tier: 'free' })
+    await db.doc(`users/${uid}/prefs/subscription`).set({
+      status:    'canceled',
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true })
+  }
+
+  res.json({ ok: true })
 })

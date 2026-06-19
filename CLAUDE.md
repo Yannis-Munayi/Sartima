@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project Overview
 
-**StyleLab** is a fashion discovery and personal styling PWA (mobile-first). It gives users a vocabulary for their own style through an aesthetic quiz (swipe-based, 40+ aesthetics), then delivers a personalised discovery feed, AI outfit generation, a digital closet, and trip packing — all powered by Claude Haiku and a hand-curated catalog.
+**Sartima** is a fashion discovery and personal styling PWA (mobile-first). It gives users a vocabulary for their own style through an aesthetic quiz (swipe-based, 40+ aesthetics), then delivers a personalised discovery feed, AI outfit generation, a digital closet, and trip packing — all powered by Claude Haiku and a hand-curated catalog.
 
 **Target audience:** Gen Z / younger Millennials (16–30) engaged with aesthetics culture on TikTok/Pinterest. Gender filter throughout.
 

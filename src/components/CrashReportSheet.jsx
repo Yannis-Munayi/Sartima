@@ -37,7 +37,7 @@ export default function CrashReportSheet({ user, appState, onClose }) {
           saw ? `What I saw: ${saw}` : '',
           `Browser: ${navigator.userAgent}`,
         ].filter(Boolean).join('\n\n')
-        window.location.href = `mailto:ytmunayi@gmail.com?subject=${encodeURIComponent('[StyleLab] Problem Report')}&body=${encodeURIComponent(body)}`
+        window.location.href = `mailto:ytmunayi@gmail.com?subject=${encodeURIComponent('[Sartima] Problem Report')}&body=${encodeURIComponent(body)}`
       }
       setDone(true)
     } catch {

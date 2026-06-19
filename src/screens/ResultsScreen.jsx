@@ -95,13 +95,13 @@ function PinterestIcon() {
 
 function ShareResults({ primaryStyle, gender }) {
   const [copied, setCopied] = useState(false)
-  const text = `My style aesthetic is ${getStyleName(primaryStyle, gender)} — I just took the StyleLab quiz! 🎨`
+  const text = `My style aesthetic is ${getStyleName(primaryStyle, gender)} — I just took the Sartima quiz! 🎨`
   const url  = window.location.href
 
   async function handleShare() {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'My StyleLab Results', text, url })
+        await navigator.share({ title: 'My Sartima Results', text, url })
       } catch {}
       return
     }
