@@ -604,7 +604,7 @@ async function getOrCreateCustomer(stripe, uid) {
   return customer.id
 }
 
-export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY', 'STRIPE_PRICE_ID_MONTHLY', 'STRIPE_PRICE_ID_ANNUAL'] }, async (request) => {
   requireAuth(request)
   const uid    = request.auth.uid
   const plan   = request.data.plan === 'annual' ? 'annual' : 'monthly'
@@ -615,20 +615,18 @@ export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, inv
   const appUrl     = process.env.APP_URL ?? 'https://sartima.ca'
 
   const session = await stripe.checkout.sessions.create({
-    customer:        customerId,
-    mode:            'subscription',
-    line_items:      [{ price: priceId, quantity: 1 }],
-    success_url:     `${appUrl}?upgrade=success`,
-    cancel_url:      appUrl,
-    metadata:        { uid },
-    automatic_tax:   { enabled: true },
-    customer_update: { address: 'auto' },
+    customer:    customerId,
+    mode:        'subscription',
+    line_items:  [{ price: priceId, quantity: 1 }],
+    success_url: `${appUrl}?upgrade=success`,
+    cancel_url:  appUrl,
+    metadata:    { uid },
   })
 
   return { url: session.url }
 })
 
-export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY'] }, async (request) => {
   requireAuth(request)
   const uid    = request.auth.uid
   const subDoc = await admin.firestore().doc(`users/${uid}/prefs/subscription`).get()
@@ -644,7 +642,7 @@ export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true
   return { url: session.url }
 })
 
-export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY', 'STRIPE_PRICE_ID_TRYON_PACK'] }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
   const tier = await getUserTier(uid)
@@ -655,20 +653,18 @@ export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoke
   const appUrl     = process.env.APP_URL ?? 'https://sartima.ca'
 
   const session = await stripe.checkout.sessions.create({
-    customer:        customerId,
-    mode:            'payment',
-    line_items:      [{ price: process.env.STRIPE_PRICE_ID_TRYON_PACK, quantity: 1 }],
-    success_url:     `${appUrl}?pack=success`,
-    cancel_url:      appUrl,
-    metadata:        { uid, type: 'tryon_pack', qty: '30' },
-    automatic_tax:   { enabled: true },
-    customer_update: { address: 'auto' },
+    customer:    customerId,
+    mode:        'payment',
+    line_items:  [{ price: process.env.STRIPE_PRICE_ID_TRYON_PACK, quantity: 1 }],
+    success_url: `${appUrl}?pack=success`,
+    cancel_url:  appUrl,
+    metadata:    { uid, type: 'tryon_pack', qty: '30' },
   })
 
   return { url: session.url }
 })
 
-export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public' }, async (req, res) => {
+export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public', secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] }, async (req, res) => {
   const sig = req.headers['stripe-signature']
   let event
   try {
