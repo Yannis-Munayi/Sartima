@@ -44,6 +44,8 @@ import Toast           from './components/Toast'
 import PaywallModal    from './components/PaywallModal'
 import { GuideProvider } from './context/GuideContext'
 import { SubscriptionProvider } from './context/SubscriptionContext'
+import { InterestProvider } from './context/InterestContext'
+import BrandScreen from './screens/BrandScreen'
 
 // Screens where the tab bar is hidden (focused setup flow)
 const HIDE_TABS_ON = new Set([
@@ -127,7 +129,7 @@ function AppShell() {
   const { state, dispatch } = useApp()
   const { user }            = useAuth()
   useTheme()
-  const { openAesthetic, openAestheticTab } = useExplore()
+  const { openAesthetic, openAestheticTab, openBrand, openBrandTab } = useExplore()
   const [activeTab, setActiveTab]           = useState('home')
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
@@ -193,6 +195,12 @@ function AppShell() {
       setActiveTab(tabId)
       return
     }
+    if (tabId.startsWith('brand:')) {
+      const id = tabId.replace('brand:', '')
+      openBrandTab(id, activeTab)
+      setActiveTab(tabId)
+      return
+    }
     if (tabId.startsWith('mystyle:')) {
       setMyStyleSubTab(tabId.replace('mystyle:', ''))
       setActiveTab('mystyle')
@@ -227,6 +235,8 @@ function AppShell() {
 
   const isAestheticTab   = activeTab.startsWith('aesthetic:')
   const aestheticId      = isAestheticTab ? activeTab.replace('aesthetic:', '') : null
+  const isBrandTab       = activeTab.startsWith('brand:')
+  const brandTabId       = isBrandTab ? activeTab.replace('brand:', '') : null
   const guideForceSubTab = guideContextValue.currentStep?.subTab ?? null
 
   const outerStyle = isDesktop
@@ -266,6 +276,9 @@ function AppShell() {
             aestheticId={aestheticId ?? openAesthetic}
             forceSubTab={guideForceSubTab}
           />
+        )}
+        {showTabs && isBrandTab && (
+          <BrandScreen brandId={brandTabId ?? openBrand} />
         )}
         {showTabs && activeTab === 'mystyle' && (
           <MyStyleScreen forceSubTab={myStyleSubTab} />
@@ -319,6 +332,7 @@ export default function App() {
   return (
     <AuthProvider>
       <SubscriptionProvider>
+      <InterestProvider>
       <AppProvider>
         <ShopProvider>
           <WishlistProvider>
@@ -330,6 +344,7 @@ export default function App() {
           </WishlistProvider>
         </ShopProvider>
       </AppProvider>
+      </InterestProvider>
       </SubscriptionProvider>
     </AuthProvider>
   )

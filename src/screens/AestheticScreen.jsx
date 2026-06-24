@@ -11,7 +11,10 @@ import { PRODUCTS } from '../data/products'
 import { useExplore } from '../context/ExploreContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import { useNavigation } from '../context/NavigationContext'
+import { BRAND_NAME_TO_ID } from '../data/brands'
+import { recordSignal } from '../services/interestTracker'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
 import styles from './AestheticScreen.module.css'
@@ -722,10 +725,16 @@ function StorySection({ emoji, title, children }) {
 }
 
 function StoryTab({ aestheticId }) {
+  const navigate = useNavigation()
   const data  = AESTHETIC_DEPTH[aestheticId]
   const style = STYLES[aestheticId]
   if (!data) {
     return <p className={styles.emptyText}>Deep dive coming soon for this aesthetic.</p>
+  }
+
+  function handleBrandClick(brandName) {
+    const brandId = BRAND_NAME_TO_ID[brandName]
+    if (brandId) navigate(`brand:${brandId}`)
   }
 
   return (
@@ -779,9 +788,20 @@ function StoryTab({ aestheticId }) {
       {style?.brands?.length > 0 && (
         <StorySection emoji="🏷️" title="Brands to Know">
           <div className={styles.brandChips}>
-            {style.brands.map((b) => (
-              <span key={b} className={styles.brandChip}>{b}</span>
-            ))}
+            {style.brands.map((b) => {
+              const hasBrandPage = !!BRAND_NAME_TO_ID[b]
+              return hasBrandPage ? (
+                <button
+                  key={b}
+                  className={`${styles.brandChip} ${styles.brandChipLink}`}
+                  onClick={() => handleBrandClick(b)}
+                >
+                  {b} ↗
+                </button>
+              ) : (
+                <span key={b} className={styles.brandChip}>{b}</span>
+              )
+            })}
           </div>
         </StorySection>
       )}
@@ -802,9 +822,17 @@ export default function AestheticScreen({ aestheticId, forceSubTab }) {
   const navigate = useNavigation()
   const { closeAestheticTab, saveAesthetic, unsaveAesthetic, isSaved } = useExplore()
   const { state } = useApp()
+  const { user } = useAuth()
   const gender = state.gender
   const [subTab, setSubTab] = useState('story')
   const [heroBg, setHeroBg] = useState(null)
+
+  // Record aesthetic visit interest signal
+  useEffect(() => {
+    if (user && aestheticId) {
+      recordSignal(user, 'aestheticVisit', { aestheticId })
+    }
+  }, [aestheticId, user])
 
   const style = STYLES[aestheticId]
   const saved = isSaved(aestheticId)

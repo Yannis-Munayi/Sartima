@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
+import { useInterests } from '../context/InterestContext'
 
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
@@ -47,6 +48,18 @@ function createEmptyProfile() {
     recentLikes:          [],
     seenIds:              new Set(),
   }
+}
+
+// Merge persisted Firestore interests into a fresh profile as the starting baseline.
+// Session swipes accumulate on top of this warm start.
+function seedProfileFromInterests(profile, interests) {
+  if (!interests) return
+  const { brandAffinities, typeAffinities, colorAffinities, styleAffinities, recentLikes } = interests
+  if (brandAffinities)  Object.assign(profile.brandAffinities,  brandAffinities)
+  if (typeAffinities)   Object.assign(profile.typeAffinities,   typeAffinities)
+  if (colorAffinities)  Object.assign(profile.colorAffinities,  colorAffinities)
+  if (styleAffinities)  Object.assign(profile.styleAffinities,  styleAffinities)
+  if (recentLikes?.length) profile.recentLikes = [...recentLikes].slice(0, 10)
 }
 
 function genderFilter(gender) {
@@ -130,14 +143,18 @@ function buildBatch(profile, batchSize, gender) {
 }
 
 export function useDiscoveryQueue(gender = 'both', quizMode = false) {
+  const { interests }    = useInterests() ?? {}
   const [queue,          setQueue]          = useState([])
   const [currentIndex,   setIndex]          = useState(0)
   const [styleScores,    setScores]         = useState({})
   const [quizLikedItems, setQuizLikedItems] = useState([])
   const [seeded,         setSeeded]         = useState(false)
-  const profileRef  = useRef(createEmptyProfile())
-  const quizModeRef = useRef(quizMode)
+  const profileRef       = useRef(createEmptyProfile())
+  const quizModeRef      = useRef(quizMode)
+  const genderRef        = useRef(gender)
+  const interestsSeeded  = useRef(false)
   useEffect(() => { quizModeRef.current = quizMode }, [quizMode])
+  useEffect(() => { genderRef.current = gender }, [gender])
 
   const currentProduct  = queue[currentIndex] ?? null
   const remaining       = queue.length - currentIndex
@@ -145,14 +162,18 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
 
   // Seed queue on mount / gender change / mode change
   useEffect(() => {
+    interestsSeeded.current = false
     profileRef.current = createEmptyProfile()
+    // Apply persisted interests as warm-start baseline (may still be null on first render)
+    seedProfileFromInterests(profileRef.current, interests)
+    if (interests) interestsSeeded.current = true
 
     if (quizMode) {
       const saved = loadQuizProgress()
       if (saved) {
         const restoredQueue   = saved.queueIds.map((id) => PRODUCTS_BY_ID[id]).filter(Boolean)
         const restoredLiked   = saved.likedIds.map((id) => PRODUCTS_BY_ID[id]).filter(Boolean)
-        // Rebuild profile affinities from liked items
+        // Rebuild profile affinities from liked items (session layer on top of persisted)
         for (const product of restoredLiked) {
           const p = profileRef.current
           p.brandAffinities[product.brand]           = (p.brandAffinities[product.brand]           ?? 0) + 2
@@ -179,7 +200,22 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     setScores({})
     setQuizLikedItems([])
     setSeeded(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gender, quizMode])
+
+  // When interests load after mount (async Firestore fetch), apply warm-start
+  // once — but only if the user hasn't swiped yet
+  useEffect(() => {
+    if (!interests || interestsSeeded.current) return
+    interestsSeeded.current = true
+    if (currentIndex > 0) return  // user already started; don't disrupt
+    seedProfileFromInterests(profileRef.current, interests)
+    // Rebuild the queue with the now-warm profile
+    const initial = buildBatch(profileRef.current, quizModeRef.current ? QUIZ_SIZE : BUFFER_SIZE, genderRef.current)
+    setQueue(initial)
+    setIndex(0)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interests])
 
   // Refill when buffer runs low — infinite mode only
   useEffect(() => {

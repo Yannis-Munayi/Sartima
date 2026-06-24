@@ -765,6 +765,17 @@
   color: var(--text-dim);
 }
 
+.brandChipLink {
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.brandChipLink:hover {
+  background: rgba(184, 149, 106, 0.15);
+  border-color: rgba(184, 149, 106, 0.4);
+  color: var(--accent);
+}
+
 /* ── Product grid card (Items tab) ── */
 .productGridCard {
   display: flex;

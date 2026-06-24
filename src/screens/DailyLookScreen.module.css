@@ -136,6 +136,113 @@
   color: var(--accent);
 }
 
+.occasionPillLocked {
+  opacity: 0.6;
+}
+
+/* ── Occasion picker (pre-generation) ── */
+.occasionPickerWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.occasionPickerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.occasionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.occasionCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.occasionCard:hover {
+  border-color: var(--border-strong);
+}
+
+.occasionCardActive {
+  background: rgba(184, 149, 106, 0.1);
+  border-color: var(--accent);
+}
+
+.occasionCardLocked {
+  opacity: 0.62;
+}
+
+.occasionCardEmoji {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.occasionCardLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.occasionCardActive .occasionCardLabel {
+  color: var(--accent);
+}
+
+.occasionCardDesc {
+  font-size: 11px;
+  color: var(--text-faint);
+  line-height: 1.4;
+}
+
+.proLockBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+
+.occasionGenerateBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.occasionGenerateBtn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 /* â”€â”€ Generating state â”€â”€ */
 .generating {
   display: flex;

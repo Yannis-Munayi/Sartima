@@ -41,11 +41,18 @@ const SOURCES = [
 ]
 
 const OCCASIONS = [
-  { id: 'casual',  label: 'Casual',    emoji: '☀️' },
-  { id: 'work',    label: 'Work',      emoji: '💼' },
-  { id: 'date',    label: 'Date Night',emoji: '✨' },
-  { id: 'gym',     label: 'Gym',       emoji: '💪' },
-  { id: 'errand',  label: 'Errand',    emoji: '🛒' },
+  { id: 'casual',  label: 'Casual',     emoji: '☀️',  desc: 'Everyday comfort',    pro: false },
+  { id: 'work',    label: 'Work',       emoji: '💼',  desc: 'Office or meetings',  pro: false },
+  { id: 'date',    label: 'Date Night', emoji: '✨',  desc: 'Evening out',         pro: false },
+  { id: 'gym',     label: 'Gym',        emoji: '💪',  desc: 'Workout ready',       pro: false },
+  { id: 'errand',  label: 'Errands',    emoji: '🛒',  desc: 'Quick & practical',   pro: false },
+  { id: 'school',  label: 'School',     emoji: '🎒',  desc: 'Campus ready',         pro: false },
+  { id: 'formal',  label: 'Formal',     emoji: '🎩',  desc: 'Events & galas',      pro: true  },
+  { id: 'brunch',  label: 'Brunch',     emoji: '🥂',  desc: 'Weekend social',      pro: true  },
+  { id: 'party',   label: 'Party',      emoji: '🎉',  desc: 'Night out',           pro: true  },
+  { id: 'beach',   label: 'Beach Day',  emoji: '🏖️', desc: 'Sun & sand vibes',    pro: true  },
+  { id: 'travel',  label: 'Travel',     emoji: '✈️',  desc: 'On the move',         pro: true  },
+  { id: 'outdoor', label: 'Outdoor',    emoji: '🌿',  desc: 'Nature & adventure',  pro: true  },
 ]
 
 const CATEGORY_EMOJIS = {
@@ -100,18 +107,19 @@ function TodayTab() {
   const { state }             = useApp()
   const { closetItems }       = useCloset()
   const { liked }             = useWishlist()
-  const { isAtLimit, openPaywall } = useSubscription()
+  const { isAtLimit, openPaywall, isPro } = useSubscription()
 
-  const [source, setSource]           = useState('closet')
-  const [occasion, setOccasion]       = useState(() => localStorage.getItem('sartima_default_occasion') ?? 'casual')
-  const [outfit, setOutfit]           = useState(null)
-  const [generating, setGenerating]   = useState(false)
-  const [genError, setGenError]       = useState(null)
-  const [weather, setWeather]         = useState(null)
-  const [logSuccess, setLogSuccess]   = useState(false)
-  const [logNote, setLogNote]         = useState('')
-  const [showLogForm, setShowLogForm] = useState(false)
-  const [loggingBusy, setLoggingBusy] = useState(false)
+  const [source, setSource]                 = useState('closet')
+  const [occasion, setOccasion]             = useState(null)
+  const [occasionPicked, setOccasionPicked] = useState(false)
+  const [outfit, setOutfit]                 = useState(null)
+  const [generating, setGenerating]         = useState(false)
+  const [genError, setGenError]             = useState(null)
+  const [weather, setWeather]               = useState(null)
+  const [logSuccess, setLogSuccess]         = useState(false)
+  const [logNote, setLogNote]               = useState('')
+  const [showLogForm, setShowLogForm]       = useState(false)
+  const [loggingBusy, setLoggingBusy]       = useState(false)
 
   const itemPool = useMemo(() => {
     const normalizedLiked = liked.map(normalizeLiked)
@@ -121,25 +129,16 @@ function TodayTab() {
     return [...closetItems, ...normalizedLiked.filter((i) => !ids.has(i.id))]
   }, [source, closetItems, liked])
 
-  // Refs so runGenerate always reads latest values even from stale closures
   const poolRef    = useRef(itemPool)
   const weatherRef = useRef(null)
   const genderRef  = useRef(state.gender)
-  useEffect(() => { poolRef.current   = itemPool     }, [itemPool])
-  useEffect(() => { weatherRef.current = weather     }, [weather])
+  useEffect(() => { poolRef.current    = itemPool     }, [itemPool])
+  useEffect(() => { weatherRef.current = weather      }, [weather])
   useEffect(() => { genderRef.current  = state.gender }, [state.gender])
 
   useEffect(() => {
     getWeather().then((w) => { setWeather(w); weatherRef.current = w }).catch(() => {})
   }, [])
-
-  // Auto-generate once when the pool first reaches 3+ items
-  const didAutoGen = useRef(false)
-  useEffect(() => {
-    if (didAutoGen.current || itemPool.length < 3) return
-    didAutoGen.current = true
-    runGenerate(occasion, false)
-  }, [itemPool.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function runGenerate(occ, force) {
     if (isAtLimit('outfitGenerations')) { openPaywall('outfitGenerations'); return }
@@ -158,11 +157,11 @@ function TodayTab() {
     try {
       const result = await generateOutfit({
         closetItems: pool,
-        weather:    weatherRef.current,
-        occasion:   occ,
-        dateStr:    todayStr(),
-        gender:     genderRef.current,
-        occupation: null,
+        weather:     weatherRef.current,
+        occasion:    occ,
+        dateStr:     todayStr(),
+        gender:      genderRef.current,
+        occupation:  null,
       })
       if (result) {
         setOutfit(result)
@@ -176,7 +175,21 @@ function TodayTab() {
     }
   }
 
-  function handleOccasionChange(occ) {
+  function handleOccasionPick(occ) {
+    const found = OCCASIONS.find((o) => o.id === occ)
+    if (found?.pro && !isPro) { openPaywall('outfitGenerations'); return }
+    setOccasion(occ)
+  }
+
+  function handleGenerate() {
+    if (!occasion) return
+    setOccasionPicked(true)
+    runGenerate(occasion, false)
+  }
+
+  function handleOccasionSwitch(occ) {
+    const found = OCCASIONS.find((o) => o.id === occ)
+    if (found?.pro && !isPro) { openPaywall('outfitGenerations'); return }
     setOccasion(occ)
     setOutfit(null)
     setGenError(null)
@@ -191,7 +204,6 @@ function TodayTab() {
     setGenError(null)
     setLogSuccess(false)
     setShowLogForm(false)
-    didAutoGen.current = false // allow auto-gen to fire again for new source
   }
 
   async function handleLog() {
@@ -277,45 +289,93 @@ function TodayTab() {
     )
   }
 
+  const sourceSelector = (
+    <div className={styles.sourceRow}>
+      {SOURCES.map((s) => (
+        <button
+          key={s.id}
+          className={`${styles.sourcePill} ${source === s.id ? styles.sourceActive : ''}`}
+          onClick={() => handleSourceChange(s.id)}
+        >
+          {s.label}
+          <span className={styles.sourceCount}>
+            {s.id === 'closet' ? closetItems.length
+             : s.id === 'liked' ? liked.length
+             : closetItems.length + liked.length}
+          </span>
+        </button>
+      ))}
+    </div>
+  )
+
+  // Pre-generation: occasion picker
+  if (!occasionPicked) {
+    return (
+      <div className={styles.todayWrap}>
+        <div className={styles.weatherRow}><WeatherWidget /></div>
+        {sourceSelector}
+        <div className={styles.occasionPickerWrap}>
+          <p className={styles.occasionPickerTitle}>What's the occasion?</p>
+          <div className={styles.occasionGrid}>
+            {OCCASIONS.map((occ) => {
+              const isLocked = occ.pro && !isPro
+              return (
+                <button
+                  key={occ.id}
+                  className={[
+                    styles.occasionCard,
+                    occasion === occ.id ? styles.occasionCardActive : '',
+                    isLocked ? styles.occasionCardLocked : '',
+                  ].join(' ')}
+                  onClick={() => handleOccasionPick(occ.id)}
+                >
+                  {isLocked && <span className={styles.proLockBadge}>Pro</span>}
+                  <span className={styles.occasionCardEmoji}>{occ.emoji}</span>
+                  <span className={styles.occasionCardLabel}>{occ.label}</span>
+                  <span className={styles.occasionCardDesc}>{occ.desc}</span>
+                </button>
+              )
+            })}
+          </div>
+          <button
+            className={styles.occasionGenerateBtn}
+            onClick={handleGenerate}
+            disabled={!occasion}
+          >
+            {occasion
+              ? `Generate ${OCCASIONS.find((o) => o.id === occasion)?.label} Outfit`
+              : 'Select an Occasion'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Post-generation: outfit view with compact occasion pills for switching
   return (
     <div className={styles.todayWrap}>
-      {/* Weather */}
-      <div className={styles.weatherRow}>
-        <WeatherWidget />
-      </div>
+      <div className={styles.weatherRow}><WeatherWidget /></div>
+      {sourceSelector}
 
-      {/* Source selector */}
-      <div className={styles.sourceRow}>
-        {SOURCES.map((s) => (
-          <button
-            key={s.id}
-            className={`${styles.sourcePill} ${source === s.id ? styles.sourceActive : ''}`}
-            onClick={() => handleSourceChange(s.id)}
-          >
-            {s.label}
-            <span className={styles.sourceCount}>
-              {s.id === 'closet' ? closetItems.length
-               : s.id === 'liked' ? liked.length
-               : closetItems.length + liked.length}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Occasion picker */}
       <div className={styles.occasionRow}>
-        {OCCASIONS.map((occ) => (
-          <button
-            key={occ.id}
-            className={`${styles.occasionPill} ${occasion === occ.id ? styles.occasionActive : ''}`}
-            onClick={() => handleOccasionChange(occ.id)}
-          >
-            {occ.emoji} {occ.label}
-          </button>
-        ))}
+        {OCCASIONS.map((occ) => {
+          const isLocked = occ.pro && !isPro
+          return (
+            <button
+              key={occ.id}
+              className={[
+                styles.occasionPill,
+                occasion === occ.id ? styles.occasionActive : '',
+                isLocked ? styles.occasionPillLocked : '',
+              ].join(' ')}
+              onClick={() => handleOccasionSwitch(occ.id)}
+            >
+              {occ.emoji} {occ.label}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Outfit display */}
       {generating ? (
         <div className={styles.generating}>
           <div className={styles.loadingDots}><span /><span /><span /></div>
@@ -633,6 +693,7 @@ export default function DailyLookScreen() {
   function handleTabChange(id) {
     if (!isPro && id === 'calendar') { openPaywall('outfitCalendar'); return }
     if (!isPro && id === 'trip')     { openPaywall('tripPlans');       return }
+    if (!isPro && id === 'laundry')  { openPaywall('laundry');         return }
     setActiveTab(id)
   }
 

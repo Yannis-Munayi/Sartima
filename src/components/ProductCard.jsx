@@ -1,5 +1,7 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWishlist } from '../context/WishlistContext'
+import { useNavigation } from '../context/NavigationContext'
+import { BRAND_NAME_TO_ID } from '../data/brands'
 import { fetchPhotos } from '../services/google'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import styles from './ProductCard.module.css'
@@ -22,7 +24,9 @@ async function fetchProductImage(product) {
 
 export default function ProductCard({ product, onLike, onSkip }) {
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
+  const navigate   = useNavigation()
   const wishlisted = isLiked(product.id)
+  const brandId    = BRAND_NAME_TO_ID[product.brand]
 
   const [photo,       setPhoto]     = useState(null)
   const [imgLoaded,   setImgLoaded] = useState(false)
@@ -201,7 +205,17 @@ export default function ProductCard({ product, onLike, onSkip }) {
 
         {/* Product info overlay */}
         <div className={styles.frontInfo}>
-          <span className={styles.brandPill}>{product.brand}</span>
+          {brandId ? (
+            <button
+              className={`${styles.brandPill} ${styles.brandPillLink}`}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); navigate(`brand:${brandId}`) }}
+            >
+              {product.brand} ↗
+            </button>
+          ) : (
+            <span className={styles.brandPill}>{product.brand}</span>
+          )}
           <h2 className={styles.itemName}>{product.name}</h2>
           <div className={styles.metaRow}>
             <span className={styles.colorDot} style={{ background: product.colorHex }} />

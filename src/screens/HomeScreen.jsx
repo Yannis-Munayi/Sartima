@@ -2,6 +2,7 @@
 import { STYLES, getStyleName } from '../data/styles'
 import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_QUIZ_ITEMS } from '../data/aestheticItems'
+import { getBrandsForAesthetic } from '../data/brands'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import { useApp, SCREENS } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -606,6 +607,55 @@ function DailyOutfitPreview({ navigate, gender }) {
   )
 }
 
+// ── Brands for you ────────────────────────────────────────────────────────────
+
+function BrandsForYou({ navigate, gender }) {
+  const { state } = useApp()
+
+  const topAestheticId = useMemo(() => {
+    const total = Object.values(state.styleScores).reduce((a, b) => a + b, 0)
+    if (total === 0) return null
+    const top = Object.entries(state.styleScores)
+      .filter(([, s]) => s > 0)
+      .sort(([, a], [, b]) => b - a)[0]
+    return top ? top[0] : null
+  }, [state.styleScores])
+
+  const brands = useMemo(() => {
+    if (!topAestheticId) return []
+    return getBrandsForAesthetic(topAestheticId)
+  }, [topAestheticId])
+
+  if (brands.length === 0) return null
+
+  const topStyle = STYLES[topAestheticId]
+
+  return (
+    <section className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionIcon}>🏷️</span>
+        <div>
+          <h2 className={styles.sectionTitle}>Brands for you</h2>
+          <p className={styles.sectionSub}>Based on your {topStyle?.name ?? 'top'} aesthetic</p>
+        </div>
+      </div>
+      <div className={styles.brandsScroll}>
+        {brands.map((brand) => (
+          <button
+            key={brand.id}
+            className={styles.brandCard}
+            onClick={() => navigate(`brand:${brand.id}`)}
+          >
+            <p className={styles.brandCardName}>{brand.name}</p>
+            <p className={styles.brandCardTag}>{brand.tagline}</p>
+            <span className={styles.brandCardArrow}>↗</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function HomeScreen({ startGuide }) {
   const navigate            = useNavigation()
   const { savedAesthetics } = useExplore()
@@ -648,6 +698,9 @@ export default function HomeScreen({ startGuide }) {
 
         {/* Live Aesthetic Profile — only appears once user has swiped */}
         <AestheticProfile navigate={navigate} gender={gender} />
+
+        {/* Brands for you — appears once user has an aesthetic profile */}
+        <BrandsForYou navigate={navigate} gender={gender} />
 
         {/* Saved aesthetics */}
         {savedAesthetics.length > 0 && (

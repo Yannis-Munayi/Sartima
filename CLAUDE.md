@@ -44,7 +44,7 @@ No test or lint scripts configured.
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React 18 + Vite 5, CSS Modules, PWA (Workbox) |
+| Frontend | React 18 + Vite 5, CSS Modules, PWA (Workbox); responsive (mobile bottom TabBar / desktop Sidebar) |
 | Auth & DB | Firebase Auth (email/password + Google), Firestore, Storage |
 | AI | Claude Haiku — vision, outfit gen, trip planning (via Firebase Functions proxy) |
 | Try-On | Replicate IDM-VTON (via `generateTryOn` Firebase Function) |
@@ -71,6 +71,7 @@ No test or lint scripts configured.
 - `GOOGLE_API_KEY` + `GOOGLE_CX`
 - `UNSPLASH_KEY`
 - `REPLICATE_API_KEY`
+- `GMAIL_APP_PASSWORD` — nodemailer app password; if absent, email notifications are silently skipped
 
 Server keys must also be set in the Firebase console (Functions → Edit → Environment variables) for deployed functions to read them. `functions/.env` is for the local emulator only.
 
@@ -89,7 +90,7 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 ## Key Patterns to Know
 
-**Navigation** — No React Router. `state.screen` (AppContext) drives the quiz flow; `activeTab` (AppShell local state) drives the main app. `handleTabChange(tabId)` is the single navigation function. Special tab IDs: `aesthetic:{id}`, `profile:quiz-history`, `closet:{subTab}` (redirects to `daily`).
+**Navigation** — No React Router. `state.screen` (AppContext) drives the quiz flow; `activeTab` (AppShell local state) drives the main app. `handleTabChange(tabId)` is the single navigation function. Special tab IDs: `aesthetic:{id}`, `profile:quiz-history`, `closet:{subTab}` (redirects to `daily`), `mystyle:{subTab}` (sets sub-tab then activates `mystyle`). Desktop (≥768px) shows a `Sidebar` instead of the bottom `TabBar`; both call the same `handleTabChange`.
 
 **Context sync** — All persisted contexts use the functional `setState` form in Firestore `.then` callbacks so in-flight additions are never overwritten on load.
 
@@ -102,3 +103,5 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 **Image cache** — Use `createBoundedCache()` from `src/services/cache.js` (not `new Map()`) in any service that caches API responses.
 
 **CSS variables** — Never use hardcoded hex fallbacks in `var()`. Use `var(--bg-elevated)` for solid sheet/modal backgrounds. Light mode is `data-theme="light"` on `:root`.
+
+**Subscription / paywall** — Tiers are `free`, `pro`, `admin`. Firebase custom claims (`sartima_tier`, `sartima_role`) are the source of truth; `SubscriptionContext` reads them on mount and syncs usage counters live from `users/{uid}/prefs/usage`. To gate a feature: call `isAtLimit('featureName')` before the action; if true, call `openPaywall('featureName')` — both come from `useSubscription()`. Never gate features with raw hardcoded limits; always go through `SubscriptionContext` so free/pro/admin behave correctly. Monthly counters reset when `periodKey` (YYYY-MM) changes; `outfitGenerations` is a per-day gate checked against `lastOutfitDate`.

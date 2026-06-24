@@ -32,7 +32,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
         {navItems.map((item) => {
           const isActive =
             activeTab === item.id ||
-            (item.id === 'explore' && activeTab.startsWith('aesthetic:')) ||
+            (item.id === 'explore' && (activeTab.startsWith('aesthetic:') || activeTab.startsWith('brand:'))) ||
             (item.id === 'profile' && activeTab.startsWith('profile:'))
           return (
             <button

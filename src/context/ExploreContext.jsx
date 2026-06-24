@@ -22,6 +22,10 @@ export function ExploreProvider({ children }) {
   // The currently open aesthetic (may be temporary or saved)
   const [openAesthetic, setOpenAesthetic] = useState(null)
 
+  // The currently open brand page + the tab to return to on back
+  const [openBrand, setOpenBrand]         = useState(null)
+  const [brandFromTab, setBrandFromTab]   = useState('explore')
+
   const loadedUid = useRef(null)
 
   // React to auth changes: load on sign-in, clear on sign-out
@@ -65,6 +69,15 @@ export function ExploreProvider({ children }) {
     setOpenAesthetic(id)
   }, [])
 
+  const openBrandTab = useCallback((id, fromTab = 'explore') => {
+    setOpenBrand(id)
+    setBrandFromTab(fromTab)
+  }, [])
+
+  const closeBrandTab = useCallback(() => {
+    setOpenBrand(null)
+  }, [])
+
   const closeAestheticTab = useCallback(() => {
     setOpenAesthetic(null)
   }, [])
@@ -87,14 +100,16 @@ export function ExploreProvider({ children }) {
     [savedAesthetics]
   )
 
-  // When navigating away from aesthetic tabs to main tabs, close unsaved ones
+  // When navigating away from aesthetic tabs to main tabs, close unsaved ones.
+  // Brand tabs are allowed to keep the aesthetic open (user may go back).
   const handleMainTabSwitch = useCallback(
     (newTab) => {
       if (
         openAesthetic &&
         !savedAesthetics.includes(openAesthetic) &&
         newTab !== 'explore' &&
-        !newTab.startsWith('aesthetic:')
+        !newTab.startsWith('aesthetic:') &&
+        !newTab.startsWith('brand:')
       ) {
         setOpenAesthetic(null)
       }
@@ -113,6 +128,10 @@ export function ExploreProvider({ children }) {
         unsaveAesthetic,
         isSaved,
         handleMainTabSwitch,
+        openBrand,
+        brandFromTab,
+        openBrandTab,
+        closeBrandTab,
       }}
     >
       {children}

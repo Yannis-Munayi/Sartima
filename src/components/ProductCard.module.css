@@ -162,6 +162,16 @@
   padding: 4px 10px;
   border-radius: 20px;
   width: fit-content;
+  border: none;
+}
+
+.brandPillLink {
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.brandPillLink:hover {
+  background: rgba(184, 149, 106, 0.4);
 }
 
 .itemName {

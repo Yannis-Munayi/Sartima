@@ -1,7 +1,9 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import { STYLES } from '../data/styles'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
+import { recordSignal } from '../services/interestTracker'
 import ProductCard from '../components/ProductCard'
 import styles from './DiscoveryScreen.module.css'
 
@@ -14,6 +16,7 @@ const SEASONS = [
 
 export default function DiscoveryScreen() {
   const { state, dispatch } = useApp()
+  const { user }  = useAuth()
   const gender    = state.gender ?? 'both'
   const quizMode  = state.quizMode ?? false
 
@@ -57,6 +60,7 @@ export default function DiscoveryScreen() {
       return
     }
     onLike(product)
+    recordSignal(user, 'like', { product })
     setLikedCount((c) => c + 1)
     setSwipedCount((c) => c + 1)
   }

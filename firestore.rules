@@ -13,6 +13,11 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
+      // Interest graph — brand/aesthetic/type affinities written by the client, read by scoring
+      match /prefs/interests {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
       // Usage counters and subscription state — written only by admin SDK (Cloud Functions).
       // More specific paths take precedence over the /prefs/{prefId} wildcard above.
       match /prefs/usage {

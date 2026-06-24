@@ -48,6 +48,11 @@ const FEATURE_COPY = {
     sub:      'Outfit Calendar is available on Pro.',
     bullets:  ['Outfit calendar + smart scheduling', 'AI trip packer', '30 Try-On pieces / month'],
   },
+  laundry: {
+    headline: 'Pro feature',
+    sub:      'Laundry care tracking is available on Pro.',
+    bullets:  ['Wash reminders + care symbol guide', 'Sort items by colour & fabric', 'Outfit calendar + trip packer'],
+  },
   upgrade: {
     headline: 'Unlock Sartima Pro',
     sub:      'Everything you need to build your style.',

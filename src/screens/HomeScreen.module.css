@@ -615,6 +615,61 @@
 }
 .viewResultsBtn:hover { opacity: 0.75; }
 
+/* ── Brands for you ── */
+.brandsScroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.brandsScroll::-webkit-scrollbar { display: none; }
+
+.brandCard {
+  flex-shrink: 0;
+  width: 140px;
+  padding: 14px 14px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+}
+.brandCard:hover {
+  border-color: var(--accent);
+  background: rgba(184, 149, 106, 0.06);
+}
+
+.brandCardName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+  line-height: 1.2;
+}
+
+.brandCardTag {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.brandCardArrow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0.7;
+}
 
 
 /* ── Wardrobe Builder CTA ── */
