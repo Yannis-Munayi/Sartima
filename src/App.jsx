@@ -45,7 +45,8 @@ import PaywallModal    from './components/PaywallModal'
 import { GuideProvider } from './context/GuideContext'
 import { SubscriptionProvider } from './context/SubscriptionContext'
 import { InterestProvider } from './context/InterestContext'
-import BrandScreen from './screens/BrandScreen'
+import BrandScreen  from './screens/BrandScreen'
+import BrandsScreen from './screens/BrandsScreen'
 
 // Screens where the tab bar is hidden (focused setup flow)
 const HIDE_TABS_ON = new Set([
@@ -267,6 +268,9 @@ function AppShell() {
         )}
         {showTabs && activeTab === 'explore' && (
           <ExploreScreen />
+        )}
+        {showTabs && activeTab === 'brands' && (
+          <BrandsScreen />
         )}
         {showTabs && activeTab === 'wardrobe-builder' && (
           <WardrobeBuildScreen onBack={() => handleTabChange('home')} />

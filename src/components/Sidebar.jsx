@@ -11,6 +11,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
   const navItems = [
     { id: 'home',    label: 'Home'       },
     { id: 'explore', label: 'Aesthetics' },
+    { id: 'brands',  label: 'Brands'     },
     ...(showQuizTab ? [{ id: 'quiz', label: 'Discover' }] : []),
     {
       id: 'daily', label: 'Outfits',
@@ -32,7 +33,8 @@ export default function Sidebar({ activeTab, onTabChange }) {
         {navItems.map((item) => {
           const isActive =
             activeTab === item.id ||
-            (item.id === 'explore' && (activeTab.startsWith('aesthetic:') || activeTab.startsWith('brand:'))) ||
+            (item.id === 'explore' && activeTab.startsWith('aesthetic:')) ||
+            (item.id === 'brands'  && activeTab.startsWith('brand:')) ||
             (item.id === 'profile' && activeTab.startsWith('profile:'))
           return (
             <button

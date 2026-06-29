@@ -24,6 +24,16 @@ function ExploreIcon() {
   )
 }
 
+function BrandsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+      <line x1="7" y1="7" x2="7.01" y2="7" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function DiscoverIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -78,7 +88,15 @@ export default function TabBar({ activeTab, setActiveTab }) {
           onClick={() => setActiveTab('explore')}
         >
           <ExploreIcon />
-          <span>Explore</span>
+          <span>Aesthetics</span>
+        </button>
+
+        <button
+          className={`${styles.tab} ${activeTab === 'brands' || activeTab.startsWith('brand:') ? styles.active : ''}`}
+          onClick={() => setActiveTab('brands')}
+        >
+          <BrandsIcon />
+          <span>Brands</span>
         </button>
 
         {showQuizTab && (

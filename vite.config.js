@@ -38,6 +38,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // Cache the app shell and all static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Network-first for API calls; cache-first for static
@@ -87,6 +88,8 @@ export default defineConfig({
           if (n.includes('/node_modules/firebase/')) return 'firebase'
           if (/\/src\/data\/(styles|categories|aestheticItems|looks|retailers|labels)\.js$/.test(n)) return 'data-styles'
           if (/\/src\/data\/(aestheticDepth|itemGuide)\.js$/.test(n)) return 'data-content'
+          if (/\/src\/data\/products/.test(n)) return 'data-products'
+          if (/\/src\/data\/(brands|aesthetics)\.js$/.test(n)) return 'data-catalog'
         },
       },
     },

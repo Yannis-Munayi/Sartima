@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getBrandById } from '../data/brands'
+import { getBrandById, BRAND_NAME_TO_ID } from '../data/brands'
 import { PRODUCTS } from '../data/products'
 import { fetchPhotosWithFallback } from '../services/pexels'
 import { useExplore } from '../context/ExploreContext'
@@ -89,7 +89,7 @@ function CollectionCard({ collection, isCurrent }) {
 function ShopTab({ brand }) {
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
 
-  const brandProducts = PRODUCTS.filter((p) => p.brand === brand.name)
+  const brandProducts = PRODUCTS.filter((p) => BRAND_NAME_TO_ID[p.brand] === brand.id)
 
   if (brandProducts.length === 0) {
     return (
