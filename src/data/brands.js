@@ -3008,7 +3008,95 @@ export const BRANDS = {
     imageQuery: 'Yohji Yamamoto fashion editorial dark avant-garde Tokyo Paris',
   },
 
+  'birkenstock': {
+    id: 'birkenstock',
+    name: 'Birkenstock',
+    founded: 1774,
+    origin: 'Linz am Rhein, Germany',
+    aesthetics: ['normcore', 'minimalist', 'gorpcore', 'cleangirl'],
+    positioning: 'contemporary',
+    tagline: 'The original comfort shoe.',
+    story: "The Birkenstock family has been recorded as shoemakers in Germany since 1774. In 1902 Konrad Birkenstock patented the first contoured, arch-supporting footbed — the radical idea that a shoe should be shaped for the foot, not the other way around. The Arizona sandal, introduced in 1973, went from countercultural staple to ironic anti-fashion statement to, after the Margiela Tabi collaboration and a starring role in Barbie, a certified fashion object — all without changing its cork sole.",
+    lines: [
+      { id: 'birk-classics', name: 'Birkenstock Classics', tier: 'contemporary', desc: 'The core cork-footbed line — Arizona, Boston, and Gizeh in leather, suede, and EVA.' },
+      { id: 'birk-1774', name: '1774', tier: 'premium', desc: "The elevated collection named for the brand's founding year — refined materials and considered colourways." },
+    ],
+    currentCollections: [
+      { name: 'Fall 2025', season: 'FW25', imageQuery: 'Birkenstock fall 2025 collection footwear editorial fashion' },
+    ],
+    pastCollections: [
+      { name: 'Birkenstock x Margiela Tabi Boston', year: 2021, desc: 'The split-toe clog collaboration with Maison Margiela that turned the humble Boston clog into a design-world grail.' },
+    ],
+    keyPieces: ['Arizona sandal', 'Boston clog', 'Gizeh sandal', 'Milano sandal', 'Super Birki'],
+    relatedBrands: ['uniqlo', 'cos', 'arket'],
+    imageQuery: 'Birkenstock cork sandal fashion editorial minimalist footwear',
+  },
+
+  'new-era': {
+    id: 'new-era',
+    name: 'New Era',
+    founded: 1920,
+    origin: 'Buffalo, New York, USA',
+    aesthetics: ['streetwear', 'normcore', 'vintage', 'y2k'],
+    positioning: 'contemporary',
+    tagline: 'This is the cap.',
+    story: "New Era began in Buffalo making caps by hand. In 1934 the company designed a fitted cap for the Cleveland Indians, and by 1993 it had become the exclusive on-field cap supplier for every team in Major League Baseball. Hip-hop adopted the 59FIFTY fitted in the '90s, and it remains the definitive streetwear cap — a flat-brimmed canvas for team loyalty, nostalgia, and logo culture.",
+    lines: [
+      { id: 'ne-59fifty', name: '59FIFTY', tier: 'contemporary', desc: 'The flagship fitted cap — flat brim, structured crown, on-field authentic construction for every MLB, NBA, and NFL team.' },
+      { id: 'ne-9forty', name: '9FORTY', tier: 'contemporary', desc: 'The adjustable, curved-brim everyday cap — the casual counterpart to the fitted 59FIFTY.' },
+      { id: 'ne-cooperstown', name: 'Cooperstown Collection', tier: 'premium', desc: "Throwback caps recreating historic team logos and colourways from baseball's past." },
+    ],
+    currentCollections: [
+      { name: 'Fall 2025', season: 'FW25', imageQuery: 'New Era fall 2025 collection fitted caps editorial fashion' },
+    ],
+    pastCollections: [
+      { name: 'MLB Exclusive Partnership', year: 1993, desc: 'New Era became the sole on-field cap provider for Major League Baseball, cementing the 59FIFTY as the sport\'s official headwear.' },
+    ],
+    keyPieces: ['59FIFTY fitted cap', '9FORTY adjustable cap', 'Cooperstown throwback cap', 'Snapback', 'Bucket hat'],
+    relatedBrands: ['nike', 'supreme', 'stussy'],
+    imageQuery: 'New Era fitted cap streetwear fashion editorial baseball culture',
+  },
+
+  'ray-ban': {
+    id: 'ray-ban',
+    name: 'Ray-Ban',
+    founded: 1937,
+    origin: 'Rochester, New York, USA (Bausch & Lomb)',
+    aesthetics: ['vintage', 'normcore', 'preppy', 'oldmoney', 'streetwear'],
+    positioning: 'premium',
+    tagline: 'Never hide.',
+    story: "Bausch & Lomb developed the first Ray-Ban Aviator in 1937 to shield US Army Air Corps pilots from high-altitude glare. The Wayfarer followed in 1952 with a plastic frame that broke from the metal-rimmed norm, and by the '80s — on Tom Cruise in Risky Business and Top Gun — Ray-Ban had become shorthand for American cool. Now owned by EssilorLuxottica, it remains the most-copied sunglasses silhouette in the world.",
+    lines: [
+      { id: 'rb-aviator', name: 'Aviator Classic', tier: 'contemporary', desc: 'The original teardrop pilot frame in metal — largely unchanged since 1937.' },
+      { id: 'rb-wayfarer', name: 'Wayfarer Classic', tier: 'contemporary', desc: 'The acetate frame that redefined sunglasses as a fashion object, not just eyewear.' },
+      { id: 'rb-meta', name: 'Ray-Ban Meta', tier: 'premium', desc: 'The smart-glasses collaboration with Meta — camera, speakers, and AI built into classic Ray-Ban silhouettes.' },
+    ],
+    currentCollections: [
+      { name: 'Fall 2025', season: 'FW25', imageQuery: 'Ray-Ban fall 2025 collection sunglasses editorial fashion' },
+    ],
+    pastCollections: [
+      { name: 'Top Gun Aviators', year: 1986, desc: "Tom Cruise's Aviators in Top Gun sent sales soaring and cemented the frame as a cultural icon for good." },
+    ],
+    keyPieces: ['Aviator Classic', 'Wayfarer Classic', 'Clubmaster', 'Round Metal', 'Ray-Ban Meta smart glasses'],
+    relatedBrands: ['gentle-monster', 'ralph-lauren', 'persol'],
+    imageQuery: 'Ray-Ban sunglasses fashion editorial vintage American icon',
+  },
+
   // ── Tier 3: Niche / Subculture Minimal Stubs ─────────────────────────────────
+
+  'bass': {
+    id: 'bass',
+    name: 'Bass',
+    founded: 1876,
+    origin: 'Wilton, Maine, USA',
+    aesthetics: ['preppy', 'oldmoney', 'ivy'],
+    positioning: 'contemporary',
+    tagline: 'Original since 1876.',
+    story: "G.H. Bass & Co. began as a boot maker for Maine loggers and hunters before designing the Weejuns penny loafer in 1936 — a slip-on based on Norwegian farmer moccasins (\"Weejuns\" is a clipped pronunciation of \"Norwegians\"). Ivy League students started slotting a penny into the strap in the '50s, making the Weejun the founding shoe of American preppy style.",
+    keyPieces: ['Weejuns penny loafer', 'Larson loafer', 'Bass boat shoe', 'Suede chukka', 'Weejuns kilt loafer'],
+    relatedBrands: ['ralph-lauren', 'j-crew', 'sperry'],
+    imageQuery: 'Bass Weejuns penny loafer fashion editorial preppy Ivy League',
+  },
 
   'veilance': {
     id: 'veilance',
@@ -3415,6 +3503,7 @@ export const BRAND_NAME_TO_ID = {
   'Dr. Martens':         'dr-martens',
   'Burberry':            'burberry',
   'Fear of God Essentials': 'fear-of-god',
+  'Fear of God':           'fear-of-god',
   'Off-White':             'off-white',
   'Loro Piana':            'loro-piana',
   'Brunello Cucinelli':    'brunello-cucinelli',
@@ -3478,6 +3567,7 @@ export const BRAND_NAME_TO_ID = {
   'Salomon Advanced':      'salomon',
   'Fjällräven':            'fjallraven',
   'Columbia':              'columbia',
+  'Columbia Sportswear':   'columbia',
   'Helly Hansen':          'helly-hansen',
   'Alpha Industries':      'alpha-industries',
   'Carhartt':              'carhartt-usa',
@@ -3564,16 +3654,20 @@ export const BRAND_NAME_TO_ID = {
 
   // Tier 3 additions
   'Veilance':              'veilance',
+  "Arc'teryx Veilance":   'veilance',
   'Satisfy':               'satisfy',
   'Polar Skate Co.':       'polar-skate-co',
   'Coogi':                 'coogi',
   'ADER Error':            'ader-error',
+  'ADER error':            'ader-error',
   'Andersson Bell':        'andersson-bell',
   'Ambush':                'ambush',
   'Spell & the Gypsy':     'spell-and-the-gypsy',
+  'Spell & The Gypsy Collective': 'spell-and-the-gypsy',
   'Mara Hoffman':          'mara-hoffman',
   'Faithfull the Brand':   'faithfull-the-brand',
   'Realisation Par':       'realisation-par',
+  'Réalisation Par':       'realisation-par',
   'Princess Polly':        'princess-polly',
   'Taylor Stitch':         'taylor-stitch',
   'Iron & Resin':          'iron-and-resin',
@@ -3590,6 +3684,12 @@ export const BRAND_NAME_TO_ID = {
   'Temperley London':      'temperley-london',
   'Jenny Packham':         'jenny-packham',
   'Emilia Wickstead':      'emilia-wickstead',
+
+  // Tier 4 additions
+  'Birkenstock':           'birkenstock',
+  'New Era':               'new-era',
+  'Ray-Ban':               'ray-ban',
+  'Bass':                  'bass',
 }
 
 export function getBrandById(id) {
