@@ -38,9 +38,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Cache the app shell and all static assets
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: ['**/data-products-*.js', '**/data-catalog-*.js', '**/data-content-*.js'],
         // Network-first for API calls; cache-first for static
         runtimeCaching: [
           {
