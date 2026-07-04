@@ -686,7 +686,7 @@ const TABS = [
   { id: 'laundry',  label: 'Laundry'         },
 ]
 
-export default function DailyLookScreen() {
+export default function DailyLookScreen({ forceSubTab }) {
   const [activeTab, setActiveTab]          = useState('scout')
   const { isPro, openPaywall }             = useSubscription()
 
@@ -696,6 +696,12 @@ export default function DailyLookScreen() {
     if (!isPro && id === 'laundry')  { openPaywall('laundry');         return }
     setActiveTab(id)
   }
+
+  // Guide-driven navigation bypasses the paywall gate above intentionally —
+  // it's a feature preview during the guided tour, not a real unlock.
+  useEffect(() => {
+    if (forceSubTab) setActiveTab(forceSubTab)
+  }, [forceSubTab])
 
   return (
     <div className={styles.screen}>

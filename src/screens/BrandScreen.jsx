@@ -296,7 +296,7 @@ const TABS = [
   { id: 'shop',        label: 'Shop' },
 ]
 
-export default function BrandScreen({ brandId }) {
+export default function BrandScreen({ brandId, forceSubTab }) {
   const navigate                 = useNavigation()
   const { user }                 = useAuth()
   const { closeBrandTab, brandFromTab } = useExplore()
@@ -318,6 +318,10 @@ export default function BrandScreen({ brandId }) {
     setSubTab('story')
     setHeroBg(null)
   }, [brandId])
+
+  useEffect(() => {
+    if (forceSubTab) setSubTab(forceSubTab)
+  }, [forceSubTab])
 
   // Fetch hero image
   useEffect(() => {

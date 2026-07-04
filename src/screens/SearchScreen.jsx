@@ -81,11 +81,15 @@ function SearchResultCard({ product, gender, onSelect }) {
   )
 }
 
-export default function SearchScreen() {
+export default function SearchScreen({ forcedQuery }) {
   const { state } = useApp()
   const gender = state.gender
   const [search, setSearch] = useState('')
   const [activeItem, setActiveItem] = useState(null)
+
+  useEffect(() => {
+    if (forcedQuery) setSearch(forcedQuery)
+  }, [forcedQuery])
 
   const query = search.toLowerCase().trim()
 

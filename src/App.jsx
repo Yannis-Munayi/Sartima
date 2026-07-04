@@ -15,7 +15,7 @@ function useIsDesktop() {
 }
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
-import { AppProvider, useApp, useTheme, SCREENS } from './context/AppContext'
+import { AppProvider, useApp, useTheme, useShowQuizTab, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NavigationProvider } from './context/NavigationContext'
 import { ShopProvider } from './context/ShopContext'
@@ -41,6 +41,7 @@ import DailyLookScreen from './screens/DailyLookScreen'
 import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
 import TabBar          from './components/TabBar'
 import GuideTour from './components/GuideTour'
+import GuideLauncherButton from './components/GuideLauncherButton'
 import Toast           from './components/Toast'
 import PaywallModal    from './components/PaywallModal'
 import { GuideProvider } from './context/GuideContext'
@@ -132,6 +133,7 @@ function AppShell() {
   const { user }            = useAuth()
   useTheme()
   const { openAesthetic, openAestheticTab, openBrand, openBrandTab } = useExplore()
+  const { showQuizTab }                     = useShowQuizTab()
   const [activeTab, setActiveTab]           = useState('home')
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
@@ -176,8 +178,8 @@ function AppShell() {
   // Answered count for the modal
   const answeredCount = Object.keys(state.responses).length
 
-  const { guideStep, startGuide, guideNext, guideBack, guideSkip, guideContextValue } = useGuideController({
-    openAestheticTab, setActiveTab,
+  const { guideStep, activeSteps, startGuide, guideNext, guideBack, guideSkip, guideContextValue } = useGuideController({
+    handleTabChange, showQuizTab,
   })
   const isDesktop = useIsDesktop()
 
@@ -258,6 +260,7 @@ function AppShell() {
   const isBrandTab       = activeTab.startsWith('brand:')
   const brandTabId       = isBrandTab ? activeTab.replace('brand:', '') : null
   const guideForceSubTab = guideContextValue.currentStep?.subTab ?? null
+  const guideForcedQuery = guideContextValue.currentStep?.forcedQuery ?? null
 
   const outerStyle = isDesktop
     ? { display: 'flex', height: '100dvh', overflow: 'hidden', background: 'var(--bg)' }
@@ -292,7 +295,7 @@ function AppShell() {
           <BrandsScreen />
         )}
         {showTabs && activeTab === 'search' && (
-          <SearchScreen />
+          <SearchScreen forcedQuery={guideForcedQuery} />
         )}
         {showTabs && activeTab === 'wardrobe-builder' && (
           <WardrobeBuildScreen
@@ -308,13 +311,13 @@ function AppShell() {
           />
         )}
         {showTabs && isBrandTab && (
-          <BrandScreen brandId={brandTabId ?? openBrand} />
+          <BrandScreen brandId={brandTabId ?? openBrand} forceSubTab={guideForceSubTab} />
         )}
         {showTabs && activeTab === 'mystyle' && (
           <MyStyleScreen forceSubTab={myStyleSubTab} />
         )}
         {showTabs && activeTab === 'daily' && (
-          <DailyLookScreen />
+          <DailyLookScreen forceSubTab={guideForceSubTab} />
         )}
         {showTabs && activeTab === 'profile' && (
           <ProfileScreen
@@ -329,10 +332,17 @@ function AppShell() {
           <TabBar activeTab={activeTab} setActiveTab={handleTabChange} />
         )}
 
+        {/* Floating context-aware guide launcher */}
+        {showTabs && !guideContextValue.isActive && (
+          <GuideLauncherButton activeTab={activeTab} onLaunch={startGuide} />
+        )}
+
         {/* Interactive guide tour */}
         {guideStep !== null && (
           <GuideTour
             step={guideStep}
+            steps={activeSteps}
+            isFullTour={guideContextValue.isFullTour}
             onNext={guideNext}
             onBack={guideBack}
             onSkip={guideSkip}

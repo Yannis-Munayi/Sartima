@@ -1,0 +1,37 @@
+.launcher {
+  position: fixed;
+  right: 16px;
+  bottom: calc(54px + env(safe-area-inset-bottom) + 16px);
+  z-index: 150;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.launcher:hover {
+  transform: scale(1.06);
+  background: rgba(184, 149, 106, 0.14);
+}
+
+.launcher:active {
+  transform: scale(0.94);
+}
+
+@media (min-width: 768px) {
+  .launcher {
+    right: 24px;
+    bottom: 24px;
+  }
+}

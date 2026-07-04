@@ -510,12 +510,12 @@ function WardrobeBuilderCTA({ navigate }) {
 function GuideLauncher({ onStart }) {
   return (
     <section className={styles.section}>
-      <button className={styles.guideLaunchBtn} onClick={onStart}>
+      <button className={styles.guideLaunchBtn} onClick={() => onStart('full')}>
         <div className={styles.guideLaunchInner}>
           <span className={styles.guideLaunchIcon}>✦</span>
           <div>
             <span className={styles.guideLaunchTitle}>Take the app tour</span>
-            <span className={styles.guideLaunchSub}>11-step walkthrough of every feature</span>
+            <span className={styles.guideLaunchSub}>A complete walkthrough of every feature</span>
           </div>
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
