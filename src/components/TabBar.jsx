@@ -34,6 +34,16 @@ function BrandsIcon() {
   )
 }
 
+function SearchIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.35-4.35" />
+    </svg>
+  )
+}
+
 function DiscoverIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -108,10 +118,18 @@ export default function TabBar({ activeTab, setActiveTab }) {
               <DiscoverIcon />
             </button>
             <span className={`${styles.discoverLabel} ${activeTab === 'quiz' ? styles.discoverLabelActive : ''}`}>
-              Swipe
+              Discover
             </span>
           </div>
         )}
+
+        <button
+          className={`${styles.tab} ${activeTab === 'search' ? styles.active : ''}`}
+          onClick={() => setActiveTab('search')}
+        >
+          <SearchIcon />
+          <span>Search</span>
+        </button>
 
         <button
           className={`${styles.tab} ${activeTab === 'daily' ? styles.active : ''}`}

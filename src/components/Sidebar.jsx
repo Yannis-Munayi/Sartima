@@ -12,6 +12,7 @@ export default function Sidebar({ activeTab, onTabChange }) {
     { id: 'home',    label: 'Home'       },
     { id: 'explore', label: 'Aesthetics' },
     { id: 'brands',  label: 'Brands'     },
+    { id: 'search',  label: 'Search'     },
     ...(showQuizTab ? [{ id: 'quiz', label: 'Discover' }] : []),
     {
       id: 'daily', label: 'Outfits',

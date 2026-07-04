@@ -122,6 +122,9 @@ function ScoutSettings() {
   const [sizeSystem, setSizeSystemState] = useState(
     () => localStorage.getItem('sartima_size_system') || 'us'
   )
+  const [resultCount, setResultCount] = useState(
+    () => Math.min(100, Math.max(5, parseInt(localStorage.getItem('sartima_scout_result_count') ?? '10', 10) || 10))
+  )
 
   function toggleAutoSave() {
     const next = !autoSave
@@ -132,6 +135,14 @@ function ScoutSettings() {
   function pickSize(val) {
     setSizeSystemState(val)
     localStorage.setItem('sartima_size_system', val)
+  }
+
+  function changeCount(delta) {
+    setResultCount((prev) => {
+      const next = Math.min(100, Math.max(5, prev + delta))
+      localStorage.setItem('sartima_scout_result_count', String(next))
+      return next
+    })
   }
 
   return (
@@ -149,6 +160,28 @@ function ScoutSettings() {
         >
           <span className={styles.toggleThumb} />
         </button>
+      </div>
+      <div style={{ height: 12 }} />
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Results per piece</p>
+          <p className={styles.settingsToggleSub}>Products shown per category (5 – 100)</p>
+        </div>
+        <div className={styles.scoutCountStepper}>
+          <button
+            className={styles.scoutCountBtn}
+            onClick={() => changeCount(-5)}
+            disabled={resultCount <= 5}
+            aria-label="Decrease"
+          >−</button>
+          <span className={styles.scoutCountValue}>{resultCount}</span>
+          <button
+            className={styles.scoutCountBtn}
+            onClick={() => changeCount(5)}
+            disabled={resultCount >= 100}
+            aria-label="Increase"
+          >+</button>
+        </div>
       </div>
       <div style={{ height: 12 }} />
       <div className={styles.settingsToggleRow}>

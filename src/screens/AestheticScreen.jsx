@@ -2,11 +2,61 @@
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_ITEMS, TYPE_EMOJI, inferCat, inferSeasons, inferGender } from '../data/aestheticItems'
+
+// Maps a product type string or item name to a Shop Scout PIECE_OPTIONS id
+function inferShopScoutPieceId(str) {
+  if (!str) return null
+  const n = str.toLowerCase()
+  // Exact type matches (from PRODUCTS.type)
+  const exactMap = {
+    'plain-tee': 'plain-tee', 'graphic-tee': 'graphic-tee',
+    'oxford-shirt': 'oxford', 'linen-shirt': 'oxford', 'camp-shirt': 'oxford',
+    'polo': 'polo',
+    'hoodie': 'hoodie',
+    'crewneck': 'crewneck', 'turtleneck': 'crewneck',
+    'slim-jeans': 'slim-jeans',
+    'baggy-jeans': 'baggy-jeans', 'wide-leg-trousers': 'baggy-jeans',
+    'chinos': 'chinos',
+    'cargo-pants': 'cargo',
+    'cycling-shorts': 'shorts',
+    'sneaker': 'clean-sneakers', 'runner': 'clean-sneakers',
+    'high-top': 'high-tops',
+    'chelsea-boot': 'boots', 'combat-boot': 'boots', 'work-boot': 'boots',
+    'loafer': 'loafers',
+    'bomber': 'bomber',
+    'puffer': 'puffer', 'insulated-jacket': 'puffer',
+    'denim-jacket': 'denim-jacket',
+    'trench': 'trench', 'trench-coat': 'trench', 'overcoat': 'trench',
+  }
+  if (exactMap[n]) return exactMap[n]
+  // Keyword fallbacks for item names
+  if (n.includes('graphic') || n.includes('printed tee')) return 'graphic-tee'
+  if (n.includes('polo')) return 'polo'
+  if (n.includes('oxford') || n.includes('button-down') || n.includes('button down') || n.includes('linen shirt') || n.includes('camp shirt')) return 'oxford'
+  if (n.includes('hoodie') || n.includes('zip-up')) return 'hoodie'
+  if (n.includes('crewneck') || n.includes('crew neck') || n.includes('sweater') || n.includes('pullover') || n.includes('knitwear') || n.includes('turtleneck')) return 'crewneck'
+  if (n.includes('cargo')) return 'cargo'
+  if (n.includes('baggy') || n.includes('wide-leg') || n.includes('wide leg') || n.includes('relaxed jean')) return 'baggy-jeans'
+  if (n.includes('chino') || n.includes('trouser') || n.includes('slacks')) return 'chinos'
+  if (n.includes('short')) return 'shorts'
+  if (n.includes('loafer')) return 'loafers'
+  if (n.includes('high-top') || n.includes('high top')) return 'high-tops'
+  if (n.includes('boot')) return 'boots'
+  if (n.includes('sneaker') || n.includes('trainer') || n.includes('runner')) return 'clean-sneakers'
+  if (n.includes('bomber')) return 'bomber'
+  if (n.includes('puffer') || n.includes('quilted jacket') || n.includes('down jacket')) return 'puffer'
+  if ((n.includes('denim') || n.includes('jean')) && n.includes('jacket')) return 'denim-jacket'
+  if (n.includes('trench') || n.includes('overcoat') || n.includes('peacoat') || n.includes('wool coat')) return 'trench'
+  if (n.includes('tee') || n.includes('t-shirt') || n.includes('plain')) return 'plain-tee'
+  if (n.includes('jean') || n.includes('denim')) return 'slim-jeans'
+  return null
+}
 import { AESTHETIC_DEPTH } from '../data/aestheticDepth'
 import { getLooks, getLookPieces } from '../data/looks'
 import { getGuideForAesthetic } from '../data/itemGuide'
 import { fetchPhotos, fetchPhotosWithFallback } from '../services/pexels'
-import { fetchPhotos as fetchGooglePhotos } from '../services/google'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import ProductImageToggle from '../components/ProductImageToggle'
 import { PRODUCTS } from '../data/products'
 import { useExplore } from '../context/ExploreContext'
 import { useWishlist } from '../context/WishlistContext'
@@ -16,7 +66,6 @@ import { useNavigation } from '../context/NavigationContext'
 import { BRAND_NAME_TO_ID } from '../data/brands'
 import { recordSignal } from '../services/interestTracker'
 import ItemActionSheet from '../components/ItemActionSheet'
-import ShopPanel from '../components/ShopPanel'
 import styles from './AestheticScreen.module.css'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -45,28 +94,22 @@ const GUIDE_CAT_PARENTS = {
   trousers:  ['bottoms'],
 }
 
-async function loadProductImage(product) {
-  if (product.googleQuery) {
-    const results = await fetchGooglePhotos(product.googleQuery, 1)
-    if (results.length) return results[0]
-  }
-  const [url] = await fetchPhotosWithFallback([product.name], 1)
-  return url ?? null
-}
-
 function ProductGridCard({ product }) {
   const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
+  const navigate = useNavigation()
+  const { state } = useApp()
+  const gender = state.gender
   const liked = isLiked(product.id)
+  const altPhoto = getAltProductImage(product, gender)
 
   useEffect(() => {
     let cancelled = false
-    loadProductImage(product).then((url) => {
+    resolveProductImage(product, gender).then((url) => {
       if (!cancelled) setPhoto(url ?? null)
     })
     return () => { cancelled = true }
-  }, [product.id])
+  }, [product.id, gender])
 
   function toggleLike(e) {
     e.stopPropagation()
@@ -83,6 +126,7 @@ function ProductGridCard({ product }) {
         styleWeights: product.styleWeights ?? {},
         shopUrl: product.shopUrl, shopFallbackUrl: product.shopFallbackUrl,
         seasons: product.seasons,
+        image: product.image, imageMen: product.imageMen, googleQuery: product.googleQuery,
       })
     }
   }
@@ -90,16 +134,7 @@ function ProductGridCard({ product }) {
   return (
     <div className={styles.productGridCard}>
       <div className={styles.productGridPhoto} style={{ background: product.gradient }}>
-        {photo && (
-          <img
-            src={photo}
-            alt={product.name}
-            className={styles.itemImg}
-            style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
-          />
-        )}
+        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.itemImg} />
         {product.brand && <span className={styles.brandBadge}>{product.brand}</span>}
         <button
           className={`${styles.heartBtnSmall} ${liked ? styles.heartBtnSmallActive : ''}`}
@@ -113,11 +148,21 @@ function ProductGridCard({ product }) {
         </button>
       </div>
       <p className={styles.itemName}>{product.name}</p>
-      {product.shopUrl && (
-        <a href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}>
-          Shop ↗
-        </a>
-      )}
+      {(() => {
+        const pieceId = inferShopScoutPieceId(product.type) ?? inferShopScoutPieceId(product.name)
+        return pieceId ? (
+          <button
+            className={styles.shopLink}
+            onClick={() => navigate(`wardrobe-builder:${pieceId}|${product.name}`)}
+          >
+            Shop Scout →
+          </button>
+        ) : product.shopUrl ? (
+          <a href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}>
+            Shop ↗
+          </a>
+        ) : null
+      })()}
     </div>
   )
 }
@@ -211,12 +256,12 @@ function matchesGenderFilter(item, preference) {
 
 function ItemsTab({ aestheticId }) {
   const { state } = useApp()
+  const navigate = useNavigation()
   const genderFilter = state.gender
   const styleData = STYLES[aestheticId]
   const gradient  = styleData?.gradient ?? 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)'
 
   const [activeItem, setActiveItem] = useState(null)
-  const [shopItem,   setShopItem]   = useState(null)
 
   const aestheticProducts = useMemo(() =>
     PRODUCTS
@@ -244,8 +289,14 @@ function ItemsTab({ aestheticId }) {
   }, [aestheticId, gradient, genderFilter])
 
   function handleOpenShop() {
-    setShopItem(activeItem)
+    const pieceId  = activeItem ? inferShopScoutPieceId(activeItem.name) : null
+    const itemName = activeItem?.name ?? null
     setActiveItem(null)
+    if (pieceId && itemName) {
+      navigate(`wardrobe-builder:${pieceId}|${itemName}`)
+    } else if (pieceId) {
+      navigate(`wardrobe-builder:${pieceId}`)
+    }
   }
 
   return (
@@ -297,13 +348,6 @@ function ItemsTab({ aestheticId }) {
           item={activeItem}
           onShop={handleOpenShop}
           onClose={() => setActiveItem(null)}
-        />
-      )}
-
-      {shopItem && (
-        <ShopPanel
-          item={shopItem}
-          onClose={() => setShopItem(null)}
         />
       )}
     </>

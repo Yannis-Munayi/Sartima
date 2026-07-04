@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { getBrandById, BRAND_NAME_TO_ID } from '../data/brands'
 import { PRODUCTS } from '../data/products'
 import { fetchPhotosWithFallback } from '../services/pexels'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import { useExplore } from '../context/ExploreContext'
 import { useAuth } from '../context/AuthContext'
+import { useApp } from '../context/AppContext'
 import { useNavigation } from '../context/NavigationContext'
 import { useWishlist } from '../context/WishlistContext'
 import { recordSignal } from '../services/interestTracker'
+import ProductImageToggle from '../components/ProductImageToggle'
 import styles from './BrandScreen.module.css'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -111,9 +114,11 @@ function ShopTab({ brand }) {
 
 function BrandProductCard({ product }) {
   const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
+  const { state } = useApp()
+  const gender = state.gender
   const liked = isLiked(product.id)
+  const altPhoto = getAltProductImage(product, gender)
   const cardRef = useRef(null)
 
   useEffect(() => {
@@ -123,12 +128,12 @@ function BrandProductCard({ product }) {
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) return
       observer.disconnect()
-      fetchPhotosWithFallback([product.name, product.brand + ' ' + product.name], 1)
-        .then(([url] = []) => { if (!cancelled) setPhoto(url ?? null) })
+      resolveProductImage(product, gender)
+        .then((url) => { if (!cancelled) setPhoto(url ?? null) })
     }, { rootMargin: '200px' })
     observer.observe(el)
     return () => { cancelled = true; observer.disconnect() }
-  }, [product.id])
+  }, [product.id, gender])
 
   function toggleLike(e) {
     e.stopPropagation()
@@ -145,6 +150,7 @@ function BrandProductCard({ product }) {
         styleWeights: product.styleWeights ?? {},
         shopUrl: product.shopUrl, shopFallbackUrl: product.shopFallbackUrl,
         seasons: product.seasons,
+        image: product.image, imageMen: product.imageMen, googleQuery: product.googleQuery,
       })
     }
   }
@@ -152,16 +158,7 @@ function BrandProductCard({ product }) {
   return (
     <div className={styles.shopCard} ref={cardRef}>
       <div className={styles.shopCardPhoto} style={{ background: product.gradient ?? 'var(--bg-elevated)' }}>
-        {photo && (
-          <img
-            src={photo}
-            alt={product.name}
-            className={styles.shopCardImg}
-            style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
-          />
-        )}
+        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.shopCardImg} />
         <button
           className={`${styles.heartBtn} ${liked ? styles.heartBtnActive : ''}`}
           onClick={toggleLike}

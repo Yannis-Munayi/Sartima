@@ -2,10 +2,11 @@
 import { addDoc, collection, getDocs, orderBy, query as firestoreQuery, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import { useWishlist } from '../context/WishlistContext'
 import { useApp } from '../context/AppContext'
 import ItemActionSheet from '../components/ItemActionSheet'
+import ProductImageToggle from '../components/ProductImageToggle'
 import ShopPanel from '../components/ShopPanel'
 import AuthWidget from '../components/AuthWidget'
 import WardrobeUpload from '../components/WardrobeUpload'
@@ -24,24 +25,16 @@ const UPLOAD_BUCKET_META = {
 }
 
 function ItemWishCard({ entry, onRemove, onSelect }) {
-  const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
+  const [photo, setPhoto] = useState(null)
   const { state } = useApp()
   const gender = state.gender
 
   const isProduct = entry.type === 'product'
+  const altPhoto = getAltProductImage(entry, gender)
 
   useEffect(() => {
     let cancelled = false
-    const hint = gender === 'women' ? 'women' : gender === 'men' ? 'men' : ''
-    const queries = entry.pexelsQuery
-      ? [entry.pexelsQuery]
-      : [
-          `${entry.brand ? entry.brand + ' ' : ''}${entry.name} ${hint} fashion outfit`.trim(),
-          `${entry.name} ${hint} outfit`.trim(),
-          `${entry.name} fashion`,
-        ]
-    fetchPhotosWithFallback(queries, 1).then(([url] = []) => {
+    resolveProductImage(entry, gender).then((url) => {
       if (!cancelled) setPhoto(url ?? null)
     })
     return () => { cancelled = true }
@@ -51,16 +44,7 @@ function ItemWishCard({ entry, onRemove, onSelect }) {
     <div className={styles.itemCard}>
       <button className={styles.itemPhotoBtn} onClick={() => onSelect(entry)}>
         <div className={styles.itemPhoto} style={{ background: entry.gradient }}>
-          {photo && (
-            <img
-              src={photo}
-              alt={entry.name}
-              className={styles.itemImg}
-              style={{ opacity: loaded ? 1 : 0 }}
-              onLoad={() => setLoaded(true)}
-              onError={() => setLoaded(true)}
-            />
-          )}
+          <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={entry.name} imgClassName={styles.itemImg} />
           {isProduct && entry.brand && (
             <span className={styles.brandBadge}>{entry.brand}</span>
           )}

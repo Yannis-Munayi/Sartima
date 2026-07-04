@@ -2,9 +2,11 @@
 import { PRODUCTS } from '../data/products'
 import { LOOKS } from '../data/looks'
 import { fetchPhotos, fetchPhotosWithFallback } from '../services/pexels'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import { useApp } from '../context/AppContext'
 import { useShop } from '../context/ShopContext'
 import ShopPanel from '../components/ShopPanel'
+import ProductImageToggle from '../components/ProductImageToggle'
 import styles from './WardrobeBuildScreen.module.css'
 import listStyles from './ShopList.module.css'
 
@@ -44,6 +46,7 @@ const STARTER_CAPSULE = ['plain-tee', 'slim-jeans', 'hoodie', 'clean-sneakers', 
 // ── Budget tiers ──────────────────────────────────────────────────────────────
 
 const BUDGET_TIERS = [
+  { id: 'any',     label: 'Any price',   sub: 'No budget limit',   priceTag: '✦',    priceRange: null },
   { id: 'budget',  label: 'Under $50',   sub: 'Affordable finds',  priceTag: '$',    priceRange: 'Under $50' },
   { id: 'mid',     label: '$50 – $150',  sub: 'Quality basics',    priceTag: '$$',   priceRange: '$50 – $150' },
   { id: 'premium', label: '$100 – $250', sub: 'Investment pieces', priceTag: '$$$',  priceRange: '$150 – $300' },
@@ -99,9 +102,9 @@ const SIZE_BY_ROLE = {
   shoes:    { us: ['6','7','8','9','10','11','12'],          eu: ['37','38','39','40','41','42','43','44'] },
 }
 
-// ── Recommendation engine — returns up to 10 products ─────────────────────────
+// ── Recommendation engine ─────────────────────────────────────────────────────
 // Products in the chosen budget tier are prioritised (+5 score boost).
-// Adjacent tiers fill remaining slots so we always aim for 10 results.
+// Result count comes from the user's Settings preference (default 10, range 5–100).
 
 function scoreProduct(product, priorities, budgetTier) {
   let score = 0
@@ -120,7 +123,27 @@ function scoreProduct(product, priorities, budgetTier) {
   return score
 }
 
-function recommendProducts(pieceOption, budgetTier, priorities, gender, pieceFilters) {
+const BUDGET_LABELS = { budget: 'Under $50', mid: '$50–$150', premium: '$150–$300', luxury: '$300+' }
+
+function matchesSpecificName(productName, specificWords) {
+  const name = productName.toLowerCase()
+  return specificWords.every(w => name.includes(w))
+}
+
+function describeFilterMismatch(products, budgetTier, colorFilter) {
+  const reasons = []
+  if (budgetTier && budgetTier !== 'any') {
+    const tiers = [...new Set(products.map(p => p.priceRange).filter(t => t && t !== budgetTier))]
+    if (tiers.length) reasons.push(`priced ${tiers.map(t => BUDGET_LABELS[t] ?? t).join(' / ')}`)
+  }
+  if (colorFilter) {
+    const colors = [...new Set(products.map(p => p.color).filter(Boolean))]
+    if (colors.length) reasons.push(`available in ${colors.slice(0, 3).join(', ')}`)
+  }
+  return reasons.length ? reasons.join(' and ') : null
+}
+
+function recommendProducts(pieceOption, budgetTier, priorities, gender, pieceFilters, maxCount = 10, specificName = null) {
   const genderMatch = (p) => {
     if (!gender || gender === 'nonbinary') return p.gender === 'unisex'
     if (gender === 'men')   return p.gender === 'mens'  || p.gender === 'unisex'
@@ -128,26 +151,61 @@ function recommendProducts(pieceOption, budgetTier, priorities, gender, pieceFil
     return p.gender === 'unisex'
   }
 
-  // Match by specific type first, fall back to parentType for broader coverage
-  let candidates = PRODUCTS.filter(
-    (p) => pieceOption.productTypes.includes(p.type) && genderMatch(p)
-  )
-  if (candidates.length === 0) {
-    candidates = PRODUCTS.filter(
-      (p) => p.parentType === pieceOption.parentType && genderMatch(p)
-    )
+  // All category candidates matching gender
+  let allCandidates = PRODUCTS.filter(p => pieceOption.productTypes.includes(p.type) && genderMatch(p))
+  if (allCandidates.length === 0) {
+    allCandidates = PRODUCTS.filter(p => p.parentType === pieceOption.parentType && genderMatch(p))
   }
 
   const colorFilter = pieceFilters?.color ? pieceFilters.color.toLowerCase() : null
 
-  return candidates
-    .map((p) => {
-      let score = scoreProduct(p, priorities, budgetTier)
-      if (colorFilter && p.color?.toLowerCase().includes(colorFilter)) score += 6
-      return { ...p, _score: score }
-    })
-    .sort((a, b) => b._score - a._score)
-    .slice(0, 10)
+  // Split into specific-match pool vs broader category pool
+  let primaryPool, suggestedPool
+  const hasSpecific = !!(specificName && specificName.trim())
+  if (hasSpecific) {
+    const words = specificName.toLowerCase().split(/\s+/).filter(w => w.length > 2)
+    if (words.length) {
+      primaryPool   = allCandidates.filter(p => matchesSpecificName(p.name, words))
+      suggestedPool = allCandidates.filter(p => !matchesSpecificName(p.name, words))
+    } else {
+      primaryPool = allCandidates; suggestedPool = []
+    }
+  } else {
+    primaryPool = allCandidates; suggestedPool = []
+  }
+
+  // Hard filters applied only when searching for a specific item
+  const passesHard = (p) => {
+    if (!hasSpecific) return true
+    if (budgetTier && budgetTier !== 'any' && p.priceRange && p.priceRange !== budgetTier) return false
+    if (colorFilter && !p.color?.toLowerCase().includes(colorFilter)) return false
+    return true
+  }
+
+  const scoreAll = (arr) =>
+    arr.map(p => {
+      let s = scoreProduct(p, priorities, budgetTier)
+      if (colorFilter && p.color?.toLowerCase().includes(colorFilter)) s += 6
+      return { ...p, _score: s }
+    }).sort((a, b) => b._score - a._score)
+
+  const primaryFiltered    = primaryPool.filter(passesHard)
+  const primaryOutOfFilter = primaryPool.filter(p => !passesHard(p))
+
+  const scoredPrimary    = scoreAll(primaryFiltered).slice(0, maxCount)
+  const need             = maxCount - scoredPrimary.length
+  const scoredSuggested  = need > 0 ? scoreAll(suggestedPool.filter(passesHard)).slice(0, need) : []
+  const scoredOutOfFilter = scoreAll(primaryOutOfFilter).slice(0, maxCount)
+
+  return {
+    primary:       scoredPrimary,
+    suggested:     scoredSuggested,
+    outOfFilter:   primaryFiltered.length === 0 ? scoredOutOfFilter : [],
+    filterMismatch: primaryFiltered.length === 0 && primaryOutOfFilter.length > 0
+      ? describeFilterMismatch(primaryOutOfFilter, budgetTier, colorFilter)
+      : null,
+    specificName,
+  }
 }
 
 function findComplements(selectedIds) {
@@ -412,8 +470,10 @@ function StepPriorities({ selected, onToggle, onNext, onBack }) {
 // ── Step 4: Results ───────────────────────────────────────────────────────────
 
 function ProductPhoto({ product }) {
-  const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const { state } = useApp()
+  const gender = state.gender
+  const altPhoto = getAltProductImage(product, gender)
   const ref     = useRef(null)
   const fetched = useRef(false)
 
@@ -423,28 +483,19 @@ function ProductPhoto({ product }) {
     const obs = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !fetched.current) {
         fetched.current = true
-        fetchPhotosWithFallback([
-          product.googleQuery ?? `${product.brand} ${product.name} fashion`,
-          `${product.brand} ${product.name}`,
-          `${product.name} fashion outfit`,
-        ], 1).then(([url] = []) => setPhoto(url ?? null))
+        resolveProductImage(product, gender).then((url) => setPhoto(url ?? null))
         obs.disconnect()
       }
     }, { rootMargin: '80px' })
     obs.observe(el)
     return () => obs.disconnect()
-  }, [product.id])
+  }, [product.id, gender])
 
   return (
     <div ref={ref} className={styles.productPhoto}
       style={{ background: product.gradient ?? 'rgba(255,255,255,0.05)' }}
     >
-      {photo && (
-        <img src={photo} alt={product.name} className={styles.productPhotoImg}
-          style={{ opacity: loaded ? 1 : 0 }}
-          onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
-        />
-      )}
+      <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.productPhotoImg} />
     </div>
   )
 }
@@ -555,16 +606,28 @@ function ResultsView({ recommendations, complements, budgets, priorities, gender
   const pieces      = recommendations.map((r) => r.pieceId)
   const outfitCount = useMemo(() => countOutfits(pieces), [pieces])
 
-  // All products selected by default so users only need to deselect unwanted ones
+  // Selected by default: primary + suggested (not OOF until revealed)
   const [selectedIds, setSelectedIds] = useState(
-    () => new Set(recommendations.flatMap((r) => r.products.map((p) => p.id)))
+    () => new Set(recommendations.flatMap((r) => [
+      ...r.recs.primary, ...r.recs.suggested,
+    ].map((p) => p.id)))
   )
+  // Track which piece groups have revealed their out-of-filter products
+  const [oofVisible, setOofVisible] = useState({})
 
   function toggleProduct(id) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function revealOof(pieceId, oofProducts) {
+    setOofVisible(prev => ({ ...prev, [pieceId]: true }))
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      oofProducts.forEach(p => next.add(p.id))
       return next
     })
   }
@@ -587,29 +650,85 @@ function ResultsView({ recommendations, complements, budgets, priorities, gender
           {onSave ? 'Tap a product to deselect it before saving' : 'Top picks for your budget and priorities'}
         </p>
 
-        {recommendations.map(({ pieceId, option, products }) => (
-          <div key={pieceId} className={styles.pieceGroup}>
-            <div className={styles.pieceGroupHeader}>
-              <span className={styles.pieceGroupEmoji}>{option.emoji}</span>
-              <span className={styles.pieceGroupName}>{option.name}</span>
-              <span className={styles.pieceGroupBudget}>{BUDGET_BY_ID[budgets[pieceId]]?.label ?? ''}</span>
-            </div>
-            {products.length > 0 ? (
-              <div className={styles.productList}>
-                {products.map((p) => (
-                  <ProductCard key={p.id} product={p} priorities={priorities}
-                    isSelected={selectedIds.has(p.id)}
-                    onToggle={onSave ? () => toggleProduct(p.id) : null}
-                  />
-                ))}
+        {recommendations.map(({ pieceId, option, recs }) => {
+          const { primary, suggested, outOfFilter, filterMismatch, specificName } = recs
+          const oof        = outOfFilter ?? []
+          const oofShown   = oofVisible[pieceId] ?? false
+          const hasMain    = primary.length > 0 || suggested.length > 0
+
+          return (
+            <div key={pieceId} className={styles.pieceGroup}>
+              <div className={styles.pieceGroupHeader}>
+                <span className={styles.pieceGroupEmoji}>{option.emoji}</span>
+                <span className={styles.pieceGroupName}>
+                  {specificName || option.name}
+                </span>
+                <span className={styles.pieceGroupBudget}>{BUDGET_BY_ID[budgets[pieceId]]?.label ?? ''}</span>
               </div>
-            ) : (
-              <p className={styles.noProducts}>
-                No matches in catalog — browse {option.name.toLowerCase()}s on your favourite retailer.
-              </p>
-            )}
-          </div>
-        ))}
+
+              {/* Exact-match products */}
+              {primary.length > 0 && (
+                <div className={styles.productList}>
+                  {primary.map((p) => (
+                    <ProductCard key={p.id} product={p} priorities={priorities}
+                      isSelected={selectedIds.has(p.id)}
+                      onToggle={onSave ? () => toggleProduct(p.id) : null}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Broader category suggestions (fills up to maxCount) */}
+              {suggested.length > 0 && (
+                <>
+                  <p className={styles.suggestedLabel}>
+                    {primary.length > 0 ? 'You might also like' : 'Top picks'}
+                  </p>
+                  <div className={styles.productList}>
+                    {suggested.map((p) => (
+                      <ProductCard key={p.id} product={p} priorities={priorities}
+                        isSelected={selectedIds.has(p.id)}
+                        onToggle={onSave ? () => toggleProduct(p.id) : null}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Out-of-filter notice */}
+              {!hasMain && oof.length > 0 && (
+                <div className={styles.oofNotice}>
+                  <p className={styles.oofText}>
+                    No <strong>{specificName ?? option.name}</strong> found within your current filters
+                    {filterMismatch
+                      ? `, but ${oof.length} ${oof.length === 1 ? 'option is' : 'options are'} ${filterMismatch}`
+                      : ''}.
+                  </p>
+                  {!oofShown ? (
+                    <button className={styles.oofBtn} onClick={() => revealOof(pieceId, oof)}>
+                      View anyway →
+                    </button>
+                  ) : (
+                    <div className={styles.productList}>
+                      {oof.map((p) => (
+                        <ProductCard key={p.id} product={p} priorities={priorities}
+                          isSelected={selectedIds.has(p.id)}
+                          onToggle={onSave ? () => toggleProduct(p.id) : null}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!hasMain && oof.length === 0 && (
+                <p className={styles.noProducts}>
+                  No matches in catalog — browse {option.name.toLowerCase()}s on your favourite retailer.
+                </p>
+              )}
+            </div>
+          )
+        })}
       </section>
 
       {complements.length > 0 && (
@@ -647,8 +766,10 @@ function ResultsView({ recommendations, complements, budgets, priorities, gender
 // ── My List tab ───────────────────────────────────────────────────────────────
 
 function ProductRowPhoto({ product }) {
-  const [photo, setPhoto]   = useState(null)
-  const [loaded, setLoaded] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const { state } = useApp()
+  const gender = state.gender
+  const altPhoto = getAltProductImage(product, gender)
   const ref     = useRef(null)
   const fetched = useRef(false)
 
@@ -658,25 +779,17 @@ function ProductRowPhoto({ product }) {
     const obs = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !fetched.current) {
         fetched.current = true
-        fetchPhotosWithFallback([
-          product.googleQuery ?? `${product.brand} ${product.name} fashion`,
-          `${product.brand} ${product.name}`,
-        ], 1).then(([url] = []) => setPhoto(url ?? null))
+        resolveProductImage(product, gender).then((url) => setPhoto(url ?? null))
         obs.disconnect()
       }
     }, { rootMargin: '60px' })
     obs.observe(el)
     return () => obs.disconnect()
-  }, [product.id])
+  }, [product.id, gender])
 
   return (
     <div ref={ref} className={listStyles.productRowPhoto}>
-      {photo && (
-        <img src={photo} alt={product.name} className={listStyles.productRowImg}
-          style={{ opacity: loaded ? 1 : 0 }}
-          onLoad={() => setLoaded(true)} onError={() => setLoaded(true)}
-        />
-      )}
+      <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={listStyles.productRowImg} />
     </div>
   )
 }
@@ -859,14 +972,16 @@ function MyListView() {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
-export default function WardrobeBuildScreen({ onBack }) {
+export default function WardrobeBuildScreen({ onBack, initialPiece = null, initialSpecificName = null }) {
   const { state } = useApp()
   const gender    = state.gender
   const { shopList, addScoutedGroup } = useShop()
 
+  const hasInitial = !!(initialPiece && PIECE_BY_ID[initialPiece])
+
   const [activeView, setActiveView] = useState('scout') // 'scout' | 'list'
-  const [step, setStep]             = useState(1)
-  const [pieces, setPieces]         = useState([])
+  const [step, setStep]             = useState(hasInitial ? 2 : 1)
+  const [pieces, setPieces]         = useState(hasInitial ? [initialPiece] : [])
   const [budgets, setBudgets]       = useState({}) // { [pieceId]: tierId }
   const [filters, setFilters]       = useState({}) // { [pieceId]: { color, material, size } }
   const [priorities, setPriorities] = useState([])
@@ -923,10 +1038,11 @@ export default function WardrobeBuildScreen({ onBack }) {
       if (!option) return null
       const budgetTier   = budgets[pieceId] ?? 'mid'
       const pieceFilters = filters[pieceId] ?? {}
-      const products     = recommendProducts(option, budgetTier, priorities, gender, pieceFilters)
-      return { pieceId, option, products, budgetTier, pieceFilters }
+      const maxCount     = Math.min(100, Math.max(5, parseInt(localStorage.getItem('sartima_scout_result_count') ?? '10', 10) || 10))
+      const recs         = recommendProducts(option, budgetTier, priorities, gender, pieceFilters, maxCount, initialSpecificName)
+      return { pieceId, option, recs, budgetTier, pieceFilters }
     }).filter(Boolean)
-  }, [step, pieces, budgets, filters, priorities, gender])
+  }, [step, pieces, budgets, filters, priorities, gender, initialSpecificName])
 
   const complements = useMemo(
     () => (step === 4 ? findComplements(pieces) : []),
@@ -934,18 +1050,19 @@ export default function WardrobeBuildScreen({ onBack }) {
   )
 
   const performSave = useCallback((selectedIds) => {
-    recommendations.forEach(({ pieceId, option, products, budgetTier, pieceFilters }) => {
-      const tier = BUDGET_BY_ID[budgetTier]
-      const safeProducts = products
+    recommendations.forEach(({ pieceId, option, recs, budgetTier, pieceFilters }) => {
+      const tier        = BUDGET_BY_ID[budgetTier]
+      const allProducts = [...recs.primary, ...recs.suggested, ...recs.outOfFilter]
+      const safeProducts = allProducts
         .filter((p) => selectedIds.has(p.id))
-        .map(({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange }) =>
-          ({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange })
+        .map(({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen }) =>
+          ({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen })
         )
       if (safeProducts.length === 0) return
       addScoutedGroup({
         id:          `${pieceId}_${budgetTier}`,
         pieceId,
-        pieceName:   option.name,
+        pieceName:   recs.specificName || option.name,
         emoji:       option.emoji,
         budgetTier,
         budgetLabel: tier?.label ?? '',
@@ -960,7 +1077,9 @@ export default function WardrobeBuildScreen({ onBack }) {
   // Auto-save when the setting is enabled — saves all products (opt-in, default off)
   useEffect(() => {
     if (!autoSave || step !== 4 || recommendations.length === 0 || saved) return
-    const allIds = new Set(recommendations.flatMap((r) => r.products.map((p) => p.id)))
+    const allIds = new Set(recommendations.flatMap((r) =>
+      [...r.recs.primary, ...r.recs.suggested].map((p) => p.id)
+    ))
     performSave(allIds)
   }, [autoSave, step, recommendations.length, saved, performSave])
 

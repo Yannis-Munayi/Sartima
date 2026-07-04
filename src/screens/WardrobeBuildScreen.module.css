@@ -991,3 +991,47 @@
   font-family: inherit;
   cursor: pointer;
 }
+
+/* ── Suggested / OOF sections ── */
+.suggestedLabel {
+  margin: 16px 20px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.oofNotice {
+  margin: 0 20px 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+}
+
+.oofText {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.oofText strong {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.oofBtn {
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+.oofBtn:hover { opacity: 0.8; }

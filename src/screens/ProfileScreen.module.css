@@ -205,6 +205,53 @@
 }
 .settingsSignOut:hover { background: rgba(184, 149, 106, 0.08); }
 
+/* ── Scout result count stepper ── */
+.scoutCountStepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.scoutCountBtn {
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 18px;
+  font-weight: 400;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.scoutCountBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.scoutCountBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.scoutCountValue {
+  min-width: 30px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 /* ── Size system segmented control ── */
 .sizeSystemPicker {
   display: flex;

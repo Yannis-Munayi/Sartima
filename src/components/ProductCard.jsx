@@ -1,9 +1,10 @@
 ﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWishlist } from '../context/WishlistContext'
 import { useNavigation } from '../context/NavigationContext'
+import { useApp } from '../context/AppContext'
 import { BRAND_NAME_TO_ID } from '../data/brands'
-import { fetchPhotos } from '../services/google'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import ProductImageToggle from './ProductImageToggle'
 import styles from './ProductCard.module.css'
 
 const SWIPE_THRESHOLD = 90
@@ -11,29 +12,21 @@ const MAX_ROTATION    = 12
 
 const PRICE_LABEL = { budget: '$', mid: '$$', premium: '$$$', luxury: '$$$$' }
 
-async function fetchProductImage(product) {
-  // Try Google Custom Search first (product shots from retailer sites)
-  if (product.googleQuery) {
-    const results = await fetchPhotos(product.googleQuery, 1)
-    if (results.length > 0) return results[0]
-  }
-  // Fall back to Pexels lifestyle photos
-  const [url] = await fetchPhotosWithFallback([product.pexelsQuery ?? product.name], 1)
-  return url ?? null
-}
-
 export default function ProductCard({ product, onLike, onSkip }) {
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
   const navigate   = useNavigation()
+  const { state }  = useApp()
+  const gender     = state.gender
   const wishlisted = isLiked(product.id)
   const brandId    = BRAND_NAME_TO_ID[product.brand]
 
   const [photo,       setPhoto]     = useState(null)
-  const [imgLoaded,   setImgLoaded] = useState(false)
   const [loadingPhoto, setLoading]  = useState(true)
   const [dragX,       setDragX]     = useState(0)
   const [dragging,    setDragging]  = useState(false)
   const [flyDir,      setFlyDir]    = useState(null)
+
+  const altPhoto  = getAltProductImage(product, gender)
 
   const startXRef = useRef(null)
   const cardRef   = useRef(null)
@@ -42,12 +35,11 @@ export default function ProductCard({ product, onLike, onSkip }) {
     let cancelled = false
     setLoading(true)
     setPhoto(null)
-    setImgLoaded(false)
-    fetchProductImage(product).then((url) => {
+    resolveProductImage(product, gender).then((url) => {
       if (!cancelled) { setPhoto(url); setLoading(false) }
     })
     return () => { cancelled = true }
-  }, [product.id])
+  }, [product.id, gender])
 
   function addProductToLiked() {
     addToLiked({
@@ -67,6 +59,9 @@ export default function ProductCard({ product, onLike, onSkip }) {
       shopUrl:      product.shopUrl,
       shopFallbackUrl: product.shopFallbackUrl,
       seasons:      product.seasons,
+      image:        product.image,
+      imageMen:     product.imageMen,
+      googleQuery:  product.googleQuery,
     })
   }
 
@@ -154,17 +149,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
           className={`${styles.carousel} ${loadingPhoto ? styles.pulsing : ''}`}
           style={{ background: product.gradient }}
         >
-          {photo && (
-            <img
-              src={photo}
-              alt=""
-              className={styles.photo}
-              style={{ opacity: imgLoaded ? 1 : 0 }}
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgLoaded(true)}
-              draggable={false}
-            />
-          )}
+          <ProductImageToggle photo={photo} altPhoto={altPhoto} imgClassName={styles.photo} />
           <div className={styles.photoOverlay} />
         </div>
 

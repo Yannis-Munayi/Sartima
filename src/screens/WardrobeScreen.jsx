@@ -1,10 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { useApp } from '../context/AppContext'
+import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
 import TryOnSheet from '../components/TryOnSheet'
+import ProductImageToggle from '../components/ProductImageToggle'
 import { TRYON_CATEGORIES } from '../services/tryOn'
 import styles from './WardrobeScreen.module.css'
 
@@ -37,34 +39,24 @@ function bucketFor(item) {
 
 // Single card for any liked item (product or old quiz item)
 function LikedItemCard({ item, onSelect, onTryOn }) {
-  const [photo,  setPhoto]  = useState(null)
-  const [loaded, setLoaded] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const { state } = useApp()
+  const gender = state.gender
   const isProduct = item.type === 'product'
+  const altPhoto = getAltProductImage(item, gender)
 
   useEffect(() => {
     let cancelled = false
-    const query = item.pexelsQuery
-      ? [item.pexelsQuery]
-      : [`${item.brand ? item.brand + ' ' : ''}${item.name} fashion outfit`]
-    fetchPhotosWithFallback(query, 1).then(([url] = []) => {
+    resolveProductImage(item, gender).then((url) => {
       if (!cancelled) setPhoto(url ?? null)
     })
     return () => { cancelled = true }
-  }, [item.id])
+  }, [item.id, gender])
 
   return (
     <div className={styles.item} onClick={() => onSelect(item)} role="button" tabIndex={0}>
       <div className={styles.itemPhoto} style={{ background: item.gradient }}>
-        {photo && (
-          <img
-            src={photo}
-            alt={item.name}
-            className={styles.itemImg}
-            style={{ opacity: loaded ? 1 : 0 }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
-          />
-        )}
+        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={item.name} imgClassName={styles.itemImg} />
         {isProduct
           ? <span className={styles.brandBadge}>{item.brand}</span>
           : <span className={styles.itemEmoji}>{item.emoji}</span>

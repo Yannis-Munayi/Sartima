@@ -34,6 +34,7 @@ import AuthScreen      from './screens/AuthScreen'
 import ProfileScreen   from './screens/ProfileScreen'
 import MyStyleScreen   from './screens/MyStyleScreen'
 import ExploreScreen   from './screens/ExploreScreen'
+import SearchScreen    from './screens/SearchScreen'
 import AestheticScreen from './screens/AestheticScreen'
 import WardrobeBuildScreen from './screens/WardrobeBuildScreen'
 import DailyLookScreen from './screens/DailyLookScreen'
@@ -135,6 +136,8 @@ function AppShell() {
   const [myStyleSubTab, setMyStyleSubTab]   = useState(null)
   const [showResumeModal, setShowResumeModal] = useState(false)
   const [profileScrollTarget, setProfileScrollTarget] = useState(null)
+  const [wardrobeBuilderPiece, setWardrobeBuilderPiece]           = useState(null)
+  const [wardrobeBuilderSpecificName, setWardrobeBuilderSpecificName] = useState(null)
   const prevUserRef = useRef(user)
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
@@ -200,6 +203,22 @@ function AppShell() {
       const id = tabId.replace('brand:', '')
       openBrandTab(id, activeTab)
       setActiveTab(tabId)
+      return
+    }
+    if (tabId === 'wardrobe-builder') {
+      setWardrobeBuilderPiece(null)
+      setWardrobeBuilderSpecificName(null)
+      setActiveTab('wardrobe-builder')
+      return
+    }
+    if (tabId.startsWith('wardrobe-builder:')) {
+      const rest     = tabId.slice('wardrobe-builder:'.length)
+      const pipeIdx  = rest.indexOf('|')
+      const pieceId  = pipeIdx >= 0 ? rest.slice(0, pipeIdx) : rest
+      const specific = pipeIdx >= 0 ? rest.slice(pipeIdx + 1) : null
+      setWardrobeBuilderPiece(pieceId || null)
+      setWardrobeBuilderSpecificName(specific || null)
+      setActiveTab('wardrobe-builder')
       return
     }
     if (tabId.startsWith('mystyle:')) {
@@ -272,8 +291,15 @@ function AppShell() {
         {showTabs && activeTab === 'brands' && (
           <BrandsScreen />
         )}
+        {showTabs && activeTab === 'search' && (
+          <SearchScreen />
+        )}
         {showTabs && activeTab === 'wardrobe-builder' && (
-          <WardrobeBuildScreen onBack={() => handleTabChange('home')} />
+          <WardrobeBuildScreen
+            onBack={() => handleTabChange('home')}
+            initialPiece={wardrobeBuilderPiece}
+            initialSpecificName={wardrobeBuilderSpecificName}
+          />
         )}
         {showTabs && isAestheticTab && (
           <AestheticScreen

@@ -27,7 +27,7 @@
 /* ── Tab base ── */
 .tab {
   flex: 1;
-  min-width: 54px;
+  min-width: 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -38,13 +38,20 @@
   border-top: 1.5px solid transparent;
   cursor: pointer;
   color: var(--text-faint);
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-family: inherit;
   font-weight: 600;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.75px;
   text-transform: uppercase;
   transition: color 0.15s, border-color 0.15s;
-  padding: 0 4px;
+  padding: 0 2px;
+}
+
+.tab span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab:hover {

@@ -98,7 +98,7 @@ export function ShopProvider({ children }) {
 
   // ── Scout result groups ───────────────────────────────────────────────────
   // group shape: { id, pieceId, pieceName, emoji, budgetTier, budgetLabel, products, savedAt }
-  // products shape (stripped for Firestore): { id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange }
+  // products shape (stripped for Firestore): { id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen }
 
   const addScoutedGroup = useCallback((group) => {
     setScoutedGroups((prev) => {
