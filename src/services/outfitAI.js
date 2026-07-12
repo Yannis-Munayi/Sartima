@@ -81,12 +81,13 @@ export async function generateOutfit({ closetItems, weather, occasion, dateStr, 
     const selectedItems = selectedIds.map((id) => itemMap[id]).filter(Boolean)
 
     const result = {
-      items:       selectedItems,
-      itemIds:     selectedIds,
-      reasoning:   data.reasoning   ?? '',
-      weatherNote: data.weatherNote ?? null,
-      occasionTag: occasion,
-      generatedAt: new Date().toISOString(),
+      items:           selectedItems,
+      itemIds:         selectedIds,
+      reasoning:       data.reasoning       ?? '',
+      weatherNote:     data.weatherNote     ?? null,
+      missingCategory: data.missingCategory ?? null,
+      occasionTag:     occasion,
+      generatedAt:     new Date().toISOString(),
     }
 
     setCache(cacheKey, { ...result, items: undefined })

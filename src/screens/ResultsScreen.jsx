@@ -4,6 +4,7 @@ import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import { useNavigation } from '../context/NavigationContext'
+import { recordSignal } from '../services/interestTracker'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import styles from './screens.module.css'
 
@@ -154,6 +155,8 @@ export default function ResultsScreen() {
       selectedSeasons,
       selectedCategories,
     }).catch(() => {}) // fail silently
+
+    recordSignal(user, 'quizComplete', { styleScores })
   }, [user])  // eslint-disable-line
 
   const topStyles = getTopStyles(styleScores)

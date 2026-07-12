@@ -22,8 +22,12 @@ import { ShopProvider } from './context/ShopContext'
 import { WishlistProvider } from './context/WishlistContext'
 import { ExploreProvider, useExplore } from './context/ExploreContext'
 import { ClosetProvider } from './context/ClosetContext'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from './services/firebase'
+import { LEGAL_VERSION, PRIVACY_POLICY, TERMS_OF_SERVICE } from './data/legalContent'
+import LegalModal from './components/LegalModal'
+import LegalUpdateBanner from './components/LegalUpdateBanner'
+import AnalyticsConsentBanner from './components/AnalyticsConsentBanner'
 import HomeScreen      from './screens/HomeScreen'
 import WelcomeScreen   from './screens/WelcomeScreen'
 import SeasonScreen    from './screens/SeasonScreen'
@@ -140,6 +144,8 @@ function AppShell() {
   const [profileScrollTarget, setProfileScrollTarget] = useState(null)
   const [wardrobeBuilderPiece, setWardrobeBuilderPiece]           = useState(null)
   const [wardrobeBuilderSpecificName, setWardrobeBuilderSpecificName] = useState(null)
+  const [legalVersionMismatch, setLegalVersionMismatch] = useState(false)
+  const [legalDoc, setLegalDoc]             = useState(null) // 'terms' | 'privacy' | null
   const prevUserRef = useRef(user)
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
@@ -160,16 +166,29 @@ function AppShell() {
     }
   }, [user])
 
-  // After a new sign-in, check whether onboarding has been completed
+  // After a new sign-in, check whether onboarding has been completed, and
+  // whether this account's accepted legal version is out of date (or
+  // missing entirely, for accounts that predate consent capture).
   const onboardingCheckedRef = useRef(false)
   useEffect(() => {
     if (!user || onboardingCheckedRef.current) return
     onboardingCheckedRef.current = true
     getDoc(doc(db, 'users', user.uid)).then((snap) => {
-      if (snap.exists() && snap.data().onboardingComplete) return
-      dispatch({ type: 'GO_TO_ONBOARDING' })
+      const data = snap.exists() ? snap.data() : null
+      if (!data?.onboardingComplete) dispatch({ type: 'GO_TO_ONBOARDING' })
+      if (data?.legalVersion !== LEGAL_VERSION) setLegalVersionMismatch(true)
     }).catch(() => {})
   }, [user])
+
+  function handleLegalAcknowledge() {
+    setLegalVersionMismatch(false)
+    if (user) {
+      setDoc(doc(db, 'users', user.uid), {
+        legalVersion: LEGAL_VERSION,
+        legalAcceptedAt: serverTimestamp(),
+      }, { merge: true }).catch(() => {})
+    }
+  }
 
   // Only intercept navigation when a finite quiz is in progress
   const sessionInProgress =
@@ -361,6 +380,19 @@ function AppShell() {
 
         <Toast />
         <PaywallModal />
+
+        {legalVersionMismatch ? (
+          <LegalUpdateBanner
+            onReview={() => setLegalDoc('terms')}
+            onAcknowledge={handleLegalAcknowledge}
+          />
+        ) : (
+          <AnalyticsConsentBanner />
+        )}
+        <LegalModal
+          doc={legalDoc === 'terms' ? TERMS_OF_SERVICE : legalDoc === 'privacy' ? PRIVACY_POLICY : null}
+          onClose={() => setLegalDoc(null)}
+        />
       </div>
     </div>
     </GuideProvider>

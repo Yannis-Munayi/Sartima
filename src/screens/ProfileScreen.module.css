@@ -28,7 +28,7 @@
   flex-shrink: 0;
 }
 
-.backBtn:hover { color: #fff; }
+.backBtn:hover { color: var(--text); }
 
 .headerInfo {
   flex: 1;
@@ -41,7 +41,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -78,7 +78,7 @@
   flex-shrink: 0;
 }
 .gearBtn:hover {
-  color: #fff;
+  color: var(--text);
   background: rgba(255,255,255,0.07);
 }
 
@@ -120,7 +120,7 @@
 .settingsSheetTitle {
   font-size: 16px;
   font-weight: 700;
-  color: var(--text, #fff);
+  color: var(--text);
   margin: 0 0 20px;
 }
 
@@ -367,7 +367,7 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  color: #fff;
+  color: var(--text);
   font-family: inherit;
   transition: background 0.15s;
 }
@@ -533,7 +533,7 @@
 
 .retakeBtn:hover {
   border-color: var(--text-faint);
-  color: #fff;
+  color: var(--text);
 }
 
 /* ── Style Evolution ── */
@@ -1028,9 +1028,5 @@
   background: linear-gradient(to right, transparent 25%, rgba(0, 0, 0, 0.52) 100%);
   border-radius: 12px;
   pointer-events: none;
-}
-
-:global([data-theme="light"]) .quizCardHeader {
-  color: var(--text);
 }
 

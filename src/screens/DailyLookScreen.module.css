@@ -64,7 +64,7 @@
   justify-content: center;
   gap: 6px;
   padding: 9px 12px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text-faint);
@@ -117,7 +117,7 @@
   align-items: center;
   gap: 5px;
   padding: 8px 14px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 20px;
   color: var(--text-faint);
@@ -167,7 +167,7 @@
   align-items: flex-start;
   gap: 3px;
   padding: 14px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1.5px solid var(--border);
   border-radius: 16px;
   cursor: pointer;
@@ -274,7 +274,7 @@
 }
 
 .outfitItem {
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   overflow: hidden;
@@ -346,7 +346,7 @@
 .regenBtn {
   flex: 1;
   padding: 12px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -391,7 +391,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
@@ -467,7 +467,7 @@
 }
 
 .logEntry {
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 14px;
@@ -655,7 +655,7 @@
 .avatarCardTitle {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text, #fff);
+  color: var(--text);
   margin: 0 0 3px;
 }
 

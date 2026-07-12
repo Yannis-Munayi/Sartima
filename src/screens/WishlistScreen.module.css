@@ -21,7 +21,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 4px;
   letter-spacing: -0.02em;
 }
@@ -51,7 +51,7 @@
 .emptyTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0;
 }
 

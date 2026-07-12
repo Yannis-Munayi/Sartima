@@ -161,7 +161,7 @@
 
 .subTabActive {
   background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  color: var(--text);
 }
 
 /* ── Tab content ── */
@@ -190,9 +190,9 @@
 }
 
 .genderPillActive {
-  border-color: #fff;
+  border-color: var(--text);
   background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  color: var(--text);
 }
 
 .itemSection {
@@ -365,7 +365,7 @@
   width: 100%;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text);
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -399,7 +399,7 @@
 .lookName {
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
@@ -563,7 +563,7 @@
 .guideSectionTitle {
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 3px;
 }
 
@@ -582,7 +582,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding: 12px 0;
   cursor: pointer;
-  color: #fff;
+  color: var(--text);
   font-family: inherit;
   user-select: none;
 }
@@ -878,7 +878,7 @@
 .guidePickName {
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text);
   margin: 0;
 }
 
@@ -902,7 +902,6 @@
 
 :global([data-theme="light"]) .subTabActive {
   background: rgba(0, 0, 0, 0.1);
-  color: #1A1611;
 }
 
 :global([data-theme="light"]) .screen {
@@ -911,10 +910,6 @@
 
 :global([data-theme="light"]) .tabContent {
   background: var(--bg);
-}
-
-:global([data-theme="light"]) .guidePickName {
-  color: var(--text);
 }
 
 :global([data-theme="light"]) .garmentName {
@@ -932,11 +927,6 @@
   color: var(--accent);
 }
 
-:global([data-theme="light"]) .guideSectionTitle {
-  color: var(--text);
-}
-
-:global([data-theme="light"]) .guideAccordionBtn {
-  color: var(--text);
+:global([data-theme="light"]) .guideItem {
   border-top-color: var(--border);
 }

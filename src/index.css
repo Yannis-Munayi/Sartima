@@ -59,6 +59,8 @@
   --accent:          #8B6840;
   --accent-dim:      rgba(139, 104, 64, 0.1);
   --accent-border:   rgba(139, 104, 64, 0.3);
+  --accent-secondary: #94754F;
+  --accent-gold:     #947540;
 }
 
 :root[data-theme="light"] body {

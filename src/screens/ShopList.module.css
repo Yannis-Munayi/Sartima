@@ -17,7 +17,7 @@
 .emptyTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0;
 }
 
@@ -53,7 +53,7 @@
   width: 100%;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text);
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -100,7 +100,7 @@
 .cardName {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 3px;
   white-space: nowrap;
   overflow: hidden;
@@ -152,7 +152,7 @@
   padding: 11px 12px;
   border-radius: 10px;
   text-decoration: none;
-  color: #fff;
+  color: var(--text);
   transition: background 0.14s;
 }
 
@@ -171,7 +171,7 @@
 .storeName {
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   flex-shrink: 0;
   min-width: 120px;
 }
@@ -297,7 +297,7 @@
 .productRowName {
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;

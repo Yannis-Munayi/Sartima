@@ -57,6 +57,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
   const [brand, setBrand]           = useState(item.brand ?? '')
   const [category, setCategory]     = useState(item.category)
   const [color, setColor]           = useState(item.color ?? '')
+  const [price, setPrice]           = useState(item.price != null ? String(item.price) : '')
   const [occasions, setOccasions]   = useState(item.occasions ?? [])
   const [seasons, setSeasons]       = useState(item.seasons ?? [])
 
@@ -101,12 +102,14 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
     if (!name.trim()) { setError('Name is required.'); return }
     setSaving(true)
     setError(null)
+    const parsedPrice = price.trim() ? Number(price) : NaN
     try {
       await updateClosetItem(item.id, {
         name:         name.trim(),
         brand:        brand.trim(),
         category,
         color:        color.trim(),
+        price:        Number.isFinite(parsedPrice) && parsedPrice >= 0 ? parsedPrice : undefined,
         occasions,
         seasons,
         material:     material.trim() || undefined,
@@ -185,7 +188,13 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
               <p className={styles.itemMeta}>
                 {CATEGORIES.find((c) => c.id === item.category)?.emoji} {item.category}
                 {item.color ? ` · ${item.color}` : ''}
+                {item.price != null ? ` · $${item.price.toFixed(2)}` : ''}
               </p>
+              {item.price != null && item.timesWorn > 0 && (
+                <p className={styles.itemMeta}>
+                  ${(item.price / item.timesWorn).toFixed(2)} per wear ({item.timesWorn}×)
+                </p>
+              )}
 
               {/* Care summary */}
               {hasCareData && (
@@ -265,6 +274,19 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
 
               <label className={styles.label}>Color</label>
               <input className={styles.input} placeholder="e.g. navy" value={color} onChange={(e) => setColor(e.target.value)} />
+
+              <label className={styles.label}>Price paid</label>
+              <p className={styles.labelHint}>Optional — powers cost-per-wear on the back of this card.</p>
+              <input
+                className={styles.input}
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 68"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
 
               <label className={styles.label}>Category</label>
               <div className={styles.chipRow}>

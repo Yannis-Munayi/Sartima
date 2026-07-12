@@ -30,7 +30,7 @@
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,7 +60,7 @@
 .headerName {
   font-size: 16px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
@@ -167,7 +167,7 @@
 .findBtn {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -211,7 +211,7 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 14px;
   text-decoration: none;
-  color: #fff;
+  color: var(--text);
   transition: background 0.15s, border-color 0.15s;
 }
 
@@ -236,7 +236,7 @@
 .retailerName {
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
@@ -270,7 +270,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
-  color: #fff;
+  color: var(--text);
   font-size: 15px;
   font-family: inherit;
   font-weight: 600;

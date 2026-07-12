@@ -44,7 +44,7 @@
 .modeTitle {
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
@@ -95,7 +95,7 @@
 .modeBtnLabel {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
 }
 
 .modeBtnSub {
@@ -128,7 +128,7 @@
 .paneTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 2px;
 }
 
@@ -177,7 +177,7 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  color: #fff;
+  color: var(--text);
   font-size: 15px;
   font-family: inherit;
   outline: none;
@@ -217,7 +217,7 @@
 .analyzeBtn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 14px;
   color: #fff;
@@ -307,7 +307,7 @@
 .detectedName {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -331,7 +331,7 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  color: #fff;
+  color: var(--text);
   font-size: 15px;
   font-weight: 700;
   font-family: inherit;
@@ -411,7 +411,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   font-family: inherit;
   outline: none;

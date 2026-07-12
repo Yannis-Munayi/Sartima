@@ -4,6 +4,8 @@ import { httpsCallable } from 'firebase/functions'
 import { auth, functions } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import LegalModal from '../components/LegalModal'
+import { PRIVACY_POLICY, TERMS_OF_SERVICE, LEGAL_VERSION } from '../data/legalContent'
 import styles from './AuthScreen.module.css'
 
 // ── Password strength ─────────────────────────────────────────────────────────
@@ -164,10 +166,83 @@ function VerificationStep({ email, onContinue }) {
   )
 }
 
+// ── Consent checkboxes (shared by signup form + Google first-sign-in) ─────────
+
+function ConsentCheckboxes({ agreedToTerms, setAgreedToTerms, ageAffirmed, setAgeAffirmed, onOpenLegal }) {
+  return (
+    <div className={styles.consentGroup}>
+      <label className={styles.consentRow}>
+        <input
+          type="checkbox"
+          checked={agreedToTerms}
+          onChange={(e) => setAgreedToTerms(e.target.checked)}
+        />
+        <span>
+          I agree to the{' '}
+          <button type="button" className={styles.legalLink} onClick={() => onOpenLegal('terms')}>Terms of Service</button>
+          {' '}and{' '}
+          <button type="button" className={styles.legalLink} onClick={() => onOpenLegal('privacy')}>Privacy Policy</button>.
+        </span>
+      </label>
+      <label className={styles.consentRow}>
+        <input
+          type="checkbox"
+          checked={ageAffirmed}
+          onChange={(e) => setAgeAffirmed(e.target.checked)}
+        />
+        <span>I am at least 16 years old.</span>
+      </label>
+    </div>
+  )
+}
+
+// ── Google first-sign-in consent interstitial ─────────────────────────────────
+
+function GoogleConsentStep({ onConfirm }) {
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [ageAffirmed, setAgeAffirmed]     = useState(false)
+  const [legalDoc, setLegalDoc]           = useState(null) // 'terms' | 'privacy' | null
+
+  return (
+    <div className={styles.flow}>
+      <div className={styles.dots}>
+        <span className={`${styles.dot} ${styles.dotActive}`} />
+      </div>
+
+      <div className={styles.iconBadge}>✨</div>
+
+      <h1 className={styles.title}>One last<br /><em>thing</em></h1>
+      <p className={styles.sub}>Please confirm the following to finish creating your account.</p>
+
+      <ConsentCheckboxes
+        agreedToTerms={agreedToTerms}
+        setAgreedToTerms={setAgreedToTerms}
+        ageAffirmed={ageAffirmed}
+        setAgeAffirmed={setAgeAffirmed}
+        onOpenLegal={setLegalDoc}
+      />
+
+      <button
+        type="button"
+        className={styles.submitBtn}
+        disabled={!agreedToTerms || !ageAffirmed}
+        onClick={() => onConfirm({ legalVersion: LEGAL_VERSION, ageAffirmed: true })}
+      >
+        Continue
+      </button>
+
+      <LegalModal
+        doc={legalDoc === 'terms' ? TERMS_OF_SERVICE : legalDoc === 'privacy' ? PRIVACY_POLICY : null}
+        onClose={() => setLegalDoc(null)}
+      />
+    </div>
+  )
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function AuthScreen() {
-  const { signup, login, signInWithGoogle } = useAuth()
+  const { signup, login, signInWithGoogle, recordConsent, user } = useAuth()
   const { dispatch } = useApp()
 
   const [mode, setMode]             = useState('login')
@@ -182,6 +257,10 @@ export default function AuthScreen() {
   const [showVerification, setShowVerification] = useState(false)
   const [showPassword, setShowPassword]         = useState(false)
   const [showConfirm, setShowConfirm]           = useState(false)
+  const [agreedToTerms, setAgreedToTerms]       = useState(false)
+  const [ageAffirmed, setAgeAffirmed]           = useState(false)
+  const [legalDoc, setLegalDoc]                 = useState(null) // 'terms' | 'privacy' | null
+  const [showGoogleConsent, setShowGoogleConsent] = useState(false)
 
   function switchMode(next) {
     setMode(next)
@@ -195,8 +274,12 @@ export default function AuthScreen() {
     setError('')
     setGoogleLoading(true)
     try {
-      await signInWithGoogle()
-      dispatch({ type: 'GO_TO_WELCOME' })
+      const { isNewUser } = await signInWithGoogle()
+      if (isNewUser) {
+        setShowGoogleConsent(true)
+      } else {
+        dispatch({ type: 'GO_TO_WELCOME' })
+      }
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('Google sign-in failed. Please try again.')
@@ -204,6 +287,12 @@ export default function AuthScreen() {
     } finally {
       setGoogleLoading(false)
     }
+  }
+
+  async function handleGoogleConsent(consent) {
+    if (user) await recordConsent(user.uid, consent)
+    setShowGoogleConsent(false)
+    dispatch({ type: 'GO_TO_WELCOME' })
   }
 
   async function handleSubmit(e) {
@@ -215,6 +304,8 @@ export default function AuthScreen() {
       if (password.length < 8) return setError('Password must be at least 8 characters.')
       if (getStrength(password) < 2) return setError('Password is too weak — add uppercase letters, numbers, or symbols.')
       if (password !== confirm) return setError('Passwords do not match.')
+      if (!agreedToTerms) return setError('Please agree to the Terms of Service and Privacy Policy.')
+      if (!ageAffirmed) return setError('Please confirm you are at least 16 years old.')
 
       setLoading(true)
       let emailValid = true
@@ -236,7 +327,7 @@ export default function AuthScreen() {
       }
 
       try {
-        await signup(email, password, name.trim())
+        await signup(email, password, name.trim(), { legalVersion: LEGAL_VERSION, ageAffirmed: true })
         dispatch({ type: 'SET_GENDER', gender })
         setShowVerification(true)
       } catch (err) {
@@ -283,6 +374,10 @@ export default function AuthScreen() {
         onContinue={() => dispatch({ type: 'GO_TO_WELCOME' })}
       />
     )
+  }
+
+  if (showGoogleConsent) {
+    return <GoogleConsentStep onConfirm={handleGoogleConsent} />
   }
 
   return (
@@ -398,6 +493,16 @@ export default function AuthScreen() {
           </div>
         )}
 
+        {mode === 'signup' && (
+          <ConsentCheckboxes
+            agreedToTerms={agreedToTerms}
+            setAgreedToTerms={setAgreedToTerms}
+            ageAffirmed={ageAffirmed}
+            setAgeAffirmed={setAgeAffirmed}
+            onOpenLegal={setLegalDoc}
+          />
+        )}
+
         {error && <p className={styles.error}>{error}</p>}
 
         <button type="submit" className={styles.submitBtn} disabled={loading}>
@@ -445,6 +550,17 @@ export default function AuthScreen() {
       >
         Continue as guest
       </button>
+
+      <div className={styles.legalFooter}>
+        <button type="button" className={styles.legalLink} onClick={() => setLegalDoc('terms')}>Terms</button>
+        <span aria-hidden="true"> · </span>
+        <button type="button" className={styles.legalLink} onClick={() => setLegalDoc('privacy')}>Privacy</button>
+      </div>
+
+      <LegalModal
+        doc={legalDoc === 'terms' ? TERMS_OF_SERVICE : legalDoc === 'privacy' ? PRIVACY_POLICY : null}
+        onClose={() => setLegalDoc(null)}
+      />
     </div>
   )
 }

@@ -170,7 +170,7 @@
 
 .avatarActive {
   background: rgba(184, 149, 106, 0.2);
-  color: #B8956A;
+  color: var(--accent);
   border-color: rgba(184, 149, 106, 0.38);
 }
 
@@ -219,6 +219,10 @@
 }
 
 :global([data-theme="light"]) .discoverBtn {
+  color: #FEFCF8;
+}
+
+:global([data-theme="light"]) .badge {
   color: #FEFCF8;
 }
 

@@ -8,6 +8,7 @@ import {
   sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
+  getAdditionalUserInfo,
 } from 'firebase/auth'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../services/firebase'
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
     return unsub
   }, [])
 
-  async function signup(email, password, displayName) {
+  async function signup(email, password, displayName, consent) {
     const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password)
     await updateProfile(newUser, { displayName })
     await sendEmailVerification(newUser)
@@ -34,6 +35,9 @@ export function AuthProvider({ children }) {
       displayName,
       email,
       createdAt: serverTimestamp(),
+      legalVersion: consent.legalVersion,
+      legalAcceptedAt: serverTimestamp(),
+      ageAffirmed16Plus: consent.ageAffirmed === true,
     })
     setUser({ ...newUser, displayName })
   }
@@ -47,10 +51,21 @@ export function AuthProvider({ children }) {
     const provider = new GoogleAuthProvider()
     const result   = await signInWithPopup(auth, provider)
     const u        = result.user
+    const isNewUser = getAdditionalUserInfo(result)?.isNewUser === true
     await setDoc(doc(db, 'users', u.uid), {
       displayName: u.displayName ?? '',
       email:       u.email ?? '',
       updatedAt:   serverTimestamp(),
+    }, { merge: true })
+    return { isNewUser }
+  }
+
+  // Called once a new Google sign-up has confirmed the ToS/Privacy + age checkboxes
+  async function recordConsent(uid, consent) {
+    await setDoc(doc(db, 'users', uid), {
+      legalVersion: consent.legalVersion,
+      legalAcceptedAt: serverTimestamp(),
+      ageAffirmed16Plus: consent.ageAffirmed === true,
     }, { merge: true })
   }
 
@@ -63,7 +78,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signup, login, logout, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, loading, signup, login, logout, signInWithGoogle, recordConsent }}>
       {!loading && children}
     </AuthContext.Provider>
   )

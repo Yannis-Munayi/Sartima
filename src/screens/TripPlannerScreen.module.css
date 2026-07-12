@@ -41,7 +41,7 @@
 
 .input {
   padding: 13px 16px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
@@ -65,7 +65,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text);
   font-size: 20px;
@@ -160,7 +160,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
 }
@@ -217,7 +217,7 @@
 .dayList { display: flex; flex-direction: column; gap: 10px; }
 
 .dayCard {
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px;
@@ -274,7 +274,7 @@
 
 .gapItem {
   padding: 10px 14px;
-  background: var(--card);
+  background: var(--bg-card);
   border: 1px dashed rgba(184, 149, 106,0.3);
   border-radius: 10px;
   font-size: 13px;

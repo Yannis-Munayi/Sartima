@@ -3,7 +3,9 @@ import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { useAvatar } from '../hooks/useAvatar'
 import { useWishlist } from '../context/WishlistContext'
+import { useSubscription } from '../context/SubscriptionContext'
 import { generateTryOnResult, TRYON_CATEGORIES } from '../services/tryOn'
+import { purchaseTryOnPackSession } from '../services/subscriptionService'
 import styles from './TryOnSheet.module.css'
 
 const MAX_PIECES = 3
@@ -93,12 +95,15 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
   const { user }   = useAuth()
   const { avatarUrl, avatarUpdatedAt, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, prettifyFailed } = useAvatar()
   const { saveOutfitBoard } = useWishlist()
+  const { isPro }  = useSubscription()
 
   const [selectedItems, setSelectedItems] = useState([item])
   const [showPicker, setShowPicker]       = useState(false)
   const [phase, setPhase]                 = useState('idle')   // idle | loading | result | error
   const [resultUrl, setResultUrl]         = useState(null)
   const [errorMessage, setErrorMessage]   = useState(null)
+  const [outOfCredits, setOutOfCredits]   = useState(false)
+  const [buyingCredits, setBuyingCredits] = useState(false)
   const [uploadError, setUploadError]     = useState(null)
   const [saved, setSaved]                 = useState(false)
 
@@ -136,6 +141,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
     setPhase('loading')
     setResultUrl(null)
     setErrorMessage(null)
+    setOutOfCredits(false)
     setSaved(false)
     setShowPicker(false)
     try {
@@ -143,17 +149,30 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
       setResultUrl(url)
       setPhase('result')
     } catch (err) {
-      const code = err?.code ?? err?.message ?? ''
+      const message  = err?.message ?? ''
+      const code     = err?.code ?? message
       if (code.includes('deadline-exceeded') || code.includes('timeout')) {
         setErrorMessage('Generation timed out — tap Try Again.')
       } else if (code.includes('invalid-argument')) {
         setErrorMessage("This item can't be used for try-on.")
+      } else if (code.includes('resource-exhausted') && message.includes('limit_tryOns')) {
+        setOutOfCredits(true)
+        setErrorMessage("You've used all your Try-On credits this month.")
       } else if (code.includes('resource-exhausted')) {
         setErrorMessage('Please wait a moment before generating again.')
       } else {
         setErrorMessage('Generation failed. Check your connection and try again.')
       }
       setPhase('error')
+    }
+  }
+
+  async function handleBuyCredits() {
+    setBuyingCredits(true)
+    try {
+      await purchaseTryOnPackSession()
+    } catch {
+      setBuyingCredits(false)
     }
   }
 
@@ -331,9 +350,15 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
           {phase === 'error' && (
             <div className={styles.errorView}>
               <p className={styles.errorEmoji}>⚠️</p>
-              <p className={styles.errorTitle}>Generation failed</p>
+              <p className={styles.errorTitle}>{outOfCredits ? 'Out of Try-On credits' : 'Generation failed'}</p>
               <p className={styles.errorSub}>{errorMessage ?? 'Check your connection and try again.'}</p>
-              <button className={styles.retryBtn} onClick={handleGenerate}>Try Again</button>
+              {outOfCredits && isPro ? (
+                <button className={styles.retryBtn} onClick={handleBuyCredits} disabled={buyingCredits}>
+                  {buyingCredits ? 'Redirecting…' : 'Buy 30 more — $2.99'}
+                </button>
+              ) : (
+                <button className={styles.retryBtn} onClick={handleGenerate}>Try Again</button>
+              )}
             </div>
           )}
 

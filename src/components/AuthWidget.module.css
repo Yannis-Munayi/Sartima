@@ -10,8 +10,8 @@
   align-items: center;
   gap: 7px;
   padding: 5px 11px 5px 5px;
-  background: #F7F4EE;
-  border: 1px solid rgba(247, 244, 238, 0.18);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: 20px;
 }
 
@@ -19,7 +19,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: 1.5px solid rgba(255, 255, 255, 0.75);
   display: flex;
   align-items: center;
@@ -33,7 +33,7 @@
 .name {
   font-size: 13px;
   font-weight: 600;
-  color: #1A1611;
+  color: var(--text);
   max-width: 80px;
   white-space: nowrap;
   overflow: hidden;
@@ -43,10 +43,10 @@
 /* ── Sign out button ── */
 .signOutBtn {
   padding: 6px 12px;
-  background: #F7F4EE;
-  border: 1px solid rgba(247, 244, 238, 0.18);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  color: rgba(26, 22, 17, 0.65);
+  color: var(--text-muted);
   font-size: 12px;
   font-family: inherit;
   font-weight: 600;
@@ -64,7 +64,7 @@
 /* ── Sign in button ── */
 .signInBtn {
   padding: 9px 18px;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
   border-radius: 20px;
   color: #fff;

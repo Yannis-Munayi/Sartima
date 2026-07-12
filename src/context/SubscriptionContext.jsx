@@ -71,7 +71,7 @@ export function SubscriptionProvider({ children }) {
     // Live-sync usage counters from Firestore
     const unsub = onSnapshot(
       doc(db, `users/${user.uid}/prefs/usage`),
-      (snap) => setUsage(snap.exists() ? snap.data() : {}),
+      (snap) => setUsage((prev) => (snap.exists() ? { ...prev, ...snap.data() } : {})),
       () => {}
     )
     return unsub

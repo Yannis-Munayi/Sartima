@@ -1,4 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#fff"/>
-  <text x="16" y="22" font-family="Georgia, serif" font-size="14" font-weight="900" fill="#0f0f0f" text-anchor="middle">SL</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="sartimaGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D8BE96"/>
+      <stop offset="100%" stop-color="#A87F4E"/>
+    </linearGradient>
+    <radialGradient id="sartimaGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F6E7C9" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#B8956A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="200" rx="50" fill="#0C0A08"/>
+  <circle cx="100" cy="144" r="32" fill="url(#sartimaGlow)"/>
+  <path d="M100,36 A46,27 0 0,1 100,90 A46,27 0 0,0 100,144" fill="none" stroke="url(#sartimaGold)" stroke-width="12" stroke-linecap="round"/>
+  <line x1="123.7" y1="34.4" x2="129.1" y2="47.4" stroke="#EDE9E1" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <line x1="136.2" y1="47.2" x2="147.2" y2="56.0" stroke="#EDE9E1" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <line x1="138.9" y1="64.4" x2="152.7" y2="66.4" stroke="#EDE9E1" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="100" cy="144" r="10" fill="#F0E0BE"/>
 </svg>

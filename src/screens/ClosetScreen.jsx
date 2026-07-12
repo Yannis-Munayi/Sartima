@@ -42,6 +42,18 @@ function getDaysSince(isoStr) {
   return Math.floor((Date.now() - new Date(isoStr).getTime()) / 86400000)
 }
 
+const STALE_DAYS = 60
+
+// "Stale" once 60+ days since last worn — or, for items never logged as worn,
+// 60+ days since they were added (avoids flagging every item as stale on day
+// one, before wear-tracking has had a chance to accumulate any data).
+function isStale(item) {
+  const sinceWorn = getDaysSince(item.lastWorn)
+  if (sinceWorn != null) return sinceWorn >= STALE_DAYS
+  const sinceAdded = getDaysSince(item.addedAt)
+  return sinceAdded != null && sinceAdded >= STALE_DAYS
+}
+
 function washStatusText(item) {
   const freq = WASH_FREQUENCIES.find((f) => f.id === item.washFrequency)
   const days = getDaysSince(item.lastWashedAt)
@@ -99,6 +111,14 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
             )}
             {item.prettifiedUrl && <span className={styles.prettifiedBadge} title="Prettified">✦</span>}
             {item.favorite      && <span className={styles.favBadge}>♥</span>}
+            {isStale(item) && (
+              <span
+                title={item.lastWorn ? `Not worn since ${item.lastWorn}` : 'Not logged as worn yet'}
+                style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 20, background: 'rgba(0,0,0,0.55)', color: 'var(--text-dim, #fff)', backdropFilter: 'blur(4px)' }}
+              >
+                💤 {STALE_DAYS}+ days
+              </span>
+            )}
           </div>
           <p className={styles.itemName}>{item.name}</p>
           {item.brand && <p className={styles.itemBrand}>{item.brand}</p>}
@@ -178,6 +198,12 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
                 {washStatus.warn ? '⚠ ' : '✓ '}{washStatus.text}
               </p>
             )}
+
+            {/* Wear count + cost-per-wear */}
+            <p className={styles.backMuted} style={{ marginTop: 4 }}>
+              {item.timesWorn ? `Worn ${item.timesWorn}× · last ${item.lastWorn}` : 'Not logged as worn yet'}
+              {item.price != null && item.timesWorn > 0 && ` · $${(item.price / item.timesWorn).toFixed(2)}/wear`}
+            </p>
           </div>
 
           {/* Actions */}
@@ -214,6 +240,11 @@ function MyClosetTab() {
     const raw = activeFilter === 'all' ? closetItems : (closetByCategory[activeFilter] ?? [])
     if (closetSort === 'favorites') return [...raw].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0))
     if (closetSort === 'category')  return [...raw].sort((a, b) => (a.category ?? '').localeCompare(b.category ?? ''))
+    if (closetSort === 'stale') {
+      // Never-worn items first, then longest-since-worn, then everything else
+      const rank = (item) => getDaysSince(item.lastWorn) ?? getDaysSince(item.addedAt) ?? -1
+      return [...raw].sort((a, b) => rank(b) - rank(a))
+    }
     return raw // 'date' — already newest-first from insertion order
   }, [activeFilter, closetItems, closetByCategory, closetSort])
 

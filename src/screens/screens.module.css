@@ -17,7 +17,7 @@
 .screenTitle {
   font-size: 1.9rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text);
   margin: 0 0 10px;
   letter-spacing: -0.03em;
   line-height: 1.15;
@@ -81,7 +81,7 @@
 
 .discoveryBackBtn:hover {
   background: rgba(255, 255, 255, 0.13);
-  color: #fff;
+  color: var(--text);
 }
 
 /* ─── Buttons ─── */
@@ -183,7 +183,7 @@
 .welcomeTitle {
   font-size: 3.2rem;
   font-weight: 900;
-  color: #fff;
+  color: var(--text);
   line-height: 1.05;
   margin: 0;
   letter-spacing: -0.04em;
@@ -299,7 +299,7 @@
 .seasonLabel {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
 }
 
 .seasonDesc {
@@ -355,7 +355,7 @@
 .catLabel {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
 }
 
 .catDesc {
@@ -391,7 +391,7 @@
 
 .progressFill {
   height: 100%;
-  background: #fff;
+  background: var(--text);
   border-radius: 2px;
   transition: width 0.4s ease;
 }
@@ -598,7 +598,7 @@
 .pieceTagLink:hover {
   background: rgba(255, 255, 255, 0.14);
   border-color: var(--text-faint);
-  color: #fff;
+  color: var(--text);
 }
 
 .scoreList {
@@ -676,12 +676,12 @@
 }
 
 .mixNote strong {
-  color: #fff;
+  color: var(--text);
   font-weight: 600;
 }
 
 .mixLink {
-  color: #fff;
+  color: var(--text);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -714,7 +714,7 @@
 .statNum {
   font-size: 2rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text);
   line-height: 1;
 }
 
@@ -745,7 +745,7 @@
 
 .signInLink:hover {
   background: rgba(255,255,255,0.12);
-  color: #fff;
+  color: var(--text);
 }
 
 .profilePill {
@@ -765,14 +765,14 @@
 
 .profilePill:hover {
   background: rgba(255,255,255,0.12);
-  color: #fff;
+  color: var(--text);
 }
 
 .profilePillAvatar {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #C4A882);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -808,7 +808,7 @@
 
 .profileBtn:hover {
   background: rgba(255,255,255,0.11);
-  color: #fff;
+  color: var(--text);
 }
 
 

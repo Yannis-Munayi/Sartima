@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { useSubscription } from '../context/SubscriptionContext'
-import { createCheckoutSession, purchaseTryOnPackSession } from '../services/subscriptionService'
+import { createCheckoutSession } from '../services/subscriptionService'
 import { useAuth } from '../context/AuthContext'
+import LegalModal from './LegalModal'
+import { TERMS_OF_SERVICE } from '../data/legalContent'
 
 const FEATURE_COPY = {
   visionUploads: {
@@ -63,6 +66,7 @@ const FEATURE_COPY = {
 export default function PaywallModal() {
   const { paywallFeature, closePaywall } = useSubscription()
   const { user } = useAuth()
+  const [showTerms, setShowTerms] = useState(false)
 
   if (!paywallFeature) return null
 
@@ -148,7 +152,22 @@ export default function PaywallModal() {
         >
           Annual — $49.99 / year (save 40%)
         </button>
+
+        <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: '14px 0 0', lineHeight: 1.5, textAlign: 'center' }}>
+          Subscriptions auto-renew until canceled. Cancel anytime from Settings → Manage subscription.
+          No refunds for partial billing periods. See{' '}
+          <button
+            type="button"
+            onClick={() => setShowTerms(true)}
+            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', fontSize: 'inherit', fontFamily: 'inherit', cursor: 'pointer' }}
+          >
+            Terms
+          </button>{' '}
+          for details.
+        </p>
       </div>
+
+      <LegalModal doc={showTerms ? TERMS_OF_SERVICE : null} onClose={() => setShowTerms(false)} />
     </div>
   )
 }

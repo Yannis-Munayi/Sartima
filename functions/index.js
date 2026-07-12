@@ -1,4 +1,5 @@
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https'
+import { onSchedule } from 'firebase-functions/v2/scheduler'
 import Anthropic from '@anthropic-ai/sdk'
 import dns from 'dns/promises'
 import admin from 'firebase-admin'
@@ -44,15 +45,16 @@ function requireAuth(request) {
 // ─── Subscription / Usage ─────────────────────────────────────────────────────
 
 const TIER_LIMITS = {
-  free:  { visionUploads: 3,    tripPlans: 0,    tryOns: 0  },
-  pro:   { visionUploads: 30,   tripPlans: 3,    tryOns: 30 },
-  admin: { visionUploads: null, tripPlans: null, tryOns: null }, // null = no limit
+  free:  { visionUploads: 3,    tripPlans: 0,    tryOns: 0,    gapReasoning: 20  },
+  pro:   { visionUploads: 30,   tripPlans: 3,    tryOns: 30,   gapReasoning: 200 },
+  admin: { visionUploads: null, tripPlans: null, tryOns: null, gapReasoning: null }, // null = no limit
 }
 
-async function getUserTier(uid) {
-  const user = await admin.auth().getUser(uid)
-  if (user.customClaims?.sartima_role === 'admin') return 'admin'
-  return user.customClaims?.sartima_tier === 'pro' ? 'pro' : 'free'
+// request.auth.token is the decoded ID token — custom claims are already on it,
+// no need for a separate Admin SDK getUser() round-trip.
+function getUserTier(authToken) {
+  if (authToken?.sartima_role === 'admin') return 'admin'
+  return authToken?.sartima_tier === 'pro' ? 'pro' : 'free'
 }
 
 // Usage doc: users/{uid}/prefs/usage
@@ -93,7 +95,7 @@ export const validateEmail = onCall({ timeoutSeconds: 10, cors: true, invoker: '
 export const anthropicVision = onCall({ timeoutSeconds: 90, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
-  const tier = await getUserTier(uid)
+  const tier = getUserTier(request.auth.token)
   await checkAndIncrementUsage(uid, 'visionUploads', TIER_LIMITS[tier].visionUploads)
 
   const { imageBase64, mimeType = 'image/jpeg' } = request.data
@@ -151,7 +153,7 @@ Rules:
 export const anthropicOutfit = onCall({ timeoutSeconds: 60, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
-  const tier = await getUserTier(uid)
+  const tier = getUserTier(request.auth.token)
   if (tier === 'free') {
     const todayStr = new Date().toISOString().slice(0, 10)
     const ref      = admin.firestore().doc(`users/${uid}/prefs/usage`)
@@ -184,12 +186,14 @@ Rules:
 - You may include one footwear and one accessory item if they are in the wardrobe
 - Vary the selection; use the date as a seed for variety
 - Prefer items whose occasions match "${occasion}"
+- If the wardrobe genuinely cannot satisfy the top+bottom rule (e.g. no bottoms/dresses at all), pick the closest partial outfit you can and set "missingCategory" to the single category that's blocking a complete outfit (one of: "tops", "bottoms", "outerwear", "footwear", "accessories"). Otherwise set it to null.
 
 Return ONLY valid JSON, no markdown:
 {
   "selectedIds": ["id1", "id2"],
   "reasoning": "1-2 sentences why this outfit works for the occasion and weather.",
-  "weatherNote": "Short suitability note or null"
+  "weatherNote": "Short suitability note or null",
+  "missingCategory": "category name or null"
 }`
 
   const response = await getAnthropic().messages.create({
@@ -205,12 +209,58 @@ Return ONLY valid JSON, no markdown:
   return JSON.parse(jsonMatch[0])
 })
 
+// ─── Gap Reasoning ────────────────────────────────────────────────────────────
+// Cheap, personalized 1-2 sentence copy for the Home-screen "what to buy next"
+// card. The deficit itself comes free client-side (useClosetGaps diffs the
+// closet against capsuleBaseline) — this just adds a stylist's voice on top.
+
+export const anthropicGapReasoning = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid  = request.auth.uid
+  const tier = getUserTier(request.auth.token)
+  await checkAndIncrementUsage(uid, 'gapReasoning', TIER_LIMITS[tier].gapReasoning)
+
+  const { category, owned, target, closetSummary, topStyles } = request.data
+  if (!category) throw new HttpsError('invalid-argument', 'category is required')
+
+  const styleLine = Array.isArray(topStyles) && topStyles.length
+    ? `Their strongest aesthetics are: ${topStyles.join(', ')}.`
+    : ''
+  const summaryLine = Array.isArray(closetSummary) && closetSummary.length
+    ? `Their closet currently has: ${closetSummary.join(', ')}.`
+    : 'Their closet is mostly empty so far.'
+
+  const prompt = `You are a personal stylist writing a short, encouraging nudge inside a wardrobe app.
+This user owns ${owned} ${category} item(s) out of a healthy baseline of ${target} for a versatile capsule wardrobe.
+${summaryLine} ${styleLine}
+
+Write 1-2 short, warm sentences (under 30 words total) telling them why picking up a ${category} piece would round out their wardrobe. Be specific and personal, not generic. No markdown, no quotes around the output.
+
+Return ONLY valid JSON, no markdown:
+{
+  "reasoning": "1-2 sentences"
+}`
+
+  const response = await getAnthropic().messages.create({
+    model:      CLAUDE_HAIKU,
+    max_tokens: 200,
+    messages:   [{ role: 'user', content: prompt }],
+  })
+
+  const text = response.content[0]?.text ?? ''
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) throw new HttpsError('internal', 'Malformed AI response')
+
+  const parsed = JSON.parse(jsonMatch[0])
+  return { reasoning: parsed.reasoning ?? '' }
+})
+
 // ─── Trip Planning ────────────────────────────────────────────────────────────
 
 export const anthropicTrip = onCall({ timeoutSeconds: 120, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
-  const tier = await getUserTier(uid)
+  const tier = getUserTier(request.auth.token)
   await checkAndIncrementUsage(uid, 'tripPlans', TIER_LIMITS[tier].tripPlans)
 
   const { destination, nights, items, gender } = request.data
@@ -287,7 +337,20 @@ export const getWeather = onCall({ timeoutSeconds: 30, cors: true, invoker: 'pub
 
 // ─── Image Search Proxy ───────────────────────────────────────────────────────
 
+// In-process rate limit: caps third-party (Pexels/Google CSE/Unsplash) quota burn per user.
+// Resets on cold start — sufficient to stop anonymous/scripted hammering.
+const searchImagesRateLimit = new Map()
+const SEARCH_IMAGES_MIN_INTERVAL_MS = 2_000
+
 export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  requireAuth(request)
+  const uid  = request.auth.uid
+  const last = searchImagesRateLimit.get(uid)
+  if (last && Date.now() - last < SEARCH_IMAGES_MIN_INTERVAL_MS) {
+    throw new HttpsError('resource-exhausted', 'Please slow down')
+  }
+  searchImagesRateLimit.set(uid, Date.now())
+
   const { query, count = 3, source = 'pexels' } = request.data
   if (!query) throw new HttpsError('invalid-argument', 'query required')
 
@@ -344,9 +407,18 @@ export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'p
 const PROXY_ALLOWED_HOSTS = [
   'images.pexels.com',
   'lh3.googleusercontent.com',
-  'encrypted-tbn',
   'images.unsplash.com',
 ]
+
+// Google Image Search thumbnails: encrypted-tbn0-3.gstatic.com
+const PROXY_ALLOWED_HOST_PATTERN = /^encrypted-tbn\d*\.gstatic\.com$/
+
+function isProxyHostAllowed(hostname) {
+  return (
+    PROXY_ALLOWED_HOSTS.some((h) => hostname === h || hostname.endsWith(`.${h}`)) ||
+    PROXY_ALLOWED_HOST_PATTERN.test(hostname)
+  )
+}
 
 export const proxyImage = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
@@ -360,7 +432,7 @@ export const proxyImage = onCall({ timeoutSeconds: 30, cors: true, invoker: 'pub
     throw new HttpsError('invalid-argument', 'invalid url')
   }
 
-  if (!PROXY_ALLOWED_HOSTS.some((h) => hostname.includes(h))) {
+  if (!isProxyHostAllowed(hostname)) {
     throw new HttpsError('permission-denied', 'Host not allowed')
   }
 
@@ -448,7 +520,7 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
   }
   tryOnCooldown.set(uid, Date.now())
 
-  const tier = await getUserTier(uid)
+  const tier = getUserTier(request.auth.token)
   if (tier === 'free') throw new HttpsError('permission-denied', 'limit_tryOns')
   if (tier !== 'admin') {
     // Pro: drain monthly allowance first, then purchased credits
@@ -585,6 +657,68 @@ export const submitCrashReport = onCall({ timeoutSeconds: 30, cors: true, invoke
   return { ok: true }
 })
 
+// ─── Scheduled Notifications ───────────────────────────────────────────────────
+// Runs every 15 minutes; sends a push to any user whose local reminderTime
+// falls in the current bucket. Uses a collectionGroup query over 'prefs' —
+// filtering on `enabled` naturally excludes every other prefs doc shape
+// (closet, wishlist, usage, ...) since none of them have that field.
+
+function minutesSinceMidnight(hhmm) {
+  const [h, m] = (hhmm ?? '08:00').split(':').map(Number)
+  return (h ?? 8) * 60 + (m ?? 0)
+}
+
+function localMinutesNow(timeZone) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone, hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(new Date())
+    const h = Number(parts.find((p) => p.type === 'hour')?.value ?? 0)
+    const m = Number(parts.find((p) => p.type === 'minute')?.value ?? 0)
+    return h * 60 + m
+  } catch {
+    return null // unknown/invalid timezone — skip this user rather than guess
+  }
+}
+
+export const sendDailyOutfitReminders = onSchedule('every 15 minutes', async () => {
+  const snap = await admin.firestore().collectionGroup('prefs').where('enabled', '==', true).get()
+
+  await Promise.all(snap.docs.map(async (docSnap) => {
+    const data   = docSnap.data()
+    const tokens = data.fcmTokens
+    if (!Array.isArray(tokens) || tokens.length === 0) return
+
+    const nowMin = localMinutesNow(data.timezone)
+    if (nowMin == null) return
+    const targetMin = minutesSinceMidnight(data.reminderTime)
+    if (nowMin < targetMin || nowMin >= targetMin + 15) return
+
+    const uid = docSnap.ref.parent.parent?.id
+    if (!uid) return
+
+    const staleTokens = []
+    await Promise.all(tokens.map(async (token) => {
+      try {
+        await admin.messaging().send({
+          token,
+          notification: { title: 'Sartima', body: "Your outfit's ready — tap to see today's look." },
+          webpush: { fcmOptions: { link: '/?tab=daily' } },
+        })
+      } catch (err) {
+        if (err?.code === 'messaging/registration-token-not-registered') staleTokens.push(token)
+      }
+    }))
+
+    if (staleTokens.length) {
+      await docSnap.ref.set(
+        { fcmTokens: tokens.filter((t) => !staleTokens.includes(t)) },
+        { merge: true }
+      )
+    }
+  }))
+})
+
 // ─── Stripe ───────────────────────────────────────────────────────────────────
 
 import Stripe from 'stripe'
@@ -645,7 +779,7 @@ export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true
 export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY', 'STRIPE_PRICE_ID_TRYON_PACK'] }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
-  const tier = await getUserTier(uid)
+  const tier = getUserTier(request.auth.token)
   if (tier === 'free') throw new HttpsError('permission-denied', 'Pro subscription required')
 
   const stripe     = getStripe()
@@ -729,4 +863,33 @@ export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public', 
   }
 
   res.json({ ok: true })
+})
+
+// Full account deletion — cancels billing, wipes Storage photos and the
+// Firestore document tree, then deletes the Auth user last (in that order,
+// so a mid-failure leaves the user able to retry this same callable rather
+// than an unreachable Auth-less orphaned account).
+export const deleteAccount = onCall({ timeoutSeconds: 120, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY'] }, async (request) => {
+  requireAuth(request)
+  const uid = request.auth.uid
+  const db  = admin.firestore()
+
+  const subSnap = await db.doc(`users/${uid}/prefs/subscription`).get()
+  const stripeSubscriptionId = subSnap.exists ? subSnap.data().stripeSubscriptionId : null
+  if (stripeSubscriptionId) {
+    try {
+      await getStripe().subscriptions.cancel(stripeSubscriptionId)
+    } catch (err) {
+      if (err.code !== 'resource_missing') throw err
+    }
+  }
+
+  const bucket = admin.storage().bucket()
+  await bucket.deleteFiles({ prefix: `users/${uid}/wardrobe/` })
+  await bucket.deleteFiles({ prefix: `users/${uid}/avatar/` })
+
+  await db.recursiveDelete(db.doc(`users/${uid}`))
+  await admin.auth().deleteUser(uid)
+
+  return { ok: true }
 })

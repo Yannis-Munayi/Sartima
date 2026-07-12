@@ -3,7 +3,7 @@
   background: var(--bg);
   display: flex;
   flex-direction: column;
-  color: #fff;
+  color: var(--text);
 }
 
 .header {
@@ -184,7 +184,7 @@
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: #fff;
+  color: var(--text);
   padding: 10px;
   border-radius: 10px;
   transition: background 0.15s;
