@@ -5,3 +5,7 @@ node_modules/
 dist/
 functions/node_modules/
 .firebase/
+playwright-report/
+test-results/
+test-*.png
+Business/

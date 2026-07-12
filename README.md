@@ -1,1038 +1,371 @@
-# StyleLab — Full Project Breakdown
+# Sartima — Full Project Breakdown
 
-> A complete onboarding document for anyone coming to the project cold.  
-> Last updated: June 2026
+> The complete onboarding document for anyone coming to the project cold — product overview first, technical deep-dive second.
+> Last updated: July 2026. (Formerly known as **StyleLab**; the rebrand to Sartima included a new logo, palette, and domain — `sartima.ca`.)
 
 ---
 
 ## Table of Contents
 
-1. [What Is StyleLab?](#1-what-is-stylelab)
+**Product**
+1. [What Is Sartima?](#1-what-is-sartima)
 2. [Problem Statement & Goals](#2-problem-statement--goals)
 3. [Target Audience](#3-target-audience)
-4. [High-Level Scope](#4-high-level-scope)
-5. [Feature Deep-Dives](#5-feature-deep-dives)
-6. [Navigation & Screen Architecture](#6-navigation--screen-architecture)
-7. [State Management](#7-state-management)
-8. [Data Architecture (Firestore)](#8-data-architecture-firestore)
-9. [AI Integration](#9-ai-integration)
-10. [Backend — Firebase Cloud Functions](#10-backend--firebase-cloud-functions)
-11. [Frontend Architecture](#11-frontend-architecture)
-12. [Image & Media Pipeline](#12-image--media-pipeline)
-13. [Authentication & Security](#13-authentication--security)
-14. [Performance & PWA](#14-performance--pwa)
-15. [Observability & Error Handling](#15-observability--error-handling)
-16. [Development Workflow](#16-development-workflow)
-17. [Environment Variables](#17-environment-variables)
-18. [Known Constraints & Technical Debt](#18-known-constraints--technical-debt)
-19. [Glossary](#19-glossary)
+4. [Feature Tour](#4-feature-tour)
+5. [Monetization — Free vs. Pro](#5-monetization--free-vs-pro)
+6. [Legal & Privacy](#6-legal--privacy)
+
+**Technical**
+7. [Tech Stack](#7-tech-stack)
+8. [Navigation & Screen Architecture](#8-navigation--screen-architecture)
+9. [State Management](#9-state-management)
+10. [Data Architecture (Firestore & Storage)](#10-data-architecture-firestore--storage)
+11. [AI Integration](#11-ai-integration)
+12. [Backend — Firebase Cloud Functions](#12-backend--firebase-cloud-functions)
+13. [Billing — Stripe](#13-billing--stripe)
+14. [Notifications](#14-notifications)
+15. [The Catalog & Static Data](#15-the-catalog--static-data)
+16. [Image & Media Pipeline](#16-image--media-pipeline)
+17. [Security Model](#17-security-model)
+18. [Performance & PWA](#18-performance--pwa)
+19. [Observability & Error Handling](#19-observability--error-handling)
+20. [Development Workflow](#20-development-workflow)
+21. [Environment Variables](#21-environment-variables)
+22. [Known Constraints & Technical Debt](#22-known-constraints--technical-debt)
+23. [Glossary](#23-glossary)
+
+For maintenance-focused reference docs, see [`docs/claude/`](docs/claude/): [architecture](docs/claude/architecture.md) · [screens](docs/claude/screens.md) · [services & functions](docs/claude/services-functions.md) · [data models](docs/claude/data-models.md).
 
 ---
 
-## 1. What Is StyleLab?
+## 1. What Is Sartima?
 
-StyleLab is a **mobile-first progressive web app (PWA)** that acts as a personal fashion assistant. It helps users discover their aesthetic identity, build a digital wardrobe, and plan outfits day-to-day — all powered by AI.
+Sartima is a **mobile-first progressive web app (PWA)** that acts as a personal fashion assistant. It gives users a vocabulary for their own style — through a swipe-based quiz across **51 named aesthetics** — then turns that identity into a personalised discovery feed, a digital closet, AI daily outfits, and curated shopping.
 
-The core loop is:
-1. Take a **swipe-based style quiz** to identify which fashion aesthetics you align with (e.g. "old money", "streetwear", "dark academia").
-2. Get a **personalised product feed** driven by those results.
-3. Build a **digital closet** by uploading outfit photos or searching a product catalog.
-4. Let the AI **generate daily outfit suggestions** from your closet, grounded in real weather and occasion.
-5. Plan ahead with an **outfit calendar**, a **trip packer**, and a **guided wardrobe builder**.
+The core loop:
+1. **Swipe** on clothing items to build a live style-affinity profile.
+2. **Explore** editorial aesthetic and brand profiles matched to that profile.
+3. **Digitise** your real wardrobe (photo upload + AI vision, or catalog search).
+4. **Wear** — AI generates a daily outfit from your closet, grounded in live weather and occasion; logging outfits feeds wear-tracking, monthly recaps, and gap detection.
+5. **Shop** — the app spots what your wardrobe is missing and routes you to curated products from a ~7,500-item catalog spanning 190 profiled brands.
 
-StyleLab's downstream goal is converting fashion discovery into real purchases — the product catalog links directly to retailers, and a "Shop Scout" feature builds curated capsule shopping lists.
-
----
+The habit loop (steps 4–5) is the business: daily outfit generation builds retention, wear data powers personal insight features (recap, closet ghosts, gaps), and gaps convert into shopping intent.
 
 ## 2. Problem Statement & Goals
 
-### The Problem
-Most people cannot articulate their own style. They know what they like when they see it but lack a framework or vocabulary to shop intentionally, build a coherent wardrobe, or communicate their aesthetic to others.
+**The problem:** most people can't articulate their own style. They know what they like when they see it but lack a framework to shop intentionally, build a coherent wardrobe, or communicate their aesthetic.
 
-### What StyleLab Solves
-- **Aesthetic vocabulary** — A quiz assigns labels (20+ named aesthetics) so users can communicate their style and discover aligned content.
-- **Discovery fatigue** — An infinite personalised feed surfaces items scored against the user's evolving taste profile, so they stop doom-scrolling generic feeds.
-- **Wardrobe paralysis** — AI daily-outfit generation takes the decision out of the user's hands each morning, grounded in weather, occasion, and what they actually own.
-- **Disjointed shopping** — A wishlist, outfit boards, and a Shop Scout aggregator give users a single place to organise purchase intent.
+**What Sartima solves:**
+- **Aesthetic vocabulary** — the quiz assigns names (51 aesthetics from Old Money to Gorpcore) so users can navigate style culture deliberately.
+- **Discovery fatigue** — an infinite personalised feed scored against the user's evolving taste profile.
+- **Wardrobe paralysis** — AI daily-outfit generation, grounded in weather, occasion, and what the user actually owns.
+- **Aimless shopping** — gap detection + Shop Scout convert "I have nothing to wear" into a specific, budgeted shopping list.
 
-### Business Goals
-- Drive time-on-app through aesthetic exploration content (editorial-style aesthetic profiles).
-- Drive conversion through direct retailer linking, a wishlist funnel, and email capture (shopping digest opt-in during onboarding).
-- Retain users through daily-habit features: weather-based outfit of the day, outfit calendar, trip planner.
-
----
+**Business goals:** retention through daily-habit features (outfit of the day, push reminders, monthly recap); revenue through the Pro subscription and try-on credit packs (Stripe); conversion through retailer-linked catalog products.
 
 ## 3. Target Audience
 
 | Segment | Description |
 |---|---|
-| **Primary** | Fashion-conscious Gen Z (16–24). Heavy TikTok/Pinterest users, fluent in aesthetics culture, mobile-first, expect fast and visual interfaces. |
-| **Secondary** | Younger Millennials (25–30) who want more intentional wardrobe curation without the overhead of fashion expertise. |
-| **Gender** | Both men and women. A gender preference toggle is wired throughout the entire app (content, search queries, quiz items, product catalog). |
-| **Device** | Primarily smartphones (iOS Safari, Android Chrome). Desktop is supported but the UI is designed for a 390–430 px viewport. |
+| **Primary** | Fashion-conscious Gen Z (16–24). Heavy TikTok/Pinterest users, fluent in aesthetics culture, mobile-first. |
+| **Secondary** | Younger Millennials (25–30) wanting intentional wardrobe curation without fashion-expert overhead. |
+| **Gender** | Men / Women / Both toggle wired through the entire app (quiz items, catalog, aesthetic content, search). |
+| **Age floor** | 16+ (affirmed at signup; see Legal). |
+| **Device** | Primarily smartphones (iOS Safari, Android Chrome). Desktop (≥768px) gets a sidebar layout. |
 
----
+## 4. Feature Tour
 
-## 4. High-Level Scope
+### 4.1 Style Quiz & Discovery Feed
+Pick seasons and categories, then swipe like/skip through clothing items. Each item carries `styleWeights` mapping it to aesthetics; every swipe updates the running `styleScores`. The finite 40-item quiz ends in a Results screen (top-3 aesthetics, persisted to quiz history); free discovery mode runs the same feed infinitely. The recommendation queue (`useDiscoveryQueue`) scores the catalog against the profile (brand ×10, type ×15, color ×5, style ×0.5, companion bonuses) with diversity enforcement and a 30-item buffer. The Discover tab can be hidden entirely from Settings for users who are done swiping.
 
-### In Scope
-- Style quiz with personalised scoring across 20+ aesthetics
-- Infinite AI-scored product discovery feed
-- 50+ editorial aesthetic profile pages with galleries and shopping links
-- Digital closet (upload photos, Claude vision analysis, background removal)
-- AI daily outfit generation (weather-aware, occasion-aware)
-- Outfit log and monthly calendar
-- Trip packing + outfit planner (AI-generated)
-- Guided wardrobe builder (capsule wardrobe shopping)
-- Wishlist, liked items, outfit boards
-- Virtual try-on (overlay garments on user avatar photo)
-- Laundry care tracking with care symbols
-- Interactive app guide / feature tour (11 steps)
-- Guest access with sign-in gates on personal features
-- PWA (installable, offline-capable for static assets)
+### 4.2 Aesthetics Library
+51 editorial aesthetic profiles (ExploreScreen → AestheticScreen) with Story / Items / Looks / Guide sub-tabs: cultural origin, key pieces, outfit galleries, colour palettes, brand lists, styling guides. Users pin aesthetics (free: 3) to personalise Home and filtering.
 
-### Out of Scope (deliberately)
-- Social features (sharing, following, commenting) — not yet built
-- In-app purchasing / checkout — links out to retailers
-- Custom retailer integrations / affiliate tracking — future roadmap
-- Native mobile app (iOS/Android) — PWA only currently
-- Real-time collaboration — single-user only
+### 4.3 Brand Discovery
+A Brands tab with **190 brand profiles** (`src/data/brands.js`): founding story, positioning, product lines/diffusion tiers, current and iconic past collections, key pieces, related brands — plus a Shop sub-tab filtered to that brand's catalog products. Brand visits feed the interest graph.
 
----
+### 4.4 Search
+Full-text client-side search over the ~7,500-product catalog with gender filtering, like/wishlist actions, and a photo↔gradient image toggle.
 
-## 5. Feature Deep-Dives
+### 4.5 Digital Closet
+Add items by **photo upload** (Claude Vision detects every garment with category, colour, and bounding box; user confirms) or **catalog search** (Google CSE → Pexels fallback). Optional **Prettify** removes the background client-side (WASM) and stores a PNG in Firebase Storage. Items carry seasons, occasions, tags, care symbols, favourites, and denormalised **wear data** (`timesWorn`, `lastWorn`). Free tier: 15 items, 3 AI scans/month.
 
-### 5.1 Style Discovery Quiz
+### 4.6 Outfits Hub (8 sub-tabs)
+My Closet · Liked · **Shop Scout** (default) · Today's Outfit · My Outfits · Calendar (Pro) · Trip (Pro) · Laundry (Pro).
 
-**Purpose:** Determine the user's aesthetic affinities through passive preference signals — swipe right to like, swipe left to skip.
+- **Today's Outfit** — live weather (geolocation → OpenWeatherMap) + occasion + closet/liked source → Claude picks 2–4 items with reasoning. Cached per day+occasion. Logging the outfit records wear counts; sharing renders a 4:5 PNG card for `navigator.share`. If the wardrobe can't complete an outfit, the AI's `missingCategory` becomes a persistent gap signal.
+- **My Outfits** — user-curated outfit boards (free: 1) + outfit log.
+- **Calendar** — monthly planner assigning outfits to dates.
+- **Trip** — destination + nights → AI packing list, day-by-day outfit plan, and gap purchases (Pro: 3/month).
+- **Laundry** — care-symbol reference (Pro).
 
-**How it works:**
-1. User picks one or more **seasons** (spring/summer/fall/winter) — this seeds the item pool.
-2. User picks one or more **clothing categories** (tops/bottoms/footwear/etc.) — further narrows the pool.
-3. Quiz begins: a stream of clothing items is shown one at a time (from `aestheticItems.js`, a 252 KB pre-built pool). Each item carries a `styleWeights` object mapping aesthetic IDs to a -1–1 affinity score.
-4. Each like/skip updates the running `styleScores` object in `AppContext`. Scores accumulate additively per aesthetic.
-5. After the quiz, a **Results screen** renders the top aesthetics by score, with a breakdown chart and curated outfit inspiration for each.
+### 4.7 Shop Scout (Wardrobe Builder)
+A guided capsule-wardrobe wizard: pick pieces (or accept the starter capsule) → set per-piece budget tiers → choose priorities (comfort, minimal, tailored, durability…) → get scored catalog recommendations, personalised by style scores and the interest graph, with complement suggestions. Saved products live in My List. Reachable from Home, the Outfits hub, and gap-card deep-links that pre-select the missing piece.
 
-**Quiz modes:**
-- **Full quiz** — linear flow, ends at Results screen. Results persisted to Firestore (`users/{uid}/quizzes/{quizId}`).
-- **Retake** — same flow, new quiz ID written, `styleScores` reset first.
-- **Infinite / feed mode** — the discovery feed also uses swipe responses to continuously update `styleScores` in the background.
+### 4.8 Wardrobe Intelligence
+- **Gap detection** — instant client-side diff of the closet against a capsule baseline (tops 5, bottoms 3, outerwear 1, footwear 2, accessories 2), boosted by real outfit-generation failures. Surfaced as a dismissable Home card with AI-written personalised copy.
+- **Monthly Wardrobe Recap** — Spotify-Wrapped-style card, once per month: outfits logged, most-worn item, "closet ghosts" (items never worn in 30 days), repeat rate.
+- **Interest graph** — brand/type/style/colour affinities accumulated from likes and page visits, used to sharpen recommendations.
 
-**Key files:**
-- `src/screens/DiscoveryScreen.jsx` — renders swipeable product cards
-- `src/screens/SeasonScreen.jsx` — season picker
-- `src/screens/CategoryScreen.jsx` — category picker
-- `src/screens/ResultsScreen.jsx` — results breakdown
-- `src/context/AppContext.jsx` — holds `styleScores`, reducer handles `LIKE_ITEM`, `SKIP_ITEM`
-- `src/data/aestheticItems.js` — the item pool (252 KB static file)
+### 4.9 Virtual Try-On (Pro)
+Upload an avatar photo, select up to 3 garments; the server chains Replicate IDM-VTON predictions in layer order (bottoms → dresses → tops → outerwear) and returns a composite. Cached per item-set + avatar; 30/month on Pro plus purchasable 30-piece credit packs.
 
----
+### 4.10 Home Feed
+Monthly recap card → hero aesthetic carousel → today's outfit preview → wardrobe gap card → fresh looks → brands-for-you → seasonal picks → trending aesthetics → wardrobe-builder CTA. A context-aware **guide tour** (per-tab chapters or full app walkthrough) is launchable from a floating button on every tab.
 
-### 5.2 Personalised Discovery Feed
+### 4.11 Onboarding & Auth
+Email/password (with verification + MX-record email validation) or Google OAuth. Signup captures ToS/Privacy consent and a 16+ age affirmation. A 4-step post-signup wizard collects occupation, preferred brands, referral source, and an optional shopping email.
 
-**Purpose:** An infinite, never-ending product feed that improves as the user swipes more.
+### 4.12 Profile & Settings
+Top aesthetics, style evolution chart across quiz retakes, quiz history, subscription management (upgrade / billing portal). Settings sheet: gender, theme (light default / dark), temperature unit, default occasion, preferred seasons, closet sort, quiz-tab visibility, notification reminders, analytics consent, legal docs, **full data export (JSON)**, and **account deletion**.
 
-**How it works (`src/hooks/useDiscoveryQueue.js`):**
-- Products come from `src/data/products.js` (600+ items, each with brand, type, color, styleWeights, outfitCompanions).
-- Each product is scored against the current `styleScores` using weighted factors:
-  | Signal | Weight |
-  |---|---|
-  | Brand affinity | ×10 |
-  | Item type | ×15 |
-  | Parent category | ×4 |
-  | Color family | ×5 |
-  | Style score | ×0.5 |
-  | Outfit companion bonus | +8–12 |
-- Products are ranked, then a **diversity injector** enforces maximums: no more than 3 items from the same brand or 4 of the same type per batch of 30.
-- When the queue drops below a threshold, a new batch is generated and appended automatically — no pagination required.
-- **Outfit companions:** If an item has related companion IDs (e.g. a jacket that pairs with specific trousers), those companions get an affinity bonus and are injected nearby in the queue to hint at outfit completion.
-- **Cold start:** First session uses a random shuffle (no scores yet). After even one swipe the algorithm kicks in.
-- **Session persistence:** Quiz-mode progress is saved to `sessionStorage` so a refresh doesn't lose position mid-quiz.
+## 5. Monetization — Free vs. Pro
 
-**Key files:**
-- `src/hooks/useDiscoveryQueue.js`
-- `src/data/products.js`
-- `src/screens/DiscoveryScreen.jsx`
+Tiers: `free`, `pro`, `admin` — held as Firebase custom claims (`sartima_tier`, `sartima_role`), the single source of truth, enforced **both** client-side (`SubscriptionContext.isAtLimit` → `PaywallModal`) and server-side (usage transactions in Functions).
 
----
-
-### 5.3 Aesthetic Exploration
-
-**Purpose:** An editorial-style content layer where users explore named aesthetics, save ones they identify with, and use them as a discovery lens.
-
-**What's in an aesthetic profile (`src/data/styles.js`, `src/data/aestheticDepth.js`):**
-- Name, tagline, icon, color/gradient
-- Description and cultural context
-- Representative color palette
-- Brand list with links
-- Outfit inspiration image gallery (Pinterest-sourced, lazy-loaded)
-- Styling guide / do-and-don't tips
-- Shopping section — real products from the catalog filtered to that aesthetic
-- Related aesthetics with navigation links
-
-**There are 50+ named aesthetics**, including: old money, minimalist, streetwear, preppy, vintage, techwear, gorpcore, athleisure, dark academia, light academia, Y2K, cottagecore, coastal grandmother, quiet luxury, and more.
-
-**ExploreScreen** (`src/screens/ExploreScreen.jsx`):
-- Grid of all aesthetics with search and filters (All / Saved / Popular).
-- Aesthetics are grouped by category (e.g. "Classic", "Subcultural", "Avant-garde").
-- Gender preference filters the content displayed within each aesthetic.
-
-**Pinning aesthetics:**
-- Users can pin aesthetics to a "Saved" tab. Pins are stored in Firestore (`users/{uid}/prefs/savedAesthetics`).
-- Pinned aesthetics appear in the ExploreScreen "Saved" filter and as quick-access tabs elsewhere.
-
-**Key files:**
-- `src/screens/ExploreScreen.jsx`
-- `src/screens/AestheticScreen.jsx`
-- `src/context/ExploreContext.jsx`
-- `src/data/styles.js`
-- `src/data/aestheticDepth.js`
-
----
-
-### 5.4 Digital Closet
-
-**Purpose:** A persistent digital representation of the user's real wardrobe, used as the source of truth for outfit generation and try-on.
-
-**How items enter the closet:**
-
-| Method | Flow |
-|---|---|
-| **Photo upload** | User takes or selects a photo → Claude vision (`anthropicVision` Cloud Function) analyses the image and returns detected clothing items (name, category, color, bounding boxes) → user confirms and edits → items saved |
-| **Catalog search** | `CatalogSearchSheet` searches Google Custom Search or Pexels for product images by text query → user picks an image → item added with selected metadata |
-| **Background removal ("Prettify")** | On any closet item, user can tap "Prettify" → @imgly WASM removes the background → prettified PNG uploaded to Firebase Storage and linked on the item |
-
-**ClosetItem data model:**
-```
-{
-  id, name, category, color, brand,
-  imageUrl,        // original upload or catalog URL
-  thumbnailUrl,    // low-res version
-  prettifiedUrl,   // background-removed PNG (Firebase Storage)
-  type,            // 'uploaded' | 'catalog'
-  favorite,
-  tags,
-  seasons,         // ['spring', 'summer', 'fall', 'winter']
-  occasions,       // ['casual', 'work', 'date', 'gym', 'errand', 'formal', 'outdoor']
-  aiDetected,
-  addedAt, updatedAt
-}
-```
-
-**Category breakdown:** tops · bottoms · outerwear · dresses · footwear · accessories
-
-**Closet screen features:**
-- Filterable by category tabs
-- Flip cards (front = photo, back = item details + edit actions)
-- Favorite toggle
-- Edit name, color, seasons, occasions, tags
-- Care symbols picker (wash instructions)
-- Delete
-
-**Persistence:** Entire closet stored as a single Firestore document `users/{uid}/prefs/closet → { items: [...] }`. On load, a `getDoc` populates `ClosetContext`. Any item added while the load was in-flight is prepended (functional setState to preserve in-flight writes).
-
-**Key files:**
-- `src/context/ClosetContext.jsx`
-- `src/screens/ClosetScreen.jsx`
-- `src/components/WardrobeUpload.jsx`
-- `src/components/CatalogSearchSheet.jsx`
-- `src/components/ClosetItemSheet.jsx`
-- `src/services/claudeVision.js`
-- `src/services/prettify.js`
-
----
-
-### 5.5 Daily Look Engine
-
-**Purpose:** Generate a daily outfit from the user's closet each morning, personalised by weather and occasion.
-
-**Today tab flow:**
-1. App fetches **live weather** using browser geolocation → proxied via `getWeather` Cloud Function → OpenWeatherMap.
-2. User picks an **occasion** (casual / work / date / gym / errand / formal / outdoor).
-3. User picks a **source** (Closet / Liked items / Both).
-4. `outfitAI.js` sends a filtered subset of the closet to the `anthropicOutfit` Cloud Function.
-5. Claude Haiku selects 2–4 items: ≥1 top, ≥1 bottom (or dress), optional outerwear if temp < 16°C or precipitation detected.
-6. Results are cached in `sessionStorage` by `{date}_{occasion}_{closetHash}` — so reopening the app on the same day with the same occasion doesn't re-run the AI.
-7. The outfit card displays the selected items, Claude's reasoning, a weather note, and the occasion tag.
-8. If a closet item has no stored photo URL, the outfit card auto-fetches an image from Pexels as a fallback.
-
-**Sub-tabs of DailyLookScreen:**
-| Tab | Purpose |
-|---|---|
-| **Today** | AI-generated outfit for today (weather + occasion) |
-| **My Log** | History of all previously logged outfits with date/occasion/notes |
-| **Calendar** | Monthly calendar view mapping logged outfits to dates |
-| **Trip** | AI trip planner (see §5.7) |
-
-**Outfit logging:** After viewing today's outfit, user can log it. Entries are written to Firestore `users/{uid}/prefs/outfitLog → { entries: [...] }`.
-
-**Liked items as outfit source:** Liked items from the quiz/discovery feed are normalised to the ClosetItem shape before being passed to the AI — so the AI treats them identically to real closet items.
-
-**Key files:**
-- `src/screens/DailyLookScreen.jsx`
-- `src/services/outfitAI.js`
-- `src/services/weather.js`
-
----
-
-### 5.6 Outfit Calendar
-
-**Purpose:** A monthly planner letting users assign outfits to specific dates, useful for planning ahead (events, travel, weeks at a glance).
-
-**How it works:**
-- Calendar renders a month grid; each day cell can hold an outfit plan.
-- Tapping a date opens an outfit picker from the closet.
-- Plans are saved to Firestore `users/{uid}/outfitPlans` as individual documents: `{ date, itemIds, savedAt }`.
-- The calendar and the My Log tab in DailyLookScreen both read from the same dataset.
-
-**Key files:**
-- `src/screens/OutfitCalendarScreen.jsx`
-
----
-
-### 5.7 Trip Planner
-
-**Purpose:** Given a destination and trip length, AI generates a full packing list and daily outfit plan using items already in the user's closet.
-
-**Flow:**
-1. User enters destination + number of nights.
-2. `tripAI.js` sends minimal item metadata (id, name, category, color, seasons) to `anthropicTrip` Cloud Function (90s timeout).
-3. Claude Haiku returns:
-   - `packingList` — categorised list of items to bring, selected from the closet
-   - `dailyOutfits` — array of day-by-day outfit combinations
-   - `gapItems` — items the user doesn't own but should consider buying for this trip
-4. `TripPlannerScreen` re-hydrates the returned item IDs back to full ClosetItem objects using the local closet.
-
-**Key files:**
-- `src/screens/TripPlannerScreen.jsx`
-- `src/services/tripAI.js`
-
----
-
-### 5.8 Wardrobe Builder (Shop Scout)
-
-**Purpose:** A guided shopping assistant that helps the user build a capsule wardrobe by identifying what they need and presenting curated product recommendations.
-
-**How it works:**
-1. User selects clothing categories they want to fill.
-2. User sets a budget and brand preferences.
-3. The system scores products from the catalog against the user's style profile and budget.
-4. Products are presented in a shopping-list UI.
-5. Tapping a product links out to the retailer.
-6. The user can save products to their Shop Scout list (Firestore: `users/{uid}/prefs/shopList`).
-
-**Key files:**
-- `src/screens/WardrobeBuildScreen.jsx`
-- `src/context/ShopContext.jsx`
-- `src/data/products.js`
-- `src/data/retailers.js`
-
----
-
-### 5.9 Wishlist, Liked Items & Outfit Boards
-
-**Three distinct lists, all in `WishlistContext`:**
-
-| List | What goes in it | Firestore path |
+| Feature | Free | Pro |
 |---|---|---|
-| **Liked items** | Products liked during the quiz or discovery feed | `users/{uid}/prefs/liked` |
-| **Wishlist** | Products saved with buy-intent | `users/{uid}/prefs/wishlist` |
-| **Outfit boards** | User-named collections of items curated into outfit combinations | `users/{uid}/prefs/outfitBoards` |
+| AI outfit generation | 1 / day | Unlimited |
+| Closet items | 15 | Unlimited |
+| AI vision scans | 3 / month | 30 / month |
+| Liked items | 50 | Unlimited |
+| Aesthetic pins | 3 | Unlimited |
+| Outfit boards | 1 | Unlimited |
+| Outfit calendar | — | ✅ |
+| Trip planner | — | 3 / month |
+| Virtual Try-On | — | 30 / month + $2.99 per 30-piece pack |
+| Laundry tracking | — | ✅ |
+| Gap-reasoning copy | 20 / month | 200 / month |
 
-**Outfit boards:** Users can create named boards (e.g. "Summer weekend", "Office fits") and add any combination of liked/wishlist/closet items. Displayed in `OutfitBoardScreen`.
+Monthly counters live in `users/{uid}/prefs/usage` (Functions-only writes) keyed by `periodKey` (YYYY-MM); outfit generation is a per-day gate on `lastOutfitDate`; try-on credit packs (`tryOnCredits`) never expire. Checkout, billing portal, and webhooks run through Stripe (see §13).
 
-**Key files:**
-- `src/context/WishlistContext.jsx`
-- `src/screens/WardrobeScreen.jsx`
-- `src/screens/LikedScreen.jsx`
-- `src/screens/WishlistScreen.jsx`
-- `src/screens/OutfitBoardScreen.jsx`
+## 6. Legal & Privacy
 
----
+Shipped July 2026 (drafts pending attorney review — see the draft notice in `src/data/legalContent.js`):
 
-### 5.10 Virtual Try-On
-
-**Purpose:** Overlay selected garments from the closet onto a user-uploaded avatar photo to preview an outfit visually.
-
-**How it works:**
-1. User uploads a full-body or half-body photo as their avatar (`useAvatar.js`). Background can be removed via Prettify.
-2. User selects items from the closet to try on (categories limited to: tops, bottoms, outerwear, dresses).
-3. `tryOn.js` calls `generateTryOn` Cloud Function with the avatar URL and selected item image URLs.
-4. The Cloud Function chains multiple garment compositing operations server-side and returns an `outputUrl`.
-5. Result is cached in Firestore `users/{uid}/prefs/tryOnCache` keyed by sorted item IDs + avatar timestamp.
-   - Cache invalidates automatically when the user updates their avatar photo.
-
-**Key files:**
-- `src/components/TryOnSheet.jsx`
-- `src/services/tryOn.js`
-- `src/hooks/useAvatar.js`
+- **Privacy Policy & Terms of Service** rendered in-app (`LegalModal`), versioned by `LEGAL_VERSION`. Material changes bump the version → signed-in users see a re-consent banner until they acknowledge.
+- **Consent capture at signup** — ToS/Privacy acceptance + 16+ age affirmation stored on the user doc (email and Google flows both).
+- **Analytics consent** — Firebase Analytics initialises only after opt-in (cookie banner); `trackEvent` is a no-op otherwise.
+- **Data export** — one-tap JSON download of profile, prefs, quiz history, plans, and uploads (excludes internal usage counters and Stripe IDs).
+- **Account deletion** — server-side, retry-safe order: cancel Stripe subscription → delete Storage photos → recursively delete the Firestore tree → delete the Auth user.
 
 ---
 
-### 5.11 Laundry Tracker
-
-**Purpose:** Track the wash status and care requirements of closet items so the user knows what's clean, what needs washing, and how to care for each piece.
-
-**Features:**
-- Per-item care symbols picker (`CareSymbolPicker.jsx`) — standard laundry symbols (machine wash, hand wash, dry clean, tumble dry, etc.)
-- Wash frequency tracking per item
-- Laundry tab in ClosetScreen showing items by wash status
-
-**Key files:**
-- `src/screens/LaundryTab.jsx` (rendered as a tab within DailyLookScreen or ClosetScreen)
-- `src/components/CareSymbolPicker.jsx`
-- `src/data/careSymbols.js`
-
----
-
-### 5.12 Onboarding Flow
-
-**Purpose:** Collect key user data post-signup to personalise the experience and enable shopping-digest email capture.
-
-**4-step wizard (skippable at each step):**
-| Step | Screen | Data collected | Where saved |
-|---|---|---|---|
-| 1 | `OccupationScreen` | User's occupation | `users/{uid}.occupation` |
-| 2 | `BrandsScreen` | Preferred brands (multi-select) | `users/{uid}.preferredBrands` |
-| 3 | `ReferralScreen` | How they heard about StyleLab | `users/{uid}.referralSource` |
-| 4 | `ShoppingEmailScreen` | Email for shopping digest (opt-in) | `users/{uid}.shoppingEmail` |
-
-- Completion sets `users/{uid}.onboardingComplete = true`.
-- Once complete, the main app tab bar is shown. If incomplete, the flow resumes.
-- `OnboardingFlow.jsx` is the step controller; `AppContext` advances the `screen` state machine.
-
-**Key files:**
-- `src/screens/onboarding/OnboardingFlow.jsx`
-- `src/screens/onboarding/OccupationScreen.jsx`
-- `src/screens/onboarding/BrandsScreen.jsx`
-- `src/screens/onboarding/ReferralScreen.jsx`
-- `src/screens/onboarding/ShoppingEmailScreen.jsx`
-
----
-
-### 5.13 Guide Tour
-
-**Purpose:** An interactive 11-step feature walkthrough that introduces new users to every major feature in context.
-
-**How it works:**
-- `GuideTour.jsx` renders a floating tooltip/spotlight overlay.
-- `useGuideController.js` drives step state and syncs tab navigation with guide progress (e.g. step 5 navigates to the Closet tab).
-- `GuideContext` exposes step number and controls to any child component that needs to react to guide state (e.g. highlighting specific buttons).
-- The tour is triggered from HomeScreen and can be re-launched from ProfileScreen settings.
-
-**Key files:**
-- `src/components/GuideTour.jsx`
-- `src/hooks/useGuideController.js`
-- `src/context/GuideContext.jsx`
-
----
-
-### 5.14 Home Feed
-
-**Purpose:** The app's landing tab — a magazine-style discovery surface showcasing aesthetic content and driving users to key features.
-
-**Sections:**
-| Section | Content |
-|---|---|
-| **Hero carousel** | 5 featured aesthetics with editorial photos, rotating automatically |
-| **Style Me Today CTA** | Shortcut card that deep-links to the Daily Look tab |
-| **Fresh Looks** | Daily-rotating gallery of curated outfit images (changes each day) |
-| **Seasonal Picks** | Products filtered to the current season |
-| **Trending Aesthetics** | Top aesthetics sorted by popularity |
-| **Wardrobe Builder CTA** | Card linking to the Shop Scout / Wardrobe Build screen |
-| **Aesthetic categories** | Horizontally scrollable rows grouped by aesthetic family |
-
-**Key files:**
-- `src/screens/HomeScreen.jsx`
-
----
-
-### 5.15 Profile Screen
-
-**Purpose:** User account management, style history, and settings.
-
-**Contents:**
-- Display name and avatar (editable)
-- Gender preference toggle (affects all aesthetic content)
-- Style evolution chart — how `styleScores` have shifted across quiz retakes
-- Quiz history — list of past quizzes with score breakdowns
-- Saved aesthetics quick list
-- Dark/light mode toggle
-- Re-launch guide tour button
-- Sign out
-- Feedback form (`FeedbackSheet`)
-- Crash report form (`CrashReportSheet`)
-
-**Key files:**
-- `src/screens/ProfileScreen.jsx`
-
----
-
-## 6. Navigation & Screen Architecture
-
-### How Navigation Works
-
-StyleLab does **not** use React Router. Navigation is entirely state-driven:
-- `App.jsx` renders screens conditionally based on `state.screen` from `AppContext` and a local `activeTab` state variable.
-- There are no URLs, no browser history pushes, no `<Link>` components.
-
-**Screen state machine (AppContext):**
-```
-AUTH → WELCOME → ONBOARDING → SEASONS → CATEGORIES → DISCOVERY → RESULTS
-                                                                     ↓
-                                                              (main app tabs)
-```
-Once the quiz completes (or is skipped), the tab bar appears and the user navigates via tabs.
-
-### Tab Bar (6 tabs, left to right)
-
-| Tab ID | Screen rendered | Notes |
-|---|---|---|
-| `home` | `HomeScreen` | Default landing |
-| `closet` | `ClosetScreen` (3 sub-tabs: My Closet · Outfits · Liked) | |
-| `explore` | `ExploreScreen` | |
-| `quiz` | `DiscoveryScreen` / `ResultsScreen` | Center elevated "Discover" tab |
-| `daily` | `DailyLookScreen` (4 sub-tabs: Today · My Log · Calendar · Trip) | |
-| `profile` | `ProfileScreen` | |
-
-**Dynamic tabs:**
-- `aesthetic:{id}` — opens a specific `AestheticScreen`; created via `openAestheticTab()` helper
-- `wardrobe-builder` — opens `WardrobeBuildScreen`; navigated to directly, not in the tab bar
-- `mystyle` — opens `MyStyleScreen`; legacy tab, still accessible via guide tour
-
-**Closet sub-tab routing:** Passing `closet:liked` or `closet:outfits` as the tab ID navigates to ClosetScreen and sets the correct sub-tab directly. Used from cross-screen deep-links (e.g. "View liked items" button from ResultsScreen).
-
-### Tab bar visibility
-
-The tab bar is **hidden** on: `AUTH`, `ONBOARDING`, `SEASONS`, `CATEGORIES`. It appears only once the user reaches the main app.
-
-### Navigation prop drilling (known debt)
-
-`setActiveTab` (exposed as `handleTabChange`) is passed as a prop down to `HomeScreen`, `ExploreScreen`, `AestheticScreen`, `DailyLookScreen`, `ProfileScreen`, and `ResultsScreen`. A `NavigationContext` would be the clean fix but hasn't been done due to regression risk across all 6 screens.
-
----
-
-## 7. State Management
-
-StyleLab uses **React Context + hooks** — no Redux, no Zustand, no external store.
-
-### Provider nesting order (outermost first)
-
-```
-AuthProvider
-  └─ AppProvider
-       └─ ShopProvider
-            └─ WishlistProvider
-                 └─ ClosetProvider
-                      └─ ExploreProvider
-```
-
-Each provider wraps its children in `App.jsx`. This nesting means inner providers can read Auth and App state.
-
-### Context responsibilities
-
-| Context | File | What it owns |
-|---|---|---|
-| `AppContext` | `src/context/AppContext.jsx` | Screen state machine, quiz mode, selected seasons/categories, item swipe responses, `styleScores`, gender preference. Uses `useReducer`. |
-| `AuthContext` | `src/context/AuthContext.jsx` | Firebase Auth session, current user object, signup/login/logout/Google OAuth |
-| `ClosetContext` | `src/context/ClosetContext.jsx` | Closet items array, Firestore sync, add/update/remove operations, error + retry state |
-| `WishlistContext` | `src/context/WishlistContext.jsx` | Wishlist items, liked items, outfit boards — all Firestore-synced |
-| `ExploreContext` | `src/context/ExploreContext.jsx` | Saved (pinned) aesthetic IDs, currently open aesthetic — Firestore-synced |
-| `ShopContext` | `src/context/ShopContext.jsx` | Shop Scout results (`scoutedGroups`), saved shopping list (`shopList`) — Firestore-synced |
-| `GuideContext` | `src/context/GuideContext.jsx` | Active guide tour step, navigation controls |
-| `NavigationContext` | `src/context/NavigationContext.jsx` | Single `navigate()` function provider (thin wrapper) |
-
-### AppContext reducer actions (key ones)
-
-| Action | Effect |
-|---|---|
-| `SET_SCREEN` | Advance the screen state machine |
-| `LIKE_ITEM` | Add item to liked list, update `styleScores` by item's `styleWeights` |
-| `SKIP_ITEM` | Add item to skipped list, minor negative score update |
-| `SET_SEASONS` | Store selected seasons for quiz seed |
-| `SET_CATEGORIES` | Store selected categories for quiz seed |
-| `RESET_QUIZ` | Clear scores and responses, return to quiz start |
-| `SET_GENDER` | Update gender preference across all content |
-
-### Firestore sync pattern
-
-All persisted contexts use the same pattern:
-1. On user sign-in, `getDoc` fetches the saved data.
-2. The `.then` uses the **functional form** of `setState` to merge in-flight items with loaded data (items added while the load was in progress are prepended, not overwritten).
-3. Writes use `setDoc` with the full updated array (merge is not used — the whole document is replaced on each write).
-
-**Guest users:** Contexts work in memory only. Sign-in gates appear (`LockedOverlay` component) on features that require persistence.
-
----
-
-## 8. Data Architecture (Firestore)
-
-### Document map
-
-```
-users/{uid}
-  ├── (root doc)  displayName, email, occupation, preferredBrands,
-  │               referralSource, shoppingEmail, onboardingComplete,
-  │               createdAt, updatedAt
-  │
-  ├── prefs/closet           → { items: ClosetItem[] }
-  ├── prefs/wishlist         → { items: WishlistItem[] }
-  ├── prefs/liked            → { items: LikedItem[] }
-  ├── prefs/outfitBoards     → { items: OutfitBoard[] }
-  ├── prefs/savedAesthetics  → { ids: string[] }
-  ├── prefs/shopList         → { items: ShopItem[] }
-  ├── prefs/outfitLog        → { entries: OutfitLogEntry[] }
-  ├── prefs/tryOnCache       → { [itemId]: { url, generatedAt, avatarUpdatedAt } }
-  │
-  ├── outfitPlans/{planId}   → { date, itemIds, savedAt }  (subcollection)
-  ├── quizzes/{quizId}       → { styleScores, responses, items, completedAt }
-  └── uploadedItems/{itemId} → user-contributed catalog items
-
-feedback/{docId}             → feedback submissions (write-only via Cloud Function)
-crashReports/{docId}         → crash reports (write-only via Cloud Function)
-```
-
-### Firestore Rules Summary
-
-- All `users/{uid}/**` paths: owner-only read + write (`request.auth.uid == userId`)
-- `feedback` and `crashReports`: not directly writable from the client — only Cloud Functions can write (server-side auth bypass)
-- Catch-all deny for every other path
-- Rules are in `firestore.rules` and deployed with `firebase deploy --only firestore:rules`
-
-### Adding new persistence
-
-Preference: add a new key under `users/{uid}/prefs/{newKey}` — already covered by existing rules, no rule redeployment needed.
-
-If you need a new subcollection (e.g. `users/{uid}/newThings/{id}`), add a `match` block to `firestore.rules` and **redeploy rules before writing any data** — writes to uncovered paths are silently rejected.
-
----
-
-## 9. AI Integration
-
-All AI calls go through Firebase Cloud Functions — **no Anthropic API key is ever in the browser**.
-
-### Model used
-
-`claude-haiku-4-5-20251001` — controlled by the `CLAUDE_HAIKU` constant in `functions/index.js`. Change it once there to upgrade all three AI functions simultaneously.
-
-### Three AI capabilities
-
-#### 9.1 Outfit Generation (`outfitAI.js` → `anthropicOutfit`)
-
-Input sent to Claude:
-- Filtered closet items (pre-filtered to current season, further filtered by occasion if ≥5 candidates)
-- Current weather (temperature, condition)
-- Occasion
-- Date
-- User gender
-- User occupation (from onboarding)
-
-Output from Claude:
-- `selectedIds` — 2–4 item IDs from the closet
-- `reasoning` — short natural-language explanation
-- `weatherNote` — weather-specific comment
-- `occasionTag` — confirmed occasion label
-
-Selection rules enforced by the prompt:
-- Always ≥1 top AND ≥1 bottom (or a dress)
-- Outerwear added if temp < 16°C or precipitation
-- Items must be for the correct season
-- Items should suit the occasion
-
-Session caching key: `stylelab_outfit_{dateStr}_{occasion}_{closetHash}`
-
-Returns `null` on failure or if the closet pool is < 3 items.
-
-#### 9.2 Vision Analysis (`claudeVision.js` → `anthropicVision`)
-
-Input: Base64-encoded outfit photo
-
-Output per detected item:
-- `name` — descriptive item name
-- `category` — one of the 6 closet categories
-- `color` — dominant color
-- `description` — short style description
-- `boundingBox` — normalized coordinates (for future UI overlays)
-
-Used when the user uploads a photo to add items to their closet. Claude identifies each clothing item in the photo and the user confirms/edits before saving.
-
-#### 9.3 Trip Planning (`tripAI.js` → `anthropicTrip`)
-
-Input:
-- Destination name
-- Number of nights
-- Minimal closet item metadata (id, name, category, color, seasons)
-- User gender
-
-Output:
-- `packingList` — categorised subset of closet items to bring
-- `dailyOutfits` — array of `{ day, morning?, evening? }` outfit combinations
-- `gapItems` — items the user doesn't own but would be useful for this trip
-
-The screen re-hydrates item IDs back to full ClosetItem objects client-side.
-
----
-
-## 10. Backend — Firebase Cloud Functions
-
-All functions are Node.js (Gen 2), deployed to `us-central1`. Every function enforces authentication via `requireAuth(request)` — unauthenticated calls throw `unauthenticated` immediately.
-
-### Function inventory
-
-| Function | Purpose | Timeout | Auth |
-|---|---|---|---|
-| `anthropicVision` | Claude vision analysis of outfit photos | 90s | Required |
-| `anthropicOutfit` | Claude outfit selection from closet | 60s | Required |
-| `anthropicTrip` | Claude trip packing + outfit plan | 120s | Required |
-| `getWeather` | OpenWeatherMap fetch by lat/lon | 30s | Required |
-| `searchImages` | Pexels / Google CSE / Unsplash image search | 30s | Required |
-| `proxyImage` | Fetch cross-origin images as data URLs (CORS bypass) | 30s | Required |
-| `generateTryOn` | Virtual try-on garment compositing | 120s | Required |
-| `validateEmail` | MX record lookup for pre-signup validation | 15s | None (public) |
-| `submitFeedback` | Write feedback to Firestore `feedback/` | 30s | Required |
-| `submitCrashReport` | Write crash report to Firestore `crashReports/` | 30s | Required |
-
-### Image search logic (`searchImages`)
-
-The function accepts a `source` parameter:
-- `'google'` → Google Custom Search API
-- `'pexels'` → Pexels API
-- `'unsplash'` → Unsplash API
-
-The client layer tries Google first, then Pexels as fallback. If Google returns `{ quotaExceeded: true }`, a module-level `disabled` flag flips to `true` in `google.js` and Pexels is used silently for the rest of the session.
-
-### Local development with emulator
-
-Set `VITE_USE_EMULATOR=true` in the client `.env`. `firebase.js` conditionally calls `connectFunctionsEmulator(functions, 'localhost', 5001)`. Run the emulator:
-```bash
-firebase emulators:start --only functions
-```
-
----
-
-## 11. Frontend Architecture
-
-### Tech stack
+## 7. Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | React 18 (hooks-only, no class components) |
-| Build tool | Vite 5 |
-| Styling | CSS Modules (one `.module.css` per component) |
-| Global styles | `src/index.css` (CSS custom properties / theme variables) |
-| PWA | `vite-plugin-pwa` + Workbox |
-| Error tracking | Sentry (`@sentry/react`) |
+| Frontend | React 18 (hooks only) + Vite, CSS Modules, PWA via `vite-plugin-pwa`/Workbox |
+| Layout | Mobile bottom TabBar / desktop (≥768px) Sidebar |
+| Auth & data | Firebase Auth (email/password + Google), Firestore, Storage, Analytics (consent-gated), Cloud Messaging |
+| Backend | Firebase Cloud Functions Gen 2 (Node, `us-central1`) |
+| AI | Claude Haiku (`claude-haiku-4-5-20251001`) — vision, outfits, trips, gap copy — via Functions proxy |
+| Try-on | Replicate IDM-VTON via `generateTryOn` Function |
+| Billing | Stripe Checkout + Billing Portal + webhooks |
+| Weather | OpenWeatherMap via `getWeather` Function |
+| Images | Pexels / Google CSE / Unsplash via `searchImages` Function |
+| Background removal | `@imgly/background-removal` WASM (client-side, lazy) |
+| Error tracking | Sentry (`@sentry/react`), production only |
 
-### Styling system
+**No Anthropic or Stripe SDK on the client.** All secret-bearing calls go through Firebase Functions.
 
-- **Default theme: dark mode.** Light mode is toggled via `data-theme="light"` on the HTML root element, persisted to `localStorage` (`stylelab_theme`).
-- **Primary accent color:** `#E8735A` (warm coral-orange)
-- **All colors use CSS variables:** `--bg`, `--surface`, `--text`, `--text-secondary`, `--accent`, `--border`, etc. — defined in `src/index.css`.
-- **CSS Modules** prevent class name collisions — each component imports its own styles as an object.
+## 8. Navigation & Screen Architecture
 
-### Code splitting (Vite chunk strategy)
+No React Router — navigation is state-driven (no URLs or browser history).
 
-Manual chunks defined in `vite.config.js`:
+**Quiz flow** (`state.screen` in `AppContext`, linear): `AUTH → WELCOME → ONBOARDING → SEASONS → CATEGORIES → DISCOVERY → RESULTS`. Once complete, `activeTab` in `AppShell` drives the main app.
 
-| Chunk | Contents |
+**7 tab destinations:** `home`, `explore` (Aesthetics), `brands`, `quiz` (Discover — hideable), `search`, `daily` (Outfits, closet-count badge), `profile`. Dynamic tab IDs: `aesthetic:{id}`, `brand:{id}` (remembers return tab), `wardrobe-builder[:{pieceId}|{name}]`, `mystyle[:{subTab}]`, `profile:quiz-history`. `handleTabChange(tabId)` is the single navigation function, exposed app-wide via `NavigationContext`.
+
+The Outfits tab hosts 8 sub-tabs (default **Shop Scout**); Calendar/Trip/Laundry taps open the paywall for free users. Full details: [docs/claude/architecture.md](docs/claude/architecture.md).
+
+## 9. State Management
+
+React Context + hooks — no external store. Nesting (outermost first):
+
+```
+AuthProvider → SubscriptionProvider → InterestProvider → AppProvider
+  → ShopProvider → WishlistProvider → ClosetProvider → ExploreProvider
+    → (in AppShell) NavigationProvider → GuideProvider
+```
+
+| Context | Owns |
 |---|---|
-| `react-core` | React, ReactDOM |
-| `firebase` | All Firebase SDKs including Functions |
-| `data-styles` | `styles.js`, `aestheticDepth.js` (style definitions) |
-| `data-content` | `aestheticItems.js`, `products.js`, `looks.js` (large data) |
+| `AppContext` | Quiz state machine, `styleScores`, gender; settings hooks (theme, temp unit, occasion, seasons, quiz-tab visibility, closet sort — all localStorage `sartima_*`) |
+| `AuthContext` | Firebase session, signup/login/Google OAuth, consent capture |
+| `SubscriptionContext` | Tier from custom claims, live usage via `onSnapshot`, `isAtLimit` / `openPaywall` |
+| `InterestContext` | Read-side of the interest graph |
+| `ClosetContext` | Closet items + Firestore sync + error/retry |
+| `WishlistContext` | Liked, wishlist, outfit boards |
+| `ExploreContext` | Pinned aesthetics; open aesthetic/brand page state |
+| `ShopContext` | Shop Scout list |
+| `GuideContext` / `NavigationContext` | Tour state / `navigate()` |
 
-The Anthropic SDK (`@anthropic-ai/sdk`) is NOT a client dependency — it only lives in `functions/`. This keeps the main bundle clean.
+**Sync pattern:** every persisted context loads with `getDoc` and merges via the functional `setState` form so in-flight writes aren't clobbered; writes replace the whole prefs document. Guests get in-memory state with `LockedOverlay` gates on persistence features.
 
-### Component inventory (17 components)
+## 10. Data Architecture (Firestore & Storage)
 
-| Component | Purpose |
-|---|---|
-| `AuthWidget` | Sign-in/avatar button in header |
-| `TabBar` | Bottom navigation |
-| `Toast` | Notification toasts |
-| `GuideTour` | 11-step interactive walkthrough overlay |
-| `WeatherWidget` | Geolocation + weather display |
-| `ProductCard` | Single item card in the discovery feed |
-| `ClothingCard` | Closet item card |
-| `ItemActionSheet` | Bottom sheet for item add/save actions |
-| `ShopPanel` | Shopping list slide-over panel |
-| `CatalogSearchSheet` | Search-and-add items from catalog to closet |
-| `ClosetItemSheet` | Full edit sheet for a closet item |
-| `WardrobeUpload` | Photo upload + Claude vision flow |
-| `TryOnSheet` | Virtual try-on interface |
-| `CareSymbolPicker` | Laundry care symbols picker |
-| `LockedOverlay` | "Sign in to use this feature" gate |
-| `FeedbackSheet` | User feedback form |
-| `CrashReportSheet` | Error report form |
-
-### Custom hooks (3 hooks)
-
-| Hook | Purpose |
-|---|---|
-| `useDiscoveryQueue` | Smart product recommendation queue with affinity scoring |
-| `useGuideController` | 11-step guide tour state and tab navigation coordination |
-| `useAvatar` | Avatar upload, prettify, and try-on cache management |
-
----
-
-## 12. Image & Media Pipeline
-
-### Closet photo upload flow
 ```
-User selects photo
-  → WardrobeUpload component
-  → File uploaded to Firebase Storage (users/{uid}/wardrobe/{itemId})
-  → URL stored in ClosetItem.imageUrl
-  → (optional) Prettify: @imgly WASM removes background
-      → Blob uploaded to Firebase Storage (users/{uid}/wardrobe/prettified/{itemId}.png)
-      → URL stored in ClosetItem.prettifiedUrl
+users/{uid}                     profile + consent fields (legalVersion, ageAffirmed16Plus, …)
+  ├── prefs/closet|wishlist|liked|outfitBoards|savedAesthetics|shopList|outfitLog
+  ├── prefs/interests           brand/type/style/color affinities, visits, recent likes
+  ├── prefs/notifications       fcmTokens[], reminderTime, timezone, enabled
+  ├── prefs/gapSignals          missing-category hit counts
+  ├── prefs/gapDismissals       per-category snooze timestamps
+  ├── prefs/recapSeen           lastShownMonth
+  ├── prefs/tryOnCache          try-on results
+  ├── prefs/usage               usage counters (Functions-only writes; client reads live)
+  ├── prefs/subscription        Stripe customer/subscription state (Functions-only writes)
+  ├── outfitPlans/{planId}      calendar plans (subcollection)
+  ├── quizzes/{quizId}          quiz history
+  └── uploadedItems/{itemId}    user-contributed items
+feedback/{docId}                Function-only writes
+crashReports/{docId}            Function-only writes
 ```
 
-### Catalog image search flow
-```
-User types search query in CatalogSearchSheet
-  → google.js calls searchImages Cloud Function (source: 'google')
-  → If quota exceeded or empty → pexels.js fallback
-  → Results displayed as a grid
-  → User selects an image → item created with that thumbnailUrl
-```
+Rules: owner-only on all user paths; `usage`/`subscription` are client-read-only; catch-all deny. Storage: `users/{uid}/wardrobe/**` and `users/{uid}/avatar/*`, owner-only, images < 10 MB. New persistence should go in a `prefs/{key}` doc (already covered by rules); new subcollections need a rules `match` + deploy first. Full map: [docs/claude/data-models.md](docs/claude/data-models.md).
 
-### Outfit card image fallback
-```
-Outfit card renders an item
-  → If item has imageUrl → show it
-  → If no imageUrl → fetch from Pexels via searchImages (source: 'pexels')
-     → Cache result in module-level bounded cache (max 150 entries)
-```
+## 11. AI Integration
 
-### Image caching
+All Claude calls run server-side through Functions; the model is the `CLAUDE_HAIKU` constant in `functions/index.js`. Four capabilities:
 
-`src/services/cache.js` exports `createBoundedCache(max = 150)`. Returns a `{ has, get, set }` Map wrapper that evicts the oldest entry (FIFO) once the limit is reached. All image service modules use this — never a bare `new Map()`.
-
-### Background removal (Prettify)
-
-`src/services/prettify.js` wraps `@imgly/background-removal`:
-- WASM module is **lazy-loaded** on first call — not in the initial bundle.
-- Accepts `File`, `Blob`, or URL string.
-- URLs that cross CORS restrictions are first fetched via the `proxyImage` Cloud Function.
-- Progress callback exposed for UI feedback.
-
----
-
-## 13. Authentication & Security
-
-### Auth methods
-- Email + password (with email verification)
-- Google OAuth sign-in
-- Guest mode (no account required, limited feature set)
-
-### Guest vs. authenticated experience
-
-| Feature | Guest | Authenticated |
+| Capability | Function | In → Out |
 |---|---|---|
-| Quiz & discovery feed | ✅ | ✅ |
-| Aesthetic exploration | ✅ | ✅ |
-| Home feed | ✅ | ✅ |
-| Digital closet | ✅ (in-memory only) | ✅ (Firestore-synced) |
-| Liked items / wishlist | ✅ (in-memory only) | ✅ (Firestore-synced) |
-| Daily outfit generation | ✅ | ✅ |
-| Outfit log & calendar | ❌ (LockedOverlay) | ✅ |
-| Trip planner | ❌ | ✅ |
-| Virtual try-on | ❌ | ✅ |
-| Profile screen | Partial | ✅ |
+| Vision closet scan | `anthropicVision` | photo (base64) → up to 10 items with name/category/colour/description/bbox |
+| Daily outfit | `anthropicOutfit` | wardrobe JSON + weather + occasion + occupation → `selectedIds`, `reasoning`, `weatherNote`, `missingCategory` |
+| Trip planning | `anthropicTrip` | wardrobe metadata + destination + nights → `packingList`, `dailyOutfits`, `gapItems` |
+| Gap copy | `anthropicGapReasoning` | category deficit + closet summary + top styles → 1–2 sentence stylist nudge |
 
-### Security model
+Outfit rules enforced by prompt: ≥1 top + ≥1 bottom (or dress); outerwear only if <16°C or rain/snow; date used as a variety seed; `missingCategory` set when the wardrobe can't satisfy the rule. Clients cache generations in sessionStorage and must handle `null` (failure) returns.
 
-- **Firebase API keys** (`VITE_FIREBASE_*`) are intentionally public — Firebase security is enforced by Firestore security rules and Auth, not by keeping keys secret.
-- **All third-party keys** (Anthropic, OpenWeatherMap, Pexels, Google, Unsplash) are stored only in `functions/.env` and Firebase console environment variables — never in the client bundle.
-- **Every Cloud Function** calls `requireAuth(request)` before doing any work. Unauthenticated calls immediately throw `HttpsError('unauthenticated')`.
-- **Firestore rules** enforce owner-only access on all user data paths. A catch-all deny blocks everything else.
+## 12. Backend — Firebase Cloud Functions
 
----
+17 functions: 4 Anthropic proxies, `getWeather`, `searchImages` (+ per-user rate limit), `proxyImage` (allow-listed hosts), `generateTryOn` (Replicate chaining + cooldown), `validateEmail` (public), `submitFeedback` / `submitCrashReport` (Firestore + Gmail email), `sendDailyOutfitReminders` (15-minute scheduler → FCM, timezone-aware, prunes dead tokens), 4 Stripe functions, and `deleteAccount`. Full table with timeouts: [docs/claude/services-functions.md](docs/claude/services-functions.md).
 
-## 14. Performance & PWA
+## 13. Billing — Stripe
 
-### PWA setup
+- `createStripeCheckout` — monthly or annual subscription Checkout session (price IDs from function secrets); success redirects to `{APP_URL}?upgrade=success`, which triggers a client token refresh to pick up the new claim.
+- `createStripeBillingPortal` — self-serve management for existing subscribers.
+- `purchaseTryOnPack` — one-time payment adding 30 `tryOnCredits`.
+- `stripeWebhook` (`onRequest`, signature-verified) — `checkout.session.completed` sets the `sartima_tier: 'pro'` claim and writes `prefs/subscription`; `customer.subscription.updated/deleted` sync status and downgrade the claim.
 
-StyleLab is installable as a PWA. The service worker (generated by `vite-plugin-pwa` with Workbox) uses intelligent caching strategies:
+Secrets are declared per-function (`secrets: [...]`): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_MONTHLY|ANNUAL|TRYON_PACK`.
 
-| Resource type | Strategy | TTL |
-|---|---|---|
-| Static assets (JS, CSS, images) | CacheFirst | 365 days |
-| Google Fonts | CacheFirst | 365 days |
-| Pexels images | CacheFirst | 7 days |
-| Firestore API calls | NetworkFirst | 5 min |
-| Everything else | NetworkFirst | — |
+## 14. Notifications
 
-This means the app shell loads instantly on repeat visits, aesthetic images are cached after first view, and Firestore data stays reasonably fresh.
+Daily outfit push reminders via Firebase Cloud Messaging:
+- Client acquires an FCM token (`VITE_FIREBASE_VAPID_KEY`) against a **dedicated-scope service worker** (`public/firebase-messaging-sw.js`) so it coexists with the Workbox SW; iOS Safari requires the PWA to be installed first (`isIOSStandaloneRequired` gates the UI).
+- Prefs (`fcmTokens`, `reminderTime`, `timezone`, `enabled`) live in `prefs/notifications`.
+- `sendDailyOutfitReminders` runs every 15 minutes, collection-group queries enabled prefs, converts each user's local time, and pushes "Your outfit's ready" with a `/?tab=daily` link.
 
-### Performance techniques
+## 15. The Catalog & Static Data
 
-| Technique | Where |
-|---|---|
-| Lazy image loading | `IntersectionObserver` on all gallery images — Pexels request deferred until card enters viewport |
-| WASM lazy-load | `@imgly/background-removal` loaded only when Prettify is first invoked |
-| Session-storage caching | Outfit generation results, weather data, geolocation coordinates |
-| Bounded in-memory caches | `createBoundedCache(150)` on Pexels, Google, Unsplash — prevents unbounded memory growth |
-| Manual code splitting | 4 named Vite chunks prevent a single large bundle |
-| Discovery queue buffering | 30-item buffer refills automatically — no blocking load between swipes |
+- **~7,500 products** in `src/data/products/` (9 files by parent type), merged by `products.js` into `PRODUCTS` + lookup maps. Every product carries brand, type/parentType, colour + hex, price range, seasons, gender, `styleWeights`, `outfitCompanions`, retailer `shopUrl` (+ fallback), a Google image query, and a gradient placeholder.
+- **190 brand profiles** in `brands.js` (stories, lines, collections, key pieces) — brand names must match across `products.js` and `styles.js`.
+- **51 aesthetics** in `styles.js` + deep content in `aestheticDepth.js`; 500+ quiz items in `aestheticItems.js`; curated looks, category trees, care symbols, legal copy, guide steps, capsule baseline.
+- Catalog expansion process: [docs/claude/catalog-brand-expansion.md](docs/claude/catalog-brand-expansion.md) (target: a floor of 40 products per brand).
 
----
+## 16. Image & Media Pipeline
 
-## 15. Observability & Error Handling
+- **Closet upload:** photo → Storage (`users/{uid}/wardrobe/{itemId}`) → optional Prettify (WASM background removal, lazy-loaded; CORS-blocked URLs fetched via `proxyImage`) → prettified PNG stored alongside.
+- **Catalog search:** Google CSE first; on quota exhaustion a module flag silently falls back to Pexels for the session.
+- **Product cards:** `resolveProductImage` picks inline image / Google query / gradient placeholder, with a user-facing toggle.
+- **Share cards:** canvas-composed 1080×1350 PNG; every photo draw is isolated so a tainted image degrades to a colour swatch instead of failing the card.
+- All image-service modules use `createBoundedCache(150)` — never a bare `Map`.
 
-### Sentry integration
+## 17. Security Model
 
-Sentry is initialised in `src/main.jsx`. It is **only active in production builds** (`import.meta.env.PROD`). The DSN comes from `VITE_SENTRY_DSN` — if empty, Sentry is skipped entirely (safe for local dev).
+- Firebase client keys are public by design; enforcement is Firestore/Storage rules + Auth.
+- All third-party secrets (Anthropic, Stripe, Replicate, OpenWeatherMap, Pexels, Google, Unsplash, Gmail) exist only in Functions env/secrets.
+- Every sensitive Function calls `requireAuth`; tier limits are re-checked server-side in Firestore transactions (client gating is UX, not security).
+- `proxyImage` only fetches from an allow-list of image hosts; `searchImages` and `generateTryOn` have per-user rate limits/cooldowns.
+- Passwords never touch Sartima (Firebase Auth); card data never touches Sartima (Stripe).
 
-### Logger pattern (`src/services/logger.js`)
+## 18. Performance & PWA
 
-All service-level errors route through two functions:
+- Installable PWA, standalone/portrait, auto-updating service worker.
+- Precache capped at 8 MB with the heavy data chunks (`data-products`, `data-catalog`, `data-content`) **excluded** from precache — they load over the network and rely on HTTP caching.
+- Runtime caching: Pexels CacheFirst 7d, Firestore NetworkFirst 5min, Google Fonts CacheFirst 1y.
+- Manual Vite chunks: `react-core`, `firebase`, `data-styles`, `data-content`, `data-products`, `data-catalog`.
+- Lazy loading: FCM SDK, background-removal WASM, share-card module — all dynamic imports; gallery images gated by IntersectionObserver.
+- Session caching: outfit generations, weather (30 min), gap-reasoning copy (per day).
 
-```js
-logError(service, message, context) // → console.error + Sentry exception
-logWarn(service, message, context)  // → console.warn + Sentry warning
-```
+## 19. Observability & Error Handling
 
-Every service file imports from `logger.js` instead of calling `console.error` directly. This keeps all Sentry wiring in one place and ensures consistent error reporting.
+- **Sentry** initialised in `main.jsx`, production only, DSN via `VITE_SENTRY_DSN` (empty = disabled). A Sentry `ErrorBoundary` wraps the app with a branded reload fallback.
+- **Logger pattern:** services call `logError`/`logWarn` from `src/services/logger.js` (console + Sentry), never `console.error` directly.
+- **Crash reporter** captures console/network diagnostics; users submit them via the Problem Report sheet → `crashReports/` + email.
+- **Feedback sheet** → `feedback/` + email. Both collections are client-inaccessible.
+- **Analytics** (Firebase) is consent-gated; `trackEvent` is a safe no-op pre-consent.
 
-### User-facing error reporting
-
-- **FeedbackSheet** — a bottom-sheet form users can submit from ProfileScreen. Writes to Firestore `feedback/` via `submitFeedback` Cloud Function.
-- **CrashReportSheet** — similar form for technical issues. Writes to `crashReports/` via `submitCrashReport` Cloud Function.
-- Both collections are write-only for clients (Cloud Function bypasses Firestore rules).
-
-### Closet error recovery
-
-`ClosetContext` exposes `closetError` (raw Error or null) and `retryLoadCloset` (re-triggers the Firestore fetch, bypassing the already-loaded guard). `ClosetScreen` shows a user-visible error state with a Retry button when `closetError` is set.
-
----
-
-## 16. Development Workflow
-
-### Commands
+## 20. Development Workflow
 
 ```bash
-npm run dev        # Start Vite dev server with HMR at localhost:5173
-npm run build      # Production build → dist/
-npm run preview    # Preview production build locally
+npm run dev        # Vite dev server (HMR)
+npm run build      # production build → dist/
+npm run preview    # preview the build
+
+firebase deploy --only functions          # deploy Cloud Functions
+firebase deploy --only firestore:rules    # deploy Firestore rules
+firebase deploy --only storage            # deploy Storage rules
+firebase emulators:start --only functions # local Functions emulator (client: VITE_USE_EMULATOR=true)
 ```
 
-No test suite or linting is currently configured.
+No test suite or linting configured. Playwright is available as a dev dependency for manual screenshot-driven verification.
 
-### Firebase deployment
+## 21. Environment Variables
 
-```bash
-# Deploy everything
-firebase deploy
-
-# Deploy only Cloud Functions
-cd functions && npm install   # first time only
-firebase deploy --only functions
-
-# Deploy only Firestore rules
-firebase deploy --only firestore:rules
-
-# Deploy only Storage rules
-firebase deploy --only storage
-```
-
-### Local development with emulators
-
-1. Add `VITE_USE_EMULATOR=true` to the client `.env`.
-2. Add API keys to `functions/.env`.
-3. Run:
-```bash
-firebase emulators:start --only functions
-```
-The client automatically connects to `localhost:5001` for all Cloud Function calls.
-
-### Adding a new Cloud Function
-
-1. Add a new `onCall` export to `functions/index.js`.
-2. Add the required API key to `functions/.env` and the Firebase console (Functions → Edit → Environment variables).
-3. Call it from the client:
-   ```js
-   import { httpsCallable } from 'firebase/functions';
-   import { functions } from './firebase';
-   const myFunc = httpsCallable(functions, 'myFunctionName');
-   const result = await myFunc({ payload });
-   ```
-
-### Adding new Firestore persistence
-
-- If it fits under `users/{uid}/prefs/{key}` — just write to it, existing rules cover it.
-- If it's a new subcollection (`users/{uid}/newThings/{id}`) — add a `match` block to `firestore.rules` and **redeploy rules first**.
-
----
-
-## 17. Environment Variables
-
-### Client (`.env` in project root) — `VITE_` prefix, bundled into the browser
+**Client (`.env`, `VITE_` prefix — bundled into the browser):**
 
 | Variable | Purpose |
 |---|---|
-| `VITE_FIREBASE_API_KEY` | Firebase project API key (intentionally public) |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging |
-| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `VITE_FIREBASE_API_KEY` / `AUTH_DOMAIN` / `PROJECT_ID` / `STORAGE_BUCKET` / `MESSAGING_SENDER_ID` / `APP_ID` / `MEASUREMENT_ID` | Firebase config (intentionally public) |
+| `VITE_FIREBASE_VAPID_KEY` | Web-push VAPID key for FCM (Console → Cloud Messaging) |
 | `VITE_SENTRY_DSN` | Sentry DSN (empty = Sentry disabled) |
-| `VITE_USE_EMULATOR` | `true` to use local Firebase emulator |
+| `VITE_USE_EMULATOR` | `true` → Functions SDK targets `localhost:5001` |
 
-### Server (`functions/.env`) — never sent to the browser
+**Server (`functions/.env` for the emulator; Firebase console env vars / secrets for deployed functions):**
 
 | Variable | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` | Anthropic Claude API |
-| `OPENWEATHER_KEY` | OpenWeatherMap API |
-| `PEXELS_KEY` | Pexels image search |
-| `GOOGLE_API_KEY` | Google Custom Search |
-| `GOOGLE_CX` | Google Custom Search engine ID |
-| `UNSPLASH_KEY` | Unsplash image search |
+| `ANTHROPIC_API_KEY` | Claude |
+| `OPENWEATHER_KEY` | Weather |
+| `PEXELS_KEY`, `GOOGLE_API_KEY` + `GOOGLE_CX`, `UNSPLASH_KEY` | Image search |
+| `REPLICATE_API_KEY` | Virtual try-on |
+| `GMAIL_APP_PASSWORD` | Feedback/crash emails (absent = silently skipped) |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_ANNUAL`, `STRIPE_PRICE_ID_TRYON_PACK` | Billing (declared as function secrets) |
+| `APP_URL` | Checkout redirect base (default `https://sartima.ca`) |
 
-Server keys must also be set in the **Firebase console** under Functions → Edit → Environment variables for deployed functions to read them. `functions/.env` is for local emulator use only.
-
----
-
-## 18. Known Constraints & Technical Debt
+## 22. Known Constraints & Technical Debt
 
 | Area | Issue | Impact |
 |---|---|---|
-| **Navigation prop drilling** | `setActiveTab` (as `handleTabChange`) is passed as a prop to 6 screens. A `NavigationContext` would be cleaner but touching all 6 screens carries regression risk. | Medium — works correctly, just messy |
-| **No test suite** | Zero unit or integration tests. | High — regressions are caught only manually |
-| **No linting** | No ESLint or Prettier configured. | Low — code style is inconsistent in places |
-| **Large static data files** | `aestheticItems.js` is 252 KB, `products.js` is 90 KB. Vite splits them but they're still loaded eagerly. | Low — code splitting mitigates it |
-| **Firestore prefs as arrays** | All prefs are stored as arrays in single documents. Large closets (100+ items) will hit Firestore's 1 MB document limit. | Future risk — needs migration to subcollection if closets grow large |
-| **Session-only quiz persistence** | Quiz progress is in `sessionStorage`. A page close (not refresh) loses progress. | Low — quiz is short enough that this is acceptable |
-| **React Router absent** | No URL-based routing means no browser back button, no deep linking, no bookmarkable URLs. | Medium — acceptable for a mobile PWA but limits shareability |
-| **Virtual try-on** | Fully implemented client-side and server-side but quality depends on the compositing service. Currently experimental. | Low — feature is optional |
-| **Google image search quota** | Google Custom Search has a daily quota. The client has a per-session fallback to Pexels but quota exhaustion mid-session is possible. | Low-medium — handled gracefully |
+| No test suite / linting | Regressions caught manually | High |
+| No URL routing | No deep links, shareable URLs, or browser back | Medium — acceptable for a PWA, limits shareability |
+| Prefs stored as single-doc arrays | Very large closets could approach Firestore's 1 MB doc limit | Future risk |
+| Legal docs are drafts | Privacy/ToS not yet attorney-reviewed (in-app draft notice) | Must resolve before scale |
+| In-process rate limits | try-on cooldown + search throttle reset on cold start | Low — good enough vs. accidental hammering |
+| Interest-graph writes | read-modify-write (not transactional); rapid multi-tab use could drop increments | Low |
+| Google CSE quota | Daily quota; per-session Pexels fallback handles exhaustion | Low-medium |
+| Catalog size | ~6 MB static data; mitigated by chunk splitting + precache exclusion, still a network cost on first load | Medium |
 
----
-
-## 19. Glossary
+## 23. Glossary
 
 | Term | Meaning |
 |---|---|
-| **Aesthetic** | A named fashion style identity (e.g. "old money", "gorpcore"). StyleLab has 50+ defined aesthetics. |
-| **styleScores** | An object mapping aesthetic IDs to numeric affinity scores, updated by quiz swipes. Lives in `AppContext`. |
-| **ClosetItem** | The data model for a single item in the digital closet. |
-| **Discovery feed** | The infinite swipe-based product stream driven by `useDiscoveryQueue`. |
-| **Outfit board** | A user-named collection of items curated into an outfit combination (separate from AI-generated outfits). |
-| **Prettify** | Background removal on a clothing photo using `@imgly/background-removal` WASM. |
-| **Shop Scout** | The wardrobe-builder feature that recommends products to buy based on gaps in the user's wardrobe. |
-| **Trip planner** | AI feature that generates a packing list and daily outfit plan for a trip destination. |
-| **Try-on** | Virtual garment overlay on a user avatar photo via `generateTryOn` Cloud Function. |
-| **Cloud Function** | A Firebase serverless function that proxies third-party API calls to keep keys off the client. |
-| **prefs/** | The Firestore subcollection under `users/{uid}/prefs/` that stores all user preference data. |
-| **CLAUDE_HAIKU** | The constant in `functions/index.js` that sets the Anthropic model for all three AI functions. |
-| **Guide tour** | The 11-step interactive walkthrough component (`GuideTour.jsx`) that introduces the app's features. |
-| **seeded** | A boolean flag from `useDiscoveryQueue` that flips `true` after the first product batch is ready, used to distinguish loading from truly empty. |
-| **Companion** | A product that pairs well with another product (defined in `products.js` as `outfitCompanions`). |
-| **Bounded cache** | The `createBoundedCache()` helper in `cache.js` — a Map that evicts oldest entries to prevent memory leaks. |
-
----
-
-*Document generated from codebase exploration — June 2026.*
+| **Aesthetic** | A named fashion style identity (51 defined, e.g. "old money", "gorpcore") |
+| **styleScores** | Aesthetic-ID → affinity score map updated by every swipe (`AppContext`) |
+| **ClosetItem** | Data model for a digital-closet item, incl. wear data |
+| **Gap / gap signal** | A category deficit vs. the capsule baseline / an AI outfit failure recorded against a category |
+| **Capsule baseline** | Per-category minimum counts a healthy wardrobe should have (`capsuleBaseline.js`) |
+| **Closet ghost** | An item not worn in the trailing 30 days (recap feature) |
+| **Interest graph** | Accumulated brand/type/style/colour affinities in `prefs/interests` |
+| **Shop Scout** | The guided capsule-wardrobe shopping wizard (`WardrobeBuildScreen`) |
+| **Prettify** | Client-side background removal on a clothing photo |
+| **Try-on credits** | Purchased Try-On uses (`tryOnCredits`) consumed after the monthly allowance |
+| **Tier / claims** | `free`/`pro`/`admin` from `sartima_tier`/`sartima_role` Firebase custom claims |
+| **periodKey** | `YYYY-MM` key that resets monthly usage counters |
+| **LEGAL_VERSION** | Version stamp on the legal docs; mismatch with the user doc triggers re-consent |
+| **Guide tour** | Per-tab or full-app interactive walkthrough (`guideSteps.js` + `GuideTour`) |
+| **CLAUDE_HAIKU** | The single model constant in `functions/index.js` for all Claude calls |
+| **Bounded cache** | `createBoundedCache()` — FIFO-evicting Map for API response caches |

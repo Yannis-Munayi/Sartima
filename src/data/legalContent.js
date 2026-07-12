@@ -1,8 +1,8 @@
 // Bump LEGAL_VERSION whenever PRIVACY_POLICY or TERMS_OF_SERVICE copy changes
 // materially — App.jsx compares a signed-in user's stored `legalVersion`
 // against this value to decide whether to show the re-consent banner.
-export const LEGAL_VERSION    = '2026-07-09'
-export const LEGAL_UPDATED_AT = 'July 9, 2026'
+export const LEGAL_VERSION    = '2026-07-12'
+export const LEGAL_UPDATED_AT = 'July 12, 2026'
 export const MINIMUM_AGE      = 16
 
 export const LEGAL_DRAFT_NOTICE =
@@ -61,6 +61,7 @@ export const PRIVACY_POLICY = {
         'OpenWeatherMap — receives your approximate location to return local weather data.',
         'Sentry — receives error and crash diagnostics; this does not include your photos.',
         'Pexels, Google Custom Search, and Unsplash — receive only text search terms (for example, an aesthetic or mood-board search) and never receive your personal information or photos.',
+        'Sovrn Commerce — when you click a "shop" link to a retailer, the click may be routed through Sovrn\'s affiliate redirect so Sartima can earn a commission on resulting purchases. Sovrn receives standard click data (such as the destination retailer, your device/browser type, and IP address) and may set its own cookies on the retailer\'s site; it does not receive your Sartima account information or photos.',
         'Because most of these providers operate primarily in the United States, your information may be processed on servers outside of Canada. Each provider maintains its own security and privacy safeguards for cross-border processing.',
         'We may also disclose information if required by law, or to protect the rights, safety, or property of Sartima or our users.',
       ],
@@ -162,6 +163,7 @@ export const TERMS_OF_SERVICE = {
       heading: 'Third-party retailer links',
       paragraphs: [
         'Sartima\'s discovery feed and Shop Scout feature link out to third-party retailer websites. Sartima is not a party to, and is not responsible for, any purchase you make on a retailer\'s site — those transactions are governed by that retailer\'s own terms and policies.',
+        'Affiliate disclosure: some retailer links in Sartima are affiliate links, meaning Sartima may earn a commission if you make a purchase after clicking them — at no additional cost to you. Commissions never influence which products are recommended to you; recommendations are driven by your style profile.',
       ],
     },
     {
