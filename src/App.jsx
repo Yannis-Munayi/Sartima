@@ -15,6 +15,7 @@ function useIsDesktop() {
 }
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
+import { useHashRouting } from './hooks/useHashRouting'
 import { AppProvider, useApp, useTheme, useShowQuizTab, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NavigationProvider } from './context/NavigationContext'
@@ -227,6 +228,9 @@ function AppShell() {
     handleTabChange, showQuizTab,
   })
   const isDesktop = useIsDesktop()
+
+  // Shareable URLs + browser back/forward, mapped onto the tab-ID scheme
+  useHashRouting(activeTab, handleTabChange)
 
   function handleTabChange(tabId) {
     if (tabId === 'quiz' && sessionInProgress) {

@@ -18,6 +18,8 @@ Once the quiz is complete the tab bar appears and `activeTab` drives rendering.
 
 **Desktop:** `useIsDesktop()` (media query ≥768px) switches the layout to a fixed `Sidebar` + scrollable main pane. Mobile shows the bottom `TabBar`. Both call the same `handleTabChange`.
 
+**Hash deep links:** `useHashRouting(activeTab, handleTabChange)` (`src/hooks/useHashRouting.js`) keeps `location.hash` in sync with `activeTab` — `brands` ↔ `#/brands`, `aesthetic:y2k` ↔ `#/aesthetic/y2k`, `brand:nike` ↔ `#/brand/nike`. Inbound hashes are validated against the tab-ID scheme (unknown hashes fall back to `home`), parameterised action IDs (`closet:*`, `mystyle:*`, `profile:quiz-history`) are accepted as deep links and the hash then reflects whatever tab they resolve to, and browser back/forward walk the tab history via `hashchange`. Covered by `e2e/routing.spec.js`.
+
 ---
 
 ## Tab Bar (`src/components/TabBar.jsx`) / Sidebar (`src/components/Sidebar.jsx`)

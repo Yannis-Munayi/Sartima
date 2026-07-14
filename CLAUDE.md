@@ -99,7 +99,7 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 ## Key Patterns to Know
 
-**Navigation** — No React Router. `state.screen` (AppContext) drives the quiz flow; `activeTab` (AppShell local state) drives the main app. `handleTabChange(tabId)` is the single navigation function, exposed everywhere via `NavigationContext`'s `navigate()`. Special tab IDs: `aesthetic:{id}`, `brand:{id}` (remembers the tab to return to), `wardrobe-builder` / `wardrobe-builder:{pieceId}|{specificName}` (deep-link with pre-selected piece), `profile:quiz-history`, `closet:{subTab}` (redirects to `daily`), `mystyle:{subTab}`. Desktop (≥768px) shows a `Sidebar` instead of the bottom `TabBar`; both call the same `handleTabChange`.
+**Navigation** — No React Router. `state.screen` (AppContext) drives the quiz flow; `activeTab` (AppShell local state) drives the main app. `handleTabChange(tabId)` is the single navigation function, exposed everywhere via `NavigationContext`'s `navigate()`. Special tab IDs: `aesthetic:{id}`, `brand:{id}` (remembers the tab to return to), `wardrobe-builder` / `wardrobe-builder:{pieceId}|{specificName}` (deep-link with pre-selected piece), `profile:quiz-history`, `closet:{subTab}` (redirects to `daily`), `mystyle:{subTab}`. Desktop (≥768px) shows a `Sidebar` instead of the bottom `TabBar`; both call the same `handleTabChange`. `useHashRouting` (`src/hooks/useHashRouting.js`) mirrors `activeTab` into `location.hash` (`aesthetic:y2k` ↔ `#/aesthetic/y2k`), so every tab has a shareable deep-link URL and browser back/forward walk the tab history.
 
 **Context sync** — All persisted contexts use the functional `setState` form in Firestore `.then` callbacks so in-flight additions are never overwritten on load.
 
