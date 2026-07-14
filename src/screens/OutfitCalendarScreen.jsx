@@ -188,42 +188,6 @@ export default function OutfitCalendarScreen() {
 
   const cells = buildCalendar(year, month)
 
-  if (!user) {
-    const ghostCells = buildCalendar(year, month)
-    const ghostPlanned = new Set([3, 7, 12, 15, 19, 22])
-    return (
-      <div className={styles.screen}>
-        <div className={styles.monthNav}>
-          <button className={styles.navBtn}>‹</button>
-          <h2 className={styles.monthLabel}>{MONTHS[month]} {year}</h2>
-          <button className={styles.navBtn}>›</button>
-        </div>
-        <div className={styles.weekRow}>
-          {WEEKDAYS.map((d) => <span key={d} className={styles.weekDay}>{d}</span>)}
-        </div>
-        <LockedOverlay message="Sign in to plan your outfits">
-          <div className={styles.calGrid}>
-            {ghostCells.map((day, idx) => {
-              if (!day) return <div key={`e-${idx}`} className={styles.emptyCell} />
-              const planned = ghostPlanned.has(day)
-              return (
-                <div key={day} className={`${styles.dayCell} ${planned ? styles.dayCellPlanned : ''}`}>
-                  <span className={styles.dayNum}>{day}</span>
-                  {planned && (
-                    <div className={styles.dayThumbs}>
-                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#2d3a4a,#1a2634)' }} />
-                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#1a2a1a,#2a3a2a)' }} />
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </LockedOverlay>
-      </div>
-    )
-  }
-
   // Load outfit log once on mount
   useEffect(() => {
     if (!user) return
@@ -259,6 +223,42 @@ export default function OutfitCalendarScreen() {
       .catch(() => {})
       .finally(() => setLoadingPlans(false))
   }, [user, year, month])
+
+  if (!user) {
+    const ghostCells = buildCalendar(year, month)
+    const ghostPlanned = new Set([3, 7, 12, 15, 19, 22])
+    return (
+      <div className={styles.screen}>
+        <div className={styles.monthNav}>
+          <button className={styles.navBtn}>‹</button>
+          <h2 className={styles.monthLabel}>{MONTHS[month]} {year}</h2>
+          <button className={styles.navBtn}>›</button>
+        </div>
+        <div className={styles.weekRow}>
+          {WEEKDAYS.map((d) => <span key={d} className={styles.weekDay}>{d}</span>)}
+        </div>
+        <LockedOverlay message="Sign in to plan your outfits">
+          <div className={styles.calGrid}>
+            {ghostCells.map((day, idx) => {
+              if (!day) return <div key={`e-${idx}`} className={styles.emptyCell} />
+              const planned = ghostPlanned.has(day)
+              return (
+                <div key={day} className={`${styles.dayCell} ${planned ? styles.dayCellPlanned : ''}`}>
+                  <span className={styles.dayNum}>{day}</span>
+                  {planned && (
+                    <div className={styles.dayThumbs}>
+                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#2d3a4a,#1a2634)' }} />
+                      <div className={styles.dayThumb} style={{ background: 'linear-gradient(135deg,#1a2a1a,#2a3a2a)' }} />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </LockedOverlay>
+      </div>
+    )
+  }
 
   async function handleSavePlan(dateKey, itemIds) {
     if (!user) return

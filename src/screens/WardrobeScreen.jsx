@@ -120,6 +120,28 @@ export default function WardrobeScreen() {
   const [shopItem,   setShopItem]   = useState(null)
   const [tryOnItem,  setTryOnItem]  = useState(null)
 
+  // Group liked items by bucket (parentType for products, categoryId for old items)
+  const grouped = useMemo(() => {
+    const map = {}
+    for (const item of liked) {
+      const bucket = bucketFor(item)
+      if (!map[bucket]) map[bucket] = []
+      map[bucket].push(item)
+    }
+    const ordered = BUCKET_ORDER
+      .filter((id) => map[id])
+      .map((id) => ({ meta: BUCKET_META[id] ?? { label: id, emoji: '✨' }, items: map[id] }))
+    // Append any buckets not in the defined order (legacy categoryIds, etc.)
+    const seen = new Set(BUCKET_ORDER)
+    const extra = Object.keys(map)
+      .filter((id) => !seen.has(id))
+      .map((id) => ({
+        meta: BUCKET_META[id] ?? { label: id.charAt(0).toUpperCase() + id.slice(1), emoji: '👔' },
+        items: map[id],
+      }))
+    return [...ordered, ...extra]
+  }, [liked])
+
   if (!user) {
     return (
       <div className={styles.screen}>
@@ -149,28 +171,6 @@ export default function WardrobeScreen() {
       </div>
     )
   }
-
-  // Group liked items by bucket (parentType for products, categoryId for old items)
-  const grouped = useMemo(() => {
-    const map = {}
-    for (const item of liked) {
-      const bucket = bucketFor(item)
-      if (!map[bucket]) map[bucket] = []
-      map[bucket].push(item)
-    }
-    const ordered = BUCKET_ORDER
-      .filter((id) => map[id])
-      .map((id) => ({ meta: BUCKET_META[id] ?? { label: id, emoji: '✨' }, items: map[id] }))
-    // Append any buckets not in the defined order (legacy categoryIds, etc.)
-    const seen = new Set(BUCKET_ORDER)
-    const extra = Object.keys(map)
-      .filter((id) => !seen.has(id))
-      .map((id) => ({
-        meta: BUCKET_META[id] ?? { label: id.charAt(0).toUpperCase() + id.slice(1), emoji: '👔' },
-        items: map[id],
-      }))
-    return [...ordered, ...extra]
-  }, [liked])
 
   function handleOpenShop() {
     setShopItem(activeItem)
