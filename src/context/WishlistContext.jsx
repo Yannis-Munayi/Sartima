@@ -4,6 +4,7 @@ import { db } from '../services/firebase'
 import { useAuth } from './AuthContext'
 import { showToast } from '../components/Toast'
 import { useSubscription } from './SubscriptionContext'
+import { recordSignal } from '../services/interestTracker'
 
 const WishlistContext = createContext(null)
 
@@ -46,12 +47,15 @@ export function WishlistProvider({ children }) {
   const [outfitBoards,  setOutfitBoards]  = usePersistedList(user, 'outfitBoards')
 
   const addToWishlist = useCallback((entry) => {
+    if (!wishlist.some((e) => e.id === entry.id)) {
+      recordSignal(user, 'save', { product: entry })
+    }
     setWishlist((prev) => {
       if (prev.some((e) => e.id === entry.id)) return prev
       showToast('Saved to wishlist 🤍')
       return [{ ...entry, addedAt: Date.now() }, ...prev]
     })
-  }, [setWishlist])
+  }, [setWishlist, wishlist, user])
 
   const removeFromWishlist = useCallback((id) => {
     setWishlist((prev) => prev.filter((e) => e.id !== id))
@@ -62,12 +66,15 @@ export function WishlistProvider({ children }) {
 
   const addToLiked = useCallback((entry) => {
     if (!isPro && liked.length >= limits.likedItems) { openPaywall('likedItems'); return }
+    if (!liked.some((e) => e.id === entry.id)) {
+      recordSignal(user, 'like', { product: entry })
+    }
     setLiked((prev) => {
       if (prev.some((e) => e.id === entry.id)) return prev
       showToast('Liked ❤️')
       return [{ ...entry, addedAt: Date.now() }, ...prev]
     })
-  }, [setLiked, isPro, liked, limits, openPaywall])
+  }, [setLiked, isPro, liked, limits, openPaywall, user])
 
   const removeFromLiked = useCallback((id) => {
     setLiked((prev) => prev.filter((e) => e.id !== id))

@@ -1,5 +1,5 @@
-﻿import { useEffect, useRef, useState } from 'react'
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
+﻿import { useEffect, useState } from 'react'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
@@ -7,6 +7,9 @@ import { useNavigation } from '../context/NavigationContext'
 import { recordSignal } from '../services/interestTracker'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import styles from './screens.module.css'
+
+// Quiz completions already persisted this session (survives remounts)
+const savedQuizIds = new Set()
 
 function getTopStyles(scores, count = 3) {
   return Object.entries(scores)
@@ -133,12 +136,14 @@ export default function ResultsScreen() {
   function openAesthetic(id) {
     navigate(`aesthetic:${id}`)
   }
-  const savedRef = useRef(false)
 
-  // Auto-save results to Firestore if signed in
+  // Auto-save results to Firestore if signed in. Keyed by the quiz's stable
+  // id (module-level set + fixed doc id) so remounts — e.g. the sign-in →
+  // onboarding → back-to-results flow — can't double-save or double-signal.
   useEffect(() => {
-    if (!user || savedRef.current) return
-    savedRef.current = true
+    const quizId = state.quizId
+    if (!user || !quizId || savedQuizIds.has(quizId)) return
+    savedQuizIds.add(quizId)
 
     const likedItems = itemQueue
       .filter((item) => responses[item.id]?.liked)
@@ -148,7 +153,7 @@ export default function ResultsScreen() {
         categoryId: item.categoryId ?? item.parentType ?? item.type ?? null,
       }))
 
-    addDoc(collection(db, 'users', user.uid, 'quizzes'), {
+    setDoc(doc(db, 'users', user.uid, 'quizzes', quizId), {
       timestamp: serverTimestamp(),
       styleScores,
       likedItems,
@@ -309,7 +314,7 @@ export default function ResultsScreen() {
           ) : (
             <button
               className={styles.profileBtn}
-              onClick={() => dispatch({ type: 'GO_TO_AUTH' })}
+              onClick={() => dispatch({ type: 'GO_TO_AUTH', returnTo: 'results' })}
             >
               Save results — sign in
             </button>

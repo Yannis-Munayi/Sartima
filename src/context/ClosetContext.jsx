@@ -2,6 +2,8 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from './AuthContext'
+import { recordSignal } from '../services/interestTracker'
+import { inferStyleWeights } from '../services/styleInference'
 
 const ClosetContext = createContext(null)
 
@@ -83,11 +85,30 @@ export function ClosetProvider({ children }) {
       id:      item.id ?? makeId(),
       addedAt: item.addedAt ?? new Date().toISOString(),
     }
+    // Every wardrobe add feeds the aesthetic tally. Catalog-sourced items
+    // carry styleWeights; for photo uploads the aesthetics are inferred from
+    // the item's name/description. Closet `type` is the source flag
+    // ('uploaded'), not a garment type, so pass only garment fields through.
+    const recordSave = (styleWeights) => recordSignal(user, 'save', {
+      product: {
+        styleWeights,
+        brand:      newItem.brand,
+        itemType:   newItem.itemType,
+        parentType: newItem.parentType ?? newItem.category,
+        color:      newItem.color,
+      },
+    })
+    if (Object.keys(newItem.styleWeights ?? {}).length > 0) {
+      recordSave(newItem.styleWeights)
+    } else {
+      inferStyleWeights(`${newItem.name ?? ''} ${newItem.description ?? ''}`)
+        .then((inferred) => { if (inferred) recordSave(inferred) })
+    }
     setItems((prev) => {
       if (prev.some((e) => e.id === newItem.id)) return prev
       return [newItem, ...prev]
     })
-  }, [])
+  }, [user])
 
   const updateClosetItem = useCallback((id, patch) => {
     setItems((prev) =>

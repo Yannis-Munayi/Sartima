@@ -234,6 +234,43 @@
   padding-bottom: 4px;
 }
 
+/* ── Forgot password ── */
+.forgotRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+.forgotBtn {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.forgotBtn:hover {
+  color: var(--accent);
+}
+
+/* ── Reset-link confirmation ── */
+.successMsg {
+  font-size: 13px;
+  color: #4caf50;
+  background: rgba(76,175,80,0.08);
+  border: 1px solid rgba(76,175,80,0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.successMsg strong {
+  font-weight: 600;
+}
+
 /* ── Error ── */
 .error {
   font-size: 13px;

@@ -43,6 +43,8 @@ import AestheticScreen from './screens/AestheticScreen'
 import WardrobeBuildScreen from './screens/WardrobeBuildScreen'
 import DailyLookScreen from './screens/DailyLookScreen'
 import OnboardingFlow  from './screens/onboarding/OnboardingFlow'
+import ConsentGate     from './screens/ConsentGate'
+import VerifyEmailBanner from './components/VerifyEmailBanner'
 import TabBar          from './components/TabBar'
 import GuideTour from './components/GuideTour'
 import GuideLauncherButton from './components/GuideLauncherButton'
@@ -146,6 +148,8 @@ function AppShell() {
   const [wardrobeBuilderSpecificName, setWardrobeBuilderSpecificName] = useState(null)
   const [legalVersionMismatch, setLegalVersionMismatch] = useState(false)
   const [legalDoc, setLegalDoc]             = useState(null) // 'terms' | 'privacy' | null
+  const [needsConsent, setNeedsConsent]     = useState(false)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const prevUserRef = useRef(user)
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
@@ -157,28 +161,50 @@ function AppShell() {
     }
   }, [state.screen])
 
+  // Tracks which uid the post-auth account checks below have run for
+  const userDocCheckedRef = useRef(null)
+
   // When the user signs out, reset to home tab so ProfileScreen doesn't linger
   useEffect(() => {
     const wasSignedIn = prevUserRef.current !== null
     prevUserRef.current = user
     if (wasSignedIn && !user) {
       setActiveTab('home')
+      setNeedsConsent(false)
+      setNeedsOnboarding(false)
+      userDocCheckedRef.current = null
     }
   }, [user])
 
-  // After a new sign-in, check whether onboarding has been completed, and
-  // whether this account's accepted legal version is out of date (or
-  // missing entirely, for accounts that predate consent capture).
-  const onboardingCheckedRef = useRef(false)
+  // Post-auth account checks, run once per account and never while the auth
+  // screen is active (so they can't yank away an in-progress signup step):
+  //  - missing ToS/age consent  → full-screen ConsentGate (new Google
+  //    sign-ins, legacy accounts, failed signup writes)
+  //  - onboarding not completed → onboarding wizard (after consent, if both)
+  //  - stale accepted legal version → update banner
   useEffect(() => {
-    if (!user || onboardingCheckedRef.current) return
-    onboardingCheckedRef.current = true
+    if (!user || state.screen === SCREENS.AUTH) return
+    if (userDocCheckedRef.current === user.uid) return
+    userDocCheckedRef.current = user.uid
     getDoc(doc(db, 'users', user.uid)).then((snap) => {
       const data = snap.exists() ? snap.data() : null
-      if (!data?.onboardingComplete) dispatch({ type: 'GO_TO_ONBOARDING' })
-      if (data?.legalVersion !== LEGAL_VERSION) setLegalVersionMismatch(true)
+      if (!data?.ageAffirmed16Plus) {
+        setNeedsConsent(true)
+        if (!data?.onboardingComplete) setNeedsOnboarding(true)
+      } else {
+        if (!data?.onboardingComplete) dispatch({ type: 'GO_TO_ONBOARDING' })
+        if (data?.legalVersion !== LEGAL_VERSION) setLegalVersionMismatch(true)
+      }
     }).catch(() => {})
-  }, [user])
+  }, [user, state.screen, dispatch])
+
+  function handleConsentDone() {
+    setNeedsConsent(false)
+    if (needsOnboarding) {
+      setNeedsOnboarding(false)
+      dispatch({ type: 'GO_TO_ONBOARDING' })
+    }
+  }
 
   function handleLegalAcknowledge() {
     setLegalVersionMismatch(false)
@@ -289,6 +315,11 @@ function AppShell() {
     ? { flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }
     : {}
 
+  // Consent must be recorded before anything else is usable
+  if (user && needsConsent) {
+    return <ConsentGate onDone={handleConsentDone} />
+  }
+
   return (
     <NavigationProvider navigate={handleTabChange}>
     <GuideProvider value={guideContextValue}>
@@ -300,6 +331,11 @@ function AppShell() {
 
       {/* Scrollable content area */}
       <div style={mainStyle}>
+        {/* Gentle verify-email nudge (email/password accounts only) */}
+        {showTabs && (activeTab === 'home' || activeTab === 'profile') && (
+          <VerifyEmailBanner />
+        )}
+
         {/* Quiz flow */}
         {(!showTabs || activeTab === 'quiz') && <QuizRouter />}
 

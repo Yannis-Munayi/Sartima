@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useShop } from '../../context/ShopContext'
+import { useInterests } from '../../context/InterestContext'
 import { fetchPhotos } from '../../services/pexels'
 import { resolveProductImage, getAltProductImage } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
@@ -38,6 +39,7 @@ function ProductRowPhoto({ product }) {
 
 function ScoutedGroupCard({ group, onRemove }) {
   const [open, setOpen] = useState(false)
+  const { recordInterest } = useInterests() ?? {}
 
   return (
     <div className={listStyles.card}>
@@ -80,6 +82,7 @@ function ScoutedGroupCard({ group, onRemove }) {
                   href={product.shopUrl ?? product.shopFallbackUrl}
                   target="_blank" rel="noopener noreferrer"
                   className={listStyles.productRowBuy}
+                  onClick={() => recordInterest?.('shop', { product })}
                 >
                   Buy →
                 </a>

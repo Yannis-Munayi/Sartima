@@ -31,6 +31,8 @@ const initialState = {
   styleScores: Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0])),
   gender: localStorage.getItem('fashionGender') ?? 'both',
   quizMode: false,
+  quizId: null,
+  authReturnTo: null,
 }
 
 function shuffle(arr) {
@@ -122,16 +124,30 @@ function reducer(state, action) {
   switch (action.type) {
 
     case 'GO_TO_AUTH':
-      return { ...state, screen: SCREENS.AUTH }
+      return { ...state, screen: SCREENS.AUTH, authReturnTo: action.returnTo ?? null }
 
     case 'GO_TO_WELCOME':
       return { ...state, screen: SCREENS.WELCOME }
+
+    // Auth screen finished (login / Google / guest) — return the user to the
+    // screen they came from (e.g. quiz results) instead of dropping them at
+    // the welcome screen. authReturnTo is kept so SET_ONBOARDING_COMPLETE can
+    // still honour it if an onboarding redirect interjects.
+    case 'AUTH_FLOW_DONE':
+      return {
+        ...state,
+        screen: state.authReturnTo === 'results' ? SCREENS.RESULTS : SCREENS.WELCOME,
+      }
 
     case 'GO_TO_ONBOARDING':
       return { ...state, screen: SCREENS.ONBOARDING }
 
     case 'SET_ONBOARDING_COMPLETE':
-      return { ...state, screen: SCREENS.WELCOME }
+      return {
+        ...state,
+        screen: state.authReturnTo === 'results' ? SCREENS.RESULTS : SCREENS.WELCOME,
+        authReturnTo: null,
+      }
 
     case 'GO_TO_PROFILE':
       return { ...state, screen: SCREENS.PROFILE }
@@ -245,6 +261,9 @@ function reducer(state, action) {
         itemQueue:   action.itemQueue,
         screen:      SCREENS.RESULTS,
         quizMode:    false,
+        // Stable id for this quiz completion so the Firestore save is
+        // idempotent even if ResultsScreen unmounts/remounts (e.g. sign-in flow)
+        quizId:      `q_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       }
 
     case 'RESTART':

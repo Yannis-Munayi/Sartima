@@ -4,6 +4,7 @@ import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import { useWishlist } from '../context/WishlistContext'
+import { useInterests } from '../context/InterestContext'
 import { useApp } from '../context/AppContext'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ProductImageToggle from '../components/ProductImageToggle'
@@ -25,6 +26,7 @@ const UPLOAD_BUCKET_META = {
 }
 
 function ItemWishCard({ entry, onRemove, onSelect }) {
+  const { recordInterest } = useInterests() ?? {}
   const [photo, setPhoto] = useState(null)
   const { state } = useApp()
   const gender = state.gender
@@ -65,7 +67,7 @@ function ItemWishCard({ entry, onRemove, onSelect }) {
           target="_blank"
           rel="noopener noreferrer"
           className={styles.shopLink}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); recordInterest?.('shop', { product: entry }) }}
         >
           Shop ↗
         </a>

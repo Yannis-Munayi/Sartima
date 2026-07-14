@@ -6,6 +6,7 @@ import { resolveProductImage, getAltProductImage } from '../../services/productI
 import ProductImageToggle from '../../components/ProductImageToggle'
 import { PRODUCTS } from '../../data/products'
 import { useWishlist } from '../../context/WishlistContext'
+import { useInterests } from '../../context/InterestContext'
 import { useApp } from '../../context/AppContext'
 import { useNavigation } from '../../context/NavigationContext'
 import ItemActionSheet from '../../components/ItemActionSheet'
@@ -64,6 +65,7 @@ function inferShopScoutPieceId(str) {
 function ProductGridCard({ product }) {
   const [photo, setPhoto]   = useState(null)
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
+  const { recordInterest } = useInterests() ?? {}
   const navigate = useNavigation()
   const { state } = useApp()
   const gender = state.gender
@@ -120,12 +122,18 @@ function ProductGridCard({ product }) {
         return pieceId ? (
           <button
             className={styles.shopLink}
-            onClick={() => navigate(`wardrobe-builder:${pieceId}|${product.name}`)}
+            onClick={() => {
+              recordInterest?.('shop', { product })
+              navigate(`wardrobe-builder:${pieceId}|${product.name}`)
+            }}
           >
             Shop Scout →
           </button>
         ) : product.shopUrl ? (
-          <a href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}>
+          <a
+            href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}
+            onClick={() => recordInterest?.('shop', { product })}
+          >
             Shop ↗
           </a>
         ) : null

@@ -3,6 +3,7 @@ import { PRODUCTS } from '../../data/products'
 import { getGuideForAesthetic } from '../../data/itemGuide'
 import { fetchPhotos } from '../../services/pexels'
 import { useApp } from '../../context/AppContext'
+import { useInterests } from '../../context/InterestContext'
 import { OutfitPhoto } from './shared'
 import styles from '../AestheticScreen.module.css'
 
@@ -22,6 +23,7 @@ function GuideItem({ type, catLabel, catId, aestheticId, isOpen, onToggle, gende
   const [menPhotos, setMenPhotos]     = useState([])
   const [womenPhotos, setWomenPhotos] = useState([])
   const [photosLoading, setPhotosLoading] = useState(false)
+  const { recordInterest } = useInterests() ?? {}
   const fetchedRef = useRef(null)
 
   const picks = useMemo(() =>
@@ -112,7 +114,10 @@ function GuideItem({ type, catLabel, catId, aestheticId, isOpen, onToggle, gende
                     <p className={styles.guidePickName}>{p.name}</p>
                   </div>
                   {p.shopUrl && (
-                    <a href={p.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.guidePickShop}>
+                    <a
+                      href={p.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.guidePickShop}
+                      onClick={() => recordInterest?.('shop', { product: p })}
+                    >
                       Shop ↗
                     </a>
                   )}

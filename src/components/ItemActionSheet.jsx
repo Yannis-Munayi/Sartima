@@ -1,11 +1,20 @@
-﻿import { useApp } from '../context/AppContext'
+﻿import { useEffect } from 'react'
+import { useApp } from '../context/AppContext'
+import { useInterests } from '../context/InterestContext'
 import { getPinterestUrl } from '../data/styles'
 import styles from './ItemActionSheet.module.css'
 
 export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
   const { state } = useApp()
+  const { recordInterest } = useInterests() ?? {}
   const isProduct    = item.type === 'product'
   const pinterestUrl = getPinterestUrl(null, state.gender, item.name)
+
+  // Opening the sheet = the user clicked this product for a closer look
+  useEffect(() => {
+    recordInterest?.('view', { product: item })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id])
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -40,7 +49,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
               target="_blank"
               rel="noopener noreferrer"
               className={`${styles.actionBtn} ${styles.shopBtn}`}
-              onClick={onClose}
+              onClick={() => { recordInterest?.('shop', { product: item }); onClose() }}
             >
               <span className={styles.actionIcon}>🛍️</span>
               <span className={styles.actionText}>Shop at {item.brand}</span>
@@ -62,7 +71,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
               target="_blank"
               rel="noopener noreferrer"
               className={styles.actionBtn}
-              onClick={onClose}
+              onClick={() => { recordInterest?.('shop', { product: item }); onClose() }}
             >
               <span className={styles.actionIcon}>🔍</span>
               <span className={styles.actionText}>Search {item.brand} for this</span>

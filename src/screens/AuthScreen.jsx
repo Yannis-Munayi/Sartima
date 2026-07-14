@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react'
-import { sendEmailVerification } from 'firebase/auth'
+import { sendPasswordResetEmail } from 'firebase/auth'
 import { httpsCallable } from 'firebase/functions'
 import { auth, functions } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
@@ -84,91 +84,9 @@ function GoogleIcon() {
   )
 }
 
-// ── Verification step ─────────────────────────────────────────────────────────
+// ── Consent checkboxes (shared by signup form + global ConsentGate) ──────────
 
-function VerificationStep({ email, onContinue }) {
-  const [resent, setResent]       = useState(false)
-  const [resending, setResending] = useState(false)
-  const [checking, setChecking]   = useState(false)
-  const [notYet, setNotYet]       = useState(false)
-
-  async function handleResend() {
-    setResending(true)
-    try {
-      if (auth.currentUser) await sendEmailVerification(auth.currentUser)
-      setResent(true)
-      setTimeout(() => setResent(false), 5000)
-    } catch {
-      // ignore — rate-limited or already verified
-    } finally {
-      setResending(false)
-    }
-  }
-
-  async function handleCheckVerified() {
-    setNotYet(false)
-    setChecking(true)
-    try {
-      if (auth.currentUser) {
-        await auth.currentUser.reload()
-        if (auth.currentUser.emailVerified) {
-          onContinue()
-          return
-        }
-      }
-      setNotYet(true)
-    } catch {
-      setNotYet(true)
-    } finally {
-      setChecking(false)
-    }
-  }
-
-  return (
-    <div className={styles.flow}>
-      <div className={styles.dots}>
-        <span className={`${styles.dot} ${styles.dotActive}`} />
-      </div>
-
-      <div className={styles.iconBadge}>📧</div>
-
-      <h1 className={styles.title}>
-        Check your<br /><em>inbox</em>
-      </h1>
-      <p className={styles.sub}>
-        We sent a confirmation link to{' '}
-        <span className={styles.emailHighlight}>{email}</span>.
-        Click the link in your inbox, then come back here.
-      </p>
-
-      {notYet && (
-        <p className={styles.notYetMsg}>
-          Email not verified yet — click the link in your inbox first.
-        </p>
-      )}
-
-      <button
-        className={styles.submitBtn}
-        onClick={handleCheckVerified}
-        disabled={checking}
-      >
-        {checking ? 'Checking…' : "I've verified my email →"}
-      </button>
-
-      <button
-        className={styles.resendBtn}
-        onClick={handleResend}
-        disabled={resending || resent}
-      >
-        {resent ? '✓ Email resent!' : resending ? 'Sending…' : 'Resend verification email'}
-      </button>
-    </div>
-  )
-}
-
-// ── Consent checkboxes (shared by signup form + Google first-sign-in) ─────────
-
-function ConsentCheckboxes({ agreedToTerms, setAgreedToTerms, ageAffirmed, setAgeAffirmed, onOpenLegal }) {
+export function ConsentCheckboxes({ agreedToTerms, setAgreedToTerms, ageAffirmed, setAgeAffirmed, onOpenLegal }) {
   return (
     <div className={styles.consentGroup}>
       <label className={styles.consentRow}>
@@ -196,56 +114,13 @@ function ConsentCheckboxes({ agreedToTerms, setAgreedToTerms, ageAffirmed, setAg
   )
 }
 
-// ── Google first-sign-in consent interstitial ─────────────────────────────────
-
-function GoogleConsentStep({ onConfirm }) {
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [ageAffirmed, setAgeAffirmed]     = useState(false)
-  const [legalDoc, setLegalDoc]           = useState(null) // 'terms' | 'privacy' | null
-
-  return (
-    <div className={styles.flow}>
-      <div className={styles.dots}>
-        <span className={`${styles.dot} ${styles.dotActive}`} />
-      </div>
-
-      <div className={styles.iconBadge}>✨</div>
-
-      <h1 className={styles.title}>One last<br /><em>thing</em></h1>
-      <p className={styles.sub}>Please confirm the following to finish creating your account.</p>
-
-      <ConsentCheckboxes
-        agreedToTerms={agreedToTerms}
-        setAgreedToTerms={setAgreedToTerms}
-        ageAffirmed={ageAffirmed}
-        setAgeAffirmed={setAgeAffirmed}
-        onOpenLegal={setLegalDoc}
-      />
-
-      <button
-        type="button"
-        className={styles.submitBtn}
-        disabled={!agreedToTerms || !ageAffirmed}
-        onClick={() => onConfirm({ legalVersion: LEGAL_VERSION, ageAffirmed: true })}
-      >
-        Continue
-      </button>
-
-      <LegalModal
-        doc={legalDoc === 'terms' ? TERMS_OF_SERVICE : legalDoc === 'privacy' ? PRIVACY_POLICY : null}
-        onClose={() => setLegalDoc(null)}
-      />
-    </div>
-  )
-}
-
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function AuthScreen() {
-  const { signup, login, signInWithGoogle, recordConsent, user } = useAuth()
+  const { signup, login, signInWithGoogle } = useAuth()
   const { dispatch } = useApp()
 
-  const [mode, setMode]             = useState('login')
+  const [mode, setMode]             = useState('login') // 'login' | 'signup' | 'reset'
   const [name, setName]             = useState('')
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
@@ -254,18 +129,18 @@ export default function AuthScreen() {
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [showVerification, setShowVerification] = useState(false)
-  const [showPassword, setShowPassword]         = useState(false)
-  const [showConfirm, setShowConfirm]           = useState(false)
-  const [agreedToTerms, setAgreedToTerms]       = useState(false)
-  const [ageAffirmed, setAgeAffirmed]           = useState(false)
-  const [legalDoc, setLegalDoc]                 = useState(null) // 'terms' | 'privacy' | null
-  const [showGoogleConsent, setShowGoogleConsent] = useState(false)
+  const [resetSent, setResetSent]         = useState(false)
+  const [showPassword, setShowPassword]   = useState(false)
+  const [showConfirm, setShowConfirm]     = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [ageAffirmed, setAgeAffirmed]     = useState(false)
+  const [legalDoc, setLegalDoc]           = useState(null) // 'terms' | 'privacy' | null
 
   function switchMode(next) {
     setMode(next)
     setError('')
     setConfirm('')
+    setResetSent(false)
     setShowPassword(false)
     setShowConfirm(false)
   }
@@ -274,12 +149,10 @@ export default function AuthScreen() {
     setError('')
     setGoogleLoading(true)
     try {
-      const { isNewUser } = await signInWithGoogle()
-      if (isNewUser) {
-        setShowGoogleConsent(true)
-      } else {
-        dispatch({ type: 'GO_TO_WELCOME' })
-      }
+      await signInWithGoogle()
+      // New Google accounts are caught by the global ConsentGate (App.jsx),
+      // which records ToS/age consent before the app becomes usable.
+      dispatch({ type: 'AUTH_FLOW_DONE' })
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('Google sign-in failed. Please try again.')
@@ -289,15 +162,26 @@ export default function AuthScreen() {
     }
   }
 
-  async function handleGoogleConsent(consent) {
-    if (user) await recordConsent(user.uid, consent)
-    setShowGoogleConsent(false)
-    dispatch({ type: 'GO_TO_WELCOME' })
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+
+    if (mode === 'reset') {
+      setLoading(true)
+      try {
+        await sendPasswordResetEmail(auth, email)
+        setResetSent(true)
+      } catch (err) {
+        if (err.code === 'auth/user-not-found') {
+          setResetSent(true) // don't reveal whether the account exists
+        } else {
+          setError(friendlyError(err.code))
+        }
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
 
     if (mode === 'signup') {
       if (!name.trim()) return setError('Please enter your name.')
@@ -329,7 +213,10 @@ export default function AuthScreen() {
       try {
         await signup(email, password, name.trim(), { legalVersion: LEGAL_VERSION, ageAffirmed: true })
         dispatch({ type: 'SET_GENDER', gender })
-        setShowVerification(true)
+        // A verification email was sent in the background (VerifyEmailBanner
+        // nudges until confirmed). Go straight to the onboarding wizard —
+        // brand-new accounts always need it.
+        dispatch({ type: 'GO_TO_ONBOARDING' })
       } catch (err) {
         setError(friendlyError(err.code))
       } finally {
@@ -341,13 +228,8 @@ export default function AuthScreen() {
     // Login flow
     setLoading(true)
     try {
-      const loggedUser = await login(email, password)
-      if (!loggedUser.emailVerified) {
-        // User exists but hasn't confirmed their email yet
-        setShowVerification(true)
-        return
-      }
-      dispatch({ type: 'GO_TO_WELCOME' })
+      await login(email, password)
+      dispatch({ type: 'AUTH_FLOW_DONE' })
     } catch (err) {
       setError(friendlyError(err.code))
     } finally {
@@ -360,24 +242,12 @@ export default function AuthScreen() {
       case 'auth/email-already-in-use':  return 'That email is already registered. Try signing in.'
       case 'auth/invalid-email':         return 'Please enter a valid email address.'
       case 'auth/weak-password':         return 'Password must be at least 8 characters.'
+      case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
       case 'auth/user-not-found':
       case 'auth/wrong-password':
       case 'auth/invalid-credential':    return 'Incorrect email or password.'
       default:                           return 'Something went wrong. Please try again.'
     }
-  }
-
-  if (showVerification) {
-    return (
-      <VerificationStep
-        email={email}
-        onContinue={() => dispatch({ type: 'GO_TO_WELCOME' })}
-      />
-    )
-  }
-
-  if (showGoogleConsent) {
-    return <GoogleConsentStep onConfirm={handleGoogleConsent} />
   }
 
   return (
@@ -387,18 +257,22 @@ export default function AuthScreen() {
       </div>
 
       <div className={styles.iconBadge}>
-        {mode === 'login' ? '🔑' : '✨'}
+        {mode === 'login' ? '🔑' : mode === 'reset' ? '🔒' : '✨'}
       </div>
 
       <h1 className={styles.title}>
         {mode === 'login'
           ? <>Welcome<br /><em>back</em></>
-          : <>Create your<br /><em>account</em></>}
+          : mode === 'reset'
+            ? <>Reset your<br /><em>password</em></>
+            : <>Create your<br /><em>account</em></>}
       </h1>
       <p className={styles.sub}>
         {mode === 'login'
           ? 'Sign in to continue your style journey.'
-          : 'Save your results and track your style over time.'}
+          : mode === 'reset'
+            ? "Enter your account email and we'll send you a link to set a new password."
+            : 'Save your results and track your style over time.'}
       </p>
 
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -446,28 +320,42 @@ export default function AuthScreen() {
           />
         </div>
 
-        <div className={styles.field}>
-          <label>Password</label>
-          <div className={styles.passwordWrap}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder={mode === 'signup' ? 'At least 8 characters' : '••••••••'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            />
+        {mode !== 'reset' && (
+          <div className={styles.field}>
+            <label>Password</label>
+            <div className={styles.passwordWrap}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder={mode === 'signup' ? 'At least 8 characters' : '••••••••'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              />
+              <button
+                type="button"
+                className={styles.eyeBtn}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+            {mode === 'signup' && <StrengthBar password={password} />}
+          </div>
+        )}
+
+        {mode === 'login' && (
+          <div className={styles.forgotRow}>
             <button
               type="button"
-              className={styles.eyeBtn}
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className={styles.forgotBtn}
+              onClick={() => switchMode('reset')}
             >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              Forgot password?
             </button>
           </div>
-          {mode === 'signup' && <StrengthBar password={password} />}
-        </div>
+        )}
 
         {mode === 'signup' && (
           <div className={styles.field}>
@@ -505,26 +393,39 @@ export default function AuthScreen() {
 
         {error && <p className={styles.error}>{error}</p>}
 
-        <button type="submit" className={styles.submitBtn} disabled={loading}>
-          {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+        {resetSent && (
+          <p className={styles.successMsg}>
+            If an account exists for <strong>{email}</strong>, a reset link is on
+            its way. Check your inbox (and spam folder).
+          </p>
+        )}
+
+        <button type="submit" className={styles.submitBtn} disabled={loading || (mode === 'reset' && resetSent)}>
+          {loading
+            ? 'Please wait…'
+            : mode === 'login' ? 'Sign in' : mode === 'reset' ? 'Send reset link' : 'Create account'}
         </button>
       </form>
 
-      <div className={styles.divider}>
-        <span className={styles.dividerLine} />
-        <span className={styles.dividerText}>or</span>
-        <span className={styles.dividerLine} />
-      </div>
+      {mode !== 'reset' && (
+        <>
+          <div className={styles.divider}>
+            <span className={styles.dividerLine} />
+            <span className={styles.dividerText}>or</span>
+            <span className={styles.dividerLine} />
+          </div>
 
-      <button
-        type="button"
-        className={styles.googleBtn}
-        onClick={handleGoogle}
-        disabled={googleLoading}
-      >
-        <GoogleIcon />
-        {googleLoading ? 'Signing in…' : 'Continue with Google'}
-      </button>
+          <button
+            type="button"
+            className={styles.googleBtn}
+            onClick={handleGoogle}
+            disabled={googleLoading}
+          >
+            <GoogleIcon />
+            {googleLoading ? 'Signing in…' : 'Continue with Google'}
+          </button>
+        </>
+      )}
 
       <div className={styles.footerRow}>
         {mode === 'login' ? (
@@ -532,6 +433,13 @@ export default function AuthScreen() {
             No account?{' '}
             <button className={styles.switchBtn} onClick={() => switchMode('signup')}>
               Create one
+            </button>
+          </span>
+        ) : mode === 'reset' ? (
+          <span>
+            Remember your password?{' '}
+            <button className={styles.switchBtn} onClick={() => switchMode('login')}>
+              Sign in
             </button>
           </span>
         ) : (
@@ -546,7 +454,7 @@ export default function AuthScreen() {
 
       <button
         className={styles.guestBtn}
-        onClick={() => dispatch({ type: 'GO_TO_WELCOME' })}
+        onClick={() => dispatch({ type: 'AUTH_FLOW_DONE' })}
       >
         Continue as guest
       </button>

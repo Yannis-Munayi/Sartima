@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useAuth } from './AuthContext'
-import { loadInterests } from '../services/interestTracker'
+import { loadInterests, recordSignal } from '../services/interestTracker'
 
 const InterestContext = createContext(null)
 
@@ -25,8 +25,14 @@ export function InterestProvider({ children }) {
     })
   }, [user])
 
+  // Convenience wrapper so components can emit interest signals without
+  // pulling in useAuth themselves
+  const recordInterest = useCallback((signalType, payload) => {
+    recordSignal(user, signalType, payload)
+  }, [user])
+
   return (
-    <InterestContext.Provider value={{ interests }}>
+    <InterestContext.Provider value={{ interests, recordInterest }}>
       {children}
     </InterestContext.Provider>
   )

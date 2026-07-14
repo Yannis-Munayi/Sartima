@@ -29,14 +29,22 @@ export function clearQuizProgress() {
   try { sessionStorage.removeItem(QUIZ_STORAGE_KEY) } catch {}
 }
 
+// Scoring weights. Each affinity map is normalised to 0..1 against its own
+// max before weighting, so the numbers below express relative importance
+// directly. The 51-aesthetic tally is the dominant signal by design: the feed
+// should lead with the user's top aesthetic, then their favourite categories.
 const WEIGHTS = {
-  brand:          10,
-  type:           15,
-  parentType:      4,
-  color:           5,
-  style:          0.5,
-  companionBonus:  8,
+  aesthetic:      30,  // persistent 51-aesthetic tally × product styleWeights
+  topAesthetic:   12,  // extra push when a product carries the user's #1 aesthetic
+  type:           15,  // "keeps liking loafers" → more loafers
+  parentType:      6,  // "keeps liking footwear" → more footwear
+  brand:           8,
+  color:           4,
+  companionBonus:  5,
 }
+
+// Product styleWeights range 1–5; used to scale them into 0..1
+const MAX_PRODUCT_STYLE_WEIGHT = 5
 
 function createEmptyProfile() {
   return {
@@ -54,11 +62,12 @@ function createEmptyProfile() {
 // Session swipes accumulate on top of this warm start.
 function seedProfileFromInterests(profile, interests) {
   if (!interests) return
-  const { brandAffinities, typeAffinities, colorAffinities, styleAffinities, recentLikes } = interests
-  if (brandAffinities)  Object.assign(profile.brandAffinities,  brandAffinities)
-  if (typeAffinities)   Object.assign(profile.typeAffinities,   typeAffinities)
-  if (colorAffinities)  Object.assign(profile.colorAffinities,  colorAffinities)
-  if (styleAffinities)  Object.assign(profile.styleAffinities,  styleAffinities)
+  const { brandAffinities, typeAffinities, parentTypeAffinities, colorAffinities, styleAffinities, recentLikes } = interests
+  if (brandAffinities)      Object.assign(profile.brandAffinities,      brandAffinities)
+  if (typeAffinities)       Object.assign(profile.typeAffinities,       typeAffinities)
+  if (parentTypeAffinities) Object.assign(profile.parentTypeAffinities, parentTypeAffinities)
+  if (colorAffinities)      Object.assign(profile.colorAffinities,      colorAffinities)
+  if (styleAffinities)      Object.assign(profile.styleAffinities,      styleAffinities)
   if (recentLikes?.length) profile.recentLikes = [...recentLikes].slice(0, 10)
 }
 
@@ -69,17 +78,55 @@ function genderFilter(gender) {
     gender === 'both'
 }
 
-function scoreProduct(product, profile) {
+// Returns a lookup that maps a key to its share of the map's max value
+// (0..1). Normalising per-map keeps the all-time aesthetic tally from
+// swamping fresh session signals and makes WEIGHTS directly comparable.
+function makeNormalizer(map) {
+  let max = 0
+  for (const v of Object.values(map)) if (v > max) max = v
+  if (max <= 0) return () => 0
+  return (key) => (map[key] ?? 0) / max
+}
+
+function topKey(map) {
+  let best = null
+  let bestVal = 0
+  for (const [key, val] of Object.entries(map)) {
+    if (val > bestVal) { best = key; bestVal = val }
+  }
+  return best
+}
+
+// Precomputed once per batch so scoring stays O(products)
+function buildRanking(profile) {
+  return {
+    style:        makeNormalizer(profile.styleAffinities),
+    type:         makeNormalizer(profile.typeAffinities),
+    parentType:   makeNormalizer(profile.parentTypeAffinities),
+    brand:        makeNormalizer(profile.brandAffinities),
+    color:        makeNormalizer(profile.colorAffinities),
+    topAesthetic: topKey(profile.styleAffinities),
+  }
+}
+
+function scoreProduct(product, profile, ranking) {
   let score = 0
 
-  score += (profile.brandAffinities[product.brand]           ?? 0) * WEIGHTS.brand
-  score += (profile.typeAffinities[product.type]             ?? 0) * WEIGHTS.type
-  score += (profile.parentTypeAffinities[product.parentType] ?? 0) * WEIGHTS.parentType
-  score += (profile.colorAffinities[product.color]           ?? 0) * WEIGHTS.color
-
+  // Dominant term: how strongly this product expresses the aesthetics the
+  // user has accumulated points in — plus an extra push for their #1.
   for (const [style, weight] of Object.entries(product.styleWeights ?? {})) {
-    score += (profile.styleAffinities[style] ?? 0) * weight * WEIGHTS.style
+    const productStrength = weight / MAX_PRODUCT_STYLE_WEIGHT
+    score += ranking.style(style) * productStrength * WEIGHTS.aesthetic
+    if (style === ranking.topAesthetic) {
+      score += productStrength * WEIGHTS.topAesthetic
+    }
   }
+
+  // Category persistence: keep serving the garment types the user keeps liking
+  score += ranking.type(product.type)             * WEIGHTS.type
+  score += ranking.parentType(product.parentType) * WEIGHTS.parentType
+  score += ranking.brand(product.brand)           * WEIGHTS.brand
+  score += ranking.color(product.color)           * WEIGHTS.color
 
   for (const likedId of profile.recentLikes.slice(0, 5)) {
     const liked = PRODUCTS_BY_ID[likedId]
@@ -129,13 +176,15 @@ function buildBatch(profile, batchSize, gender) {
 
   if (unseen.length === 0) return []
 
-  // Cold start: no likes yet → random shuffle
-  if (profile.recentLikes.length === 0) {
+  // Cold start: no likes AND no aesthetic tally yet → random shuffle.
+  // (A quiz-completed user has a tally even before their first swipe.)
+  if (profile.recentLikes.length === 0 && Object.keys(profile.styleAffinities).length === 0) {
     const shuffled = [...unseen].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, batchSize)
   }
 
-  const scored = unseen.map((p) => ({ product: p, score: scoreProduct(p, profile) }))
+  const ranking = buildRanking(profile)
+  const scored = unseen.map((p) => ({ product: p, score: scoreProduct(p, profile, ranking) }))
   scored.sort((a, b) => b.score - a.score)
 
   const diverse = injectDiversity(scored, batchSize)

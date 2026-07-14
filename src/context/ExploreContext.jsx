@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from './AuthContext'
 import { useSubscription } from './SubscriptionContext'
+import { recordSignal } from '../services/interestTracker'
 
 const ExploreContext = createContext(null)
 
@@ -83,13 +84,17 @@ export function ExploreProvider({ children }) {
   }, [])
 
   const saveAesthetic = useCallback((id) => {
+    const willPin =
+      !savedAesthetics.includes(id) &&
+      (isPro || savedAesthetics.length < limits.aestheticPins)
+    if (willPin) recordSignal(user, 'aestheticPin', { aestheticId: id })
     setSavedAesthetics((prev) => {
       if (prev.includes(id)) return prev
       if (!isPro && prev.length >= limits.aestheticPins) { openPaywall('aestheticPins'); return prev }
       return [...prev, id]
     })
     setOpenAesthetic(id)
-  }, [isPro, limits, openPaywall])
+  }, [isPro, limits, openPaywall, savedAesthetics, user])
 
   const unsaveAesthetic = useCallback((id) => {
     setSavedAesthetics((prev) => prev.filter((s) => s !== id))

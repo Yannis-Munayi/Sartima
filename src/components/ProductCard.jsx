@@ -2,6 +2,7 @@
 import { useWishlist } from '../context/WishlistContext'
 import { useNavigation } from '../context/NavigationContext'
 import { useApp } from '../context/AppContext'
+import { useInterests } from '../context/InterestContext'
 import { BRAND_NAME_TO_ID } from '../data/brands'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import ProductImageToggle from './ProductImageToggle'
@@ -14,6 +15,7 @@ const PRICE_LABEL = { budget: '$', mid: '$$', premium: '$$$', luxury: '$$$$' }
 
 export default function ProductCard({ product, onLike, onSkip }) {
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
+  const { recordInterest } = useInterests() ?? {}
   const navigate   = useNavigation()
   const { state }  = useApp()
   const gender     = state.gender
@@ -171,6 +173,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
             rel="noopener noreferrer"
             className={styles.shopBtn}
             onTouchStart={(e) => e.stopPropagation()}
+            onClick={() => recordInterest?.('shop', { product })}
             aria-label="Shop this item"
           >
             🛍

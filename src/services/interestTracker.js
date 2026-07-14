@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { db } from './firebase'
 import { logError } from './logger'
 
@@ -11,37 +11,55 @@ function getInterestsRef(uid) {
   return doc(db, 'users', uid, 'prefs', 'interests')
 }
 
+const MAX_KEY_LENGTH = 100
+
+// Affinity keys can originate from free text (closet uploads, AI-extracted
+// garment fields), but they become Firestore field names. Firestore rejects
+// names matching __.*__ — one bad key would fail the whole flush forever —
+// and '__proto__' is silently swallowed by JS object assignment. Normalise
+// rather than drop so odd-but-honest names still count.
+function sanitizeKey(key) {
+  if (typeof key !== 'string') return null
+  const safe = key.trim().replace(/^_+|_+$/g, '').slice(0, MAX_KEY_LENGTH)
+  return safe.length > 0 ? safe : null
+}
+
 // Merge a delta object into a parent affinities map (numeric accumulation)
 function mergeAffinities(base = {}, delta = {}) {
   const result = { ...base }
   for (const [key, val] of Object.entries(delta)) {
-    result[key] = (result[key] ?? 0) + val
+    const safe = sanitizeKey(key)
+    if (!safe || !Number.isFinite(val)) continue
+    result[safe] = (Object.hasOwn(result, safe) ? result[safe] : 0) + val
   }
   return result
 }
 
-// Core write — reads current doc, applies delta, writes back
+// Core write — reads current doc, applies delta, writes back. Runs in a
+// transaction so concurrent flushes (second tab, another device) compose
+// instead of last-writer-wins clobbering the whole document.
 async function flushDelta(uid, delta) {
   try {
-    const ref  = getInterestsRef(uid)
-    const snap = await getDoc(ref)
-    const current = snap.exists() ? snap.data() : {}
+    const ref = getInterestsRef(uid)
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref)
+      const current = snap.exists() ? snap.data() : {}
 
-    const updated = {
-      brandAffinities:  mergeAffinities(current.brandAffinities,  delta.brandAffinities),
-      typeAffinities:   mergeAffinities(current.typeAffinities,   delta.typeAffinities),
-      styleAffinities:  mergeAffinities(current.styleAffinities,  delta.styleAffinities),
-      colorAffinities:  mergeAffinities(current.colorAffinities,  delta.colorAffinities),
-      brandVisits:      mergeAffinities(current.brandVisits,      delta.brandVisits),
-      aestheticVisits:  mergeAffinities(current.aestheticVisits,  delta.aestheticVisits),
-      recentLikes:      [
-        ...(delta.recentLikes ?? []),
-        ...(current.recentLikes ?? []),
-      ].slice(0, 20),
-      updatedAt: serverTimestamp(),
-    }
-
-    await setDoc(ref, updated, { merge: false })
+      tx.set(ref, {
+        brandAffinities:      mergeAffinities(current.brandAffinities,      delta.brandAffinities),
+        typeAffinities:       mergeAffinities(current.typeAffinities,       delta.typeAffinities),
+        parentTypeAffinities: mergeAffinities(current.parentTypeAffinities, delta.parentTypeAffinities),
+        styleAffinities:      mergeAffinities(current.styleAffinities,      delta.styleAffinities),
+        colorAffinities:      mergeAffinities(current.colorAffinities,      delta.colorAffinities),
+        brandVisits:          mergeAffinities(current.brandVisits,          delta.brandVisits),
+        aestheticVisits:      mergeAffinities(current.aestheticVisits,      delta.aestheticVisits),
+        recentLikes:      [
+          ...(delta.recentLikes ?? []),
+          ...(current.recentLikes ?? []),
+        ].slice(0, 20),
+        updatedAt: serverTimestamp(),
+      })
+    })
   } catch (err) {
     logError(SERVICE, 'Failed to flush interest delta', { error: err, uid })
   }
@@ -52,13 +70,14 @@ const pendingDelta = {}
 
 function initDelta() {
   return {
-    brandAffinities: {},
-    typeAffinities:  {},
-    styleAffinities: {},
-    colorAffinities: {},
-    brandVisits:     {},
-    aestheticVisits: {},
-    recentLikes:     [],
+    brandAffinities:      {},
+    typeAffinities:       {},
+    parentTypeAffinities: {},
+    styleAffinities:      {},
+    colorAffinities:      {},
+    brandVisits:          {},
+    aestheticVisits:      {},
+    recentLikes:          [],
   }
 }
 
@@ -73,31 +92,85 @@ function queueDelta(uid, patch) {
   if (!pendingDelta[uid]) pendingDelta[uid] = initDelta()
   const d = pendingDelta[uid]
 
-  if (patch.brandAffinities) d.brandAffinities = mergeAffinities(d.brandAffinities, patch.brandAffinities)
-  if (patch.typeAffinities)  d.typeAffinities  = mergeAffinities(d.typeAffinities,  patch.typeAffinities)
-  if (patch.styleAffinities) d.styleAffinities = mergeAffinities(d.styleAffinities, patch.styleAffinities)
-  if (patch.colorAffinities) d.colorAffinities = mergeAffinities(d.colorAffinities, patch.colorAffinities)
-  if (patch.brandVisits)     d.brandVisits     = mergeAffinities(d.brandVisits,     patch.brandVisits)
-  if (patch.aestheticVisits) d.aestheticVisits = mergeAffinities(d.aestheticVisits, patch.aestheticVisits)
-  if (patch.recentLikes)     d.recentLikes     = [...patch.recentLikes, ...d.recentLikes].slice(0, 20)
+  if (patch.brandAffinities)      d.brandAffinities      = mergeAffinities(d.brandAffinities,      patch.brandAffinities)
+  if (patch.typeAffinities)       d.typeAffinities       = mergeAffinities(d.typeAffinities,       patch.typeAffinities)
+  if (patch.parentTypeAffinities) d.parentTypeAffinities = mergeAffinities(d.parentTypeAffinities, patch.parentTypeAffinities)
+  if (patch.styleAffinities)      d.styleAffinities      = mergeAffinities(d.styleAffinities,      patch.styleAffinities)
+  if (patch.colorAffinities)      d.colorAffinities      = mergeAffinities(d.colorAffinities,      patch.colorAffinities)
+  if (patch.brandVisits)          d.brandVisits          = mergeAffinities(d.brandVisits,          patch.brandVisits)
+  if (patch.aestheticVisits)      d.aestheticVisits      = mergeAffinities(d.aestheticVisits,      patch.aestheticVisits)
+  if (patch.recentLikes)          d.recentLikes          = [...patch.recentLikes, ...d.recentLikes].slice(0, 20)
 
   // Debounce: reset 2-second window on every new signal
   clearTimeout(pendingFlush[uid])
   pendingFlush[uid] = setTimeout(() => scheduledFlush(uid), 2000)
 }
 
+// Liked/wishlist/closet entries reuse `type` as an entry-kind flag rather
+// than a garment type — never let those values into the type tally.
+const ENTRY_KIND_FLAGS = new Set(['product', 'item', 'photo', 'uploaded'])
+
+// Per-signal strength. `style` scales the aesthetic-tally points, `meta`
+// scales brand/type/color. Likes and high-intent actions (save, shop click,
+// try-on) award full aesthetic points; a passing product view awards a
+// fraction so browsing can't outweigh deliberate actions.
+const PRODUCT_SIGNALS = {
+  like:  { style: 1,    meta: 1,    recentLike: true },
+  save:  { style: 1,    meta: 0.5 },
+  shop:  { style: 1,    meta: 0.5 },
+  tryOn: { style: 1,    meta: 0.5 },
+  view:  { style: 0.25, meta: 0.25 },
+}
+
+// Some surfaces persist stripped product entries without styleWeights (e.g.
+// Shop Scout groups). Recover the full catalog product by id when possible.
+// Dynamic import keeps the heavy catalog chunk out of eager context bundles.
+function resolveProduct(product) {
+  if (Object.keys(product.styleWeights ?? {}).length > 0 || !product.id) {
+    return Promise.resolve(product)
+  }
+  return import('../data/products')
+    .then((m) => m.PRODUCTS_BY_ID[product.id] ?? product)
+    .catch(() => product)
+}
+
+// Build a queueDelta patch from a product-ish object. Entries come from many
+// surfaces (catalog products, liked/wishlist entries, closet items) with
+// varying shapes, so every field is optional.
+function productDelta(product, strength) {
+  const patch = {}
+  const styleAffinities = {}
+  for (const [style, w] of Object.entries(product.styleWeights ?? {})) {
+    styleAffinities[style] = w * strength.style
+  }
+  if (Object.keys(styleAffinities).length > 0) patch.styleAffinities = styleAffinities
+
+  const rawType     = product.itemType ?? product.type
+  const garmentType = rawType && !ENTRY_KIND_FLAGS.has(rawType) ? rawType : null
+  if (product.brand)      patch.brandAffinities      = { [product.brand]: 2 * strength.meta }
+  if (garmentType)        patch.typeAffinities       = { [garmentType]: 3 * strength.meta }
+  if (product.parentType) patch.parentTypeAffinities = { [product.parentType]: strength.meta }
+  if (product.color)      patch.colorAffinities      = { [product.color]: strength.meta }
+  return patch
+}
+
 /**
  * Record a user interest signal.
  *
  * signalType:
- *   'like'          — user liked a product in the discovery feed or wishlist
+ *   'like'          — user liked a product (discovery swipe or heart anywhere)
+ *   'save'          — user saved a product (wishlist add, closet/wardrobe add)
+ *   'shop'          — user clicked out to shop for a product
+ *   'tryOn'         — user virtually tried a product on
+ *   'view'          — user opened a product's detail sheet
  *   'brandVisit'    — user opened a brand page
- *   'aestheticVisit'— user opened an aesthetic page
+ *   'aestheticVisit'— user opened an aesthetic page (also +1 to that aesthetic's tally)
+ *   'aestheticPin'  — user pinned an aesthetic (+5 to that aesthetic's tally)
  *   'quizComplete'  — quiz finished; bulk style affinity write
  *
- * payload for 'like':        { product: { brand, type, color, parentType, styleWeights } }
- * payload for 'brandVisit':  { brandId }
- * payload for 'aestheticVisit': { aestheticId }
+ * payload for product signals:  { product: { brand, type|itemType, color, parentType, styleWeights } }
+ * payload for 'brandVisit':     { brandId }
+ * payload for 'aestheticVisit' / 'aestheticPin': { aestheticId }
  * payload for 'quizComplete':   { styleScores: { [aestheticId]: number } }
  */
 export function recordSignal(user, signalType, payload) {
@@ -105,23 +178,20 @@ export function recordSignal(user, signalType, payload) {
 
   const uid = user.uid
 
+  const strength = PRODUCT_SIGNALS[signalType]
+  if (strength) {
+    const { product } = payload
+    if (!product) return
+    resolveProduct(product).then((resolved) => {
+      const patch = productDelta(resolved, strength)
+      if (Object.keys(patch).length === 0) return
+      if (strength.recentLike && resolved.id) patch.recentLikes = [resolved.id]
+      queueDelta(uid, patch)
+    })
+    return
+  }
+
   switch (signalType) {
-    case 'like': {
-      const { product } = payload
-      if (!product) return
-      const styleAffinities = {}
-      for (const [style, w] of Object.entries(product.styleWeights ?? {})) {
-        styleAffinities[style] = w
-      }
-      queueDelta(uid, {
-        brandAffinities:  { [product.brand]: 2 },
-        typeAffinities:   { [product.type]: 3 },
-        colorAffinities:  { [product.color]: 1 },
-        styleAffinities,
-        recentLikes: [product.id],
-      })
-      break
-    }
     case 'brandVisit': {
       const { brandId } = payload
       if (!brandId) return
@@ -131,7 +201,16 @@ export function recordSignal(user, signalType, payload) {
     case 'aestheticVisit': {
       const { aestheticId } = payload
       if (!aestheticId) return
-      queueDelta(uid, { aestheticVisits: { [aestheticId]: 1 } })
+      queueDelta(uid, {
+        aestheticVisits: { [aestheticId]: 1 },
+        styleAffinities: { [aestheticId]: 1 },
+      })
+      break
+    }
+    case 'aestheticPin': {
+      const { aestheticId } = payload
+      if (!aestheticId) return
+      queueDelta(uid, { styleAffinities: { [aestheticId]: 5 } })
       break
     }
     case 'quizComplete': {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext'
+import { useInterests } from '../../context/InterestContext'
 import { fetchPhotosWithFallback } from '../../services/pexels'
 import { resolveProductImage, getAltProductImage } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
@@ -41,6 +42,7 @@ function ProductPhoto({ product }) {
 }
 
 function ProductCard({ product, priorities, isSelected, onToggle }) {
+  const { recordInterest } = useInterests() ?? {}
   const priceColor = PRICE_COLORS[product.priceRange] ?? '#888'
   const priceLabel = PRICE_LABELS[product.priceRange] ?? ''
 
@@ -87,6 +89,7 @@ function ProductCard({ product, priorities, isSelected, onToggle }) {
         {priorityLabel && <span className={styles.productLabel}>{priorityLabel}</span>}
         <a href={product.shopUrl ?? product.shopFallbackUrl}
           target="_blank" rel="noopener noreferrer" className={styles.shopBtn}
+          onClick={() => recordInterest?.('shop', { product })}
         >
           Shop {product.brand} →
         </a>

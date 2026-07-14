@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
+import { useInterests } from '../context/InterestContext'
 import { useApp } from '../context/AppContext'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import ItemActionSheet from '../components/ItemActionSheet'
@@ -39,6 +40,7 @@ function bucketFor(item) {
 
 // Single card for any liked item (product or old quiz item)
 function LikedItemCard({ item, onSelect, onTryOn }) {
+  const { recordInterest } = useInterests() ?? {}
   const [photo, setPhoto] = useState(null)
   const { state } = useApp()
   const gender = state.gender
@@ -83,7 +85,7 @@ function LikedItemCard({ item, onSelect, onTryOn }) {
           target="_blank"
           rel="noopener noreferrer"
           className={styles.shopLink}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); recordInterest?.('shop', { product: item }) }}
         >
           Shop at {item.brand} ↗
         </a>

@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import { useNavigation } from '../context/NavigationContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useInterests } from '../context/InterestContext'
 import { recordSignal } from '../services/interestTracker'
 import ProductImageToggle from '../components/ProductImageToggle'
 import styles from './BrandScreen.module.css'
@@ -155,6 +156,8 @@ function BrandProductCard({ product }) {
     }
   }
 
+  const { recordInterest } = useInterests() ?? {}
+
   return (
     <div className={styles.shopCard} ref={cardRef}>
       <div className={styles.shopCardPhoto} style={{ background: product.gradient ?? 'var(--bg-elevated)' }}>
@@ -173,7 +176,10 @@ function BrandProductCard({ product }) {
       <p className={styles.shopCardName}>{product.name}</p>
       {product.priceRange && <p className={styles.shopCardPrice}>{product.priceRange}</p>}
       {product.shopUrl && (
-        <a href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}>
+        <a
+          href={product.shopUrl} target="_blank" rel="noopener noreferrer" className={styles.shopLink}
+          onClick={() => recordInterest?.('shop', { product })}
+        >
           Shop ↗
         </a>
       )}

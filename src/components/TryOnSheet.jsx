@@ -6,6 +6,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useSubscription } from '../context/SubscriptionContext'
 import { generateTryOnResult, TRYON_CATEGORIES } from '../services/tryOn'
 import { purchaseTryOnPackSession } from '../services/subscriptionService'
+import { recordSignal } from '../services/interestTracker'
 import styles from './TryOnSheet.module.css'
 
 const MAX_PIECES = 3
@@ -148,6 +149,9 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
       const url = await generateTryOnResult(user.uid, selectedItems, avatarUrl, avatarUpdatedAt)
       setResultUrl(url)
       setPhase('result')
+      for (const tried of selectedItems) {
+        recordSignal(user, 'tryOn', { product: tried })
+      }
     } catch (err) {
       const message  = err?.message ?? ''
       const code     = err?.code ?? message

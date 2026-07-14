@@ -1,9 +1,10 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import {
   PRICE_RANGES, MATERIALS, COLOURS, SIZES, FIT_OPTIONS,
   getRetailersForItem,
 } from '../data/retailers'
 import { useShop } from '../context/ShopContext'
+import { useInterests } from '../context/InterestContext'
 import styles from './ShopPanel.module.css'
 
 const COLOUR_HEX = {
@@ -105,6 +106,13 @@ function RetailerCard({ retailer, index }) {
 
 export default function ShopPanel({ item, onClose }) {
   const { addToShop, isInShop } = useShop()
+  const { recordInterest } = useInterests() ?? {}
+
+  // Opening the retailer panel = shopping intent for this item
+  useEffect(() => {
+    recordInterest?.('shop', { product: item })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id])
 
   const [priceRange, setPriceRange] = useState(null)
   const [material,   setMaterial]   = useState(null)

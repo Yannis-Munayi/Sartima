@@ -39,7 +39,9 @@ export function AuthProvider({ children }) {
       legalAcceptedAt: serverTimestamp(),
       ageAffirmed16Plus: consent.ageAffirmed === true,
     })
-    setUser({ ...newUser, displayName })
+    // onAuthStateChanged already set `user` to the live User instance;
+    // updateProfile mutated it in place, so no manual setUser needed here
+    // (a spread copy would strip the User prototype methods).
   }
 
   async function login(email, password) {
