@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
 import { useInterests } from '../context/InterestContext'
+import { trackEvent } from '../services/firebase'
 
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
@@ -202,6 +203,9 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
   const quizModeRef      = useRef(quizMode)
   const genderRef        = useRef(gender)
   const interestsSeeded  = useRef(false)
+  // Monotonic per-session swipe counter — feeds like-rate-by-position
+  // analytics (currentIndex resets on refill so it can't serve as position)
+  const swipeCountRef    = useRef(0)
   useEffect(() => { quizModeRef.current = quizMode }, [quizMode])
   useEffect(() => { genderRef.current = gender }, [gender])
 
@@ -308,6 +312,15 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     if (quizModeRef.current) {
       setQuizLikedItems((prev) => [...prev, product])
     }
+    swipeCountRef.current += 1
+    trackEvent('feed_swipe', {
+      action:       'like',
+      product_id:   product.id,
+      brand:        product.brand,
+      product_type: product.type,
+      position:     swipeCountRef.current,
+      mode:         quizModeRef.current ? 'quiz' : 'discover',
+    })
     setIndex((i) => i + 1)
   }, [])
 
@@ -316,6 +329,15 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
     p.brandAffinities[product.brand] = Math.max(0, (p.brandAffinities[product.brand] ?? 0) - 1)
     p.typeAffinities[product.type]   = Math.max(0, (p.typeAffinities[product.type]   ?? 0) - 1)
     p.seenIds.add(product.id)
+    swipeCountRef.current += 1
+    trackEvent('feed_swipe', {
+      action:       'skip',
+      product_id:   product.id,
+      brand:        product.brand,
+      product_type: product.type,
+      position:     swipeCountRef.current,
+      mode:         quizModeRef.current ? 'quiz' : 'discover',
+    })
     setIndex((i) => i + 1)
   }, [])
 

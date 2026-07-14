@@ -16,6 +16,7 @@ function useIsDesktop() {
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
 import { useGuideController } from './hooks/useGuideController'
 import { useHashRouting } from './hooks/useHashRouting'
+import { useOutboundClickTracking } from './hooks/useOutboundClickTracking'
 import { AppProvider, useApp, useTheme, useShowQuizTab, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NavigationProvider } from './context/NavigationContext'
@@ -231,6 +232,9 @@ function AppShell() {
 
   // Shareable URLs + browser back/forward, mapped onto the tab-ID scheme
   useHashRouting(activeTab, handleTabChange)
+
+  // Attribute outbound retailer/affiliate clicks to the tab they came from
+  useOutboundClickTracking(activeTab)
 
   function handleTabChange(tabId) {
     if (tabId === 'quiz' && sessionInProgress) {
