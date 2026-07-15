@@ -572,7 +572,7 @@
   font-weight: 700;
   color: var(--text);
   margin: 0 0 4px;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
 }
 
 .addSheetSub {

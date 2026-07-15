@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import { initCrashReporter } from './services/crashReporter'
 import './index.css'
+import './styles/aestheticThemes.css'
 import App from './App.jsx'
 
 initCrashReporter()

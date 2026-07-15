@@ -1611,7 +1611,7 @@
 }
 
 .studioSheetTitle {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
   color: var(--text);

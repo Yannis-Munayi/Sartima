@@ -3,7 +3,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 import { db, functions, getAnalyticsConsent, setAnalyticsConsent, trackEvent } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
-import { useApp, useTheme, useTempUnit, useDefaultOccasion, usePreferredSeasons, useShowQuizTab, useClosetSort } from '../context/AppContext'
+import { useApp, useTheme, useTempUnit, useDefaultOccasion, usePreferredSeasons, useShowQuizTab, useClosetSort, useAdaptiveTheme } from '../context/AppContext'
+import { useInterests } from '../context/InterestContext'
+import { AESTHETIC_FLAVORS, resolveAestheticFlavor } from '../data/aestheticThemes'
+import { STYLES } from '../data/styles'
 import LegalModal from './LegalModal'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from '../data/legalContent'
 import { downloadAllUserData } from '../services/dataExport'
@@ -144,6 +147,21 @@ function ScoutSettings() {
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
+  const { state }           = useApp()
+  const { interests }       = useInterests()
+  const { adaptiveTheme, setAdaptiveTheme } = useAdaptiveTheme()
+
+  const resolved   = resolveAestheticFlavor(state.styleScores, interests?.styleAffinities)
+  const flavorSub  = adaptiveTheme && resolved
+    ? `${AESTHETIC_FLAVORS[resolved.flavorId]?.label ?? ''} — themed to ${STYLES[resolved.styleId]?.name ?? 'your top aesthetic'}`
+    : 'Fonts & accent colors follow your top aesthetic'
+
+  function toggleAdaptive() {
+    const next = !adaptiveTheme
+    setAdaptiveTheme(next)
+    trackEvent('adaptive_theme_toggled', { enabled: next })
+  }
+
   return (
     <section>
       <h3 className={styles.sectionTitle}>Appearance</h3>
@@ -159,6 +177,20 @@ function ThemeToggle() {
           onClick={() => setTheme('light')}
         >
           ☀️ Light
+        </button>
+      </div>
+      <div style={{ height: 12 }} />
+      <div className={styles.settingsToggleRow}>
+        <div>
+          <p className={styles.settingsToggleLabel}>Adaptive theme</p>
+          <p className={styles.settingsToggleSub}>{flavorSub}</p>
+        </div>
+        <button
+          className={`${styles.toggle} ${adaptiveTheme ? styles.toggleOn : ''}`}
+          onClick={toggleAdaptive}
+          aria-label={adaptiveTheme ? 'Disable adaptive theme' : 'Enable adaptive theme'}
+        >
+          <span className={styles.toggleThumb} />
         </button>
       </div>
     </section>

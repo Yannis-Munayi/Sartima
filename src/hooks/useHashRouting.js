@@ -12,7 +12,7 @@ const STATIC_TABS = new Set([
   'home', 'quiz', 'explore', 'brands', 'search', 'mystyle',
   'daily', 'profile', 'wardrobe-builder',
 ])
-const PREFIX_TABS = ['aesthetic:', 'brand:', 'mystyle:', 'closet:', 'wardrobe-builder:', 'profile:']
+const PREFIX_TABS = ['aesthetic:', 'brand:', 'mystyle:', 'closet:', 'wardrobe-builder:', 'profile:', 'quiz:']
 
 export function isRoutableTab(tabId) {
   if (!tabId) return false

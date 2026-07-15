@@ -129,7 +129,11 @@ Theme: warm charcoal dark palette + warm ivory light palette. **Light is the def
 
 `--text-2xs` / `--text-xs`: 12px · `--text-sm`: 13px · `--text-base`: 14px · `--text-md`: 15px · `--text-lg`: 17px · `--text-xl`: 20px · `--text-2xl`: 24px · `--text-3xl`: 28px · `--text-hero`: 32px
 
-Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display.
+Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display. Display headings go through `--font-display` (default `'Playfair Display', serif`).
+
+### Adaptive aesthetic theming
+
+`data-aesthetic="<flavor>"` on `:root` (set by `useAestheticFlavor` from the user's top aesthetic; 51 aesthetics → 11 flavors in `src/data/aestheticThemes.js`) overrides `--font-display`, all `--accent*` vars and, for some flavors, the radius scale — see `src/styles/aestheticThemes.css`. Off switch: `localStorage sartima_adaptive_theme = 'false'`; resolved flavor cached in `sartima_aesthetic_flavor` for flash-free boot (inline script in `index.html`).
 
 ### Border Radius
 

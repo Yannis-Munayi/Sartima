@@ -14,6 +14,7 @@ function useIsDesktop() {
   return isDesktop
 }
 import { clearQuizProgress } from './hooks/useDiscoveryQueue'
+import { useAestheticFlavor } from './hooks/useAestheticFlavor'
 import { useGuideController } from './hooks/useGuideController'
 import { useHashRouting } from './hooks/useHashRouting'
 import { useOutboundClickTracking } from './hooks/useOutboundClickTracking'
@@ -140,6 +141,7 @@ function AppShell() {
   const { state, dispatch } = useApp()
   const { user }            = useAuth()
   useTheme()
+  useAestheticFlavor()
   const { openAesthetic, openAestheticTab, openBrand, openBrandTab } = useExplore()
   const { showQuizTab }                     = useShowQuizTab()
   const [activeTab, setActiveTab]           = useState('home')
@@ -237,6 +239,15 @@ function AppShell() {
   useOutboundClickTracking(activeTab)
 
   function handleTabChange(tabId) {
+    // Explicit finite-quiz start. Callers must use this instead of pairing
+    // their own GO_TO_QUIZ dispatch with navigate('quiz') — the auto-start
+    // branch below reads this render's state, so the pair would clobber
+    // quizMode with GO_TO_DISCOVERY_DIRECT before the reducer applies.
+    if (tabId === 'quiz:start') {
+      dispatch({ type: 'GO_TO_QUIZ' })
+      setActiveTab('quiz')
+      return
+    }
     if (tabId === 'quiz' && sessionInProgress) {
       setShowResumeModal(true)
       return

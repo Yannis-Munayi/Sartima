@@ -30,3 +30,21 @@ test('theme toggle flips data-theme and persists across reload', async ({ page }
   await page.getByRole('button', { name: '🌑 Dark', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
+
+test('adaptive theme toggle persists and clears the flavor attribute', async ({ page }) => {
+  await openSettings(page)
+  await expect(page.getByText('Adaptive theme', { exact: true })).toBeVisible()
+
+  // Default is on — turning it off persists and strips any applied flavor
+  await page.locator('button[aria-label="Disable adaptive theme"]').click()
+  expect(await page.evaluate(() => localStorage.getItem('sartima_adaptive_theme'))).toBe('false')
+  expect(await page.locator('html').getAttribute('data-aesthetic')).toBeNull()
+
+  // Off state survives a reload, then can be re-enabled
+  await page.reload({ waitUntil: 'networkidle' })
+  await dismissConsentBanner(page)
+  await page.getByRole('button', { name: /Profile/i }).first().click()
+  await page.locator('button[aria-label="Settings"]').click({ force: true })
+  await page.locator('button[aria-label="Enable adaptive theme"]').click()
+  expect(await page.evaluate(() => localStorage.getItem('sartima_adaptive_theme'))).toBe('true')
+})

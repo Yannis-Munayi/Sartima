@@ -363,6 +363,28 @@ export function useShowQuizTab() {
   return { showQuizTab: show, setShowQuizTab: setShow }
 }
 
+// ── Adaptive aesthetic theme hook (cross-component reactive via custom event) ──
+// On/off switch for theming the UI to the user's top aesthetic. Default on.
+// The actual data-aesthetic attribute is managed by useAestheticFlavor.
+const ADAPTIVE_THEME_EVENT = 'sartima:adaptive-theme-change'
+
+export function useAdaptiveTheme() {
+  const [enabled, setEnabledState] = useState(() => localStorage.getItem('sartima_adaptive_theme') !== 'false')
+
+  useEffect(() => {
+    function onUpdate(e) { setEnabledState(e.detail !== false) }
+    window.addEventListener(ADAPTIVE_THEME_EVENT, onUpdate)
+    return () => window.removeEventListener(ADAPTIVE_THEME_EVENT, onUpdate)
+  }, [])
+
+  function setEnabled(v) {
+    localStorage.setItem('sartima_adaptive_theme', String(v))
+    setEnabledState(v)
+    window.dispatchEvent(new CustomEvent(ADAPTIVE_THEME_EVENT, { detail: v }))
+  }
+  return { adaptiveTheme: enabled, setAdaptiveTheme: setEnabled }
+}
+
 // ── Closet sort hook ──────────────────────────────────────────────────────────
 export function useClosetSort() {
   const [sort, setSortState] = useState(() => localStorage.getItem('sartima_closet_sort') ?? 'date')

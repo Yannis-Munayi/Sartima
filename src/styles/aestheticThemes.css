@@ -1,0 +1,216 @@
+/* ── Adaptive aesthetic theming ─────────────────────────────────────────────
+   Applied via `data-aesthetic` on :root (see src/hooks/useAestheticFlavor.js
+   and src/data/aestheticThemes.js). Each flavor overrides the display font,
+   the accent palette and (for a few) border radii. Dark-theme values live in
+   the single-attribute block; the light block re-declares every accent var so
+   it always wins over :root[data-theme="light"] regardless of source order.
+
+   Accent alpha conventions match index.css: dim .12 / border .32 on dark,
+   dim .10 / border .30 on light. */
+
+/* ── Heritage — old money, tailoring. Times New Roman, camel & navy ── */
+:root[data-aesthetic="heritage"] {
+  --font-display:    'Times New Roman', Times, Georgia, serif;
+  --accent:          #C2A878;
+  --accent-dim:      rgba(194, 168, 120, 0.12);
+  --accent-border:   rgba(194, 168, 120, 0.32);
+  --accent-secondary: #CDB68C;
+  --accent-gold:     #CDB68C;
+}
+:root[data-theme="light"][data-aesthetic="heritage"] {
+  --accent:          #33486B;
+  --accent-dim:      rgba(51, 72, 107, 0.1);
+  --accent-border:   rgba(51, 72, 107, 0.3);
+  --accent-secondary: #46597A;
+  --accent-gold:     #46597A;
+}
+
+/* ── Collegiate — preppy. Georgia, regatta navy ── */
+:root[data-aesthetic="collegiate"] {
+  --font-display:    Georgia, 'Times New Roman', serif;
+  --accent:          #9DB9DB;
+  --accent-dim:      rgba(157, 185, 219, 0.12);
+  --accent-border:   rgba(157, 185, 219, 0.32);
+  --accent-secondary: #AFC6E2;
+  --accent-gold:     #AFC6E2;
+}
+:root[data-theme="light"][data-aesthetic="collegiate"] {
+  --accent:          #2E5D8B;
+  --accent-dim:      rgba(46, 93, 139, 0.1);
+  --accent-border:   rgba(46, 93, 139, 0.3);
+  --accent-secondary: #3E6D9A;
+  --accent-gold:     #3E6D9A;
+}
+
+/* ── Serene — minimalist, scandi. Clean sans headings, stone neutrals ── */
+:root[data-aesthetic="serene"] {
+  --font-display:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --accent:          #C9C3B8;
+  --accent-dim:      rgba(201, 195, 184, 0.12);
+  --accent-border:   rgba(201, 195, 184, 0.32);
+  --accent-secondary: #D4CFC5;
+  --accent-gold:     #D4CFC5;
+}
+:root[data-theme="light"][data-aesthetic="serene"] {
+  --accent:          #6E6659;
+  --accent-dim:      rgba(110, 102, 89, 0.1);
+  --accent-border:   rgba(110, 102, 89, 0.3);
+  --accent-secondary: #7D7568;
+  --accent-gold:     #7D7568;
+}
+
+/* ── Pop — y2k, kpop, maximalist. Trebuchet, hot pink, soft corners ── */
+:root[data-aesthetic="pop"] {
+  --font-display:    'Trebuchet MS', Verdana, sans-serif;
+  --accent:          #F48FB1;
+  --accent-dim:      rgba(244, 143, 177, 0.12);
+  --accent-border:   rgba(244, 143, 177, 0.32);
+  --accent-secondary: #F7A6C1;
+  --accent-gold:     #F7A6C1;
+  --radius-sm:       6px;
+  --radius-md:       10px;
+  --radius-lg:       14px;
+  --radius-xl:       18px;
+}
+:root[data-theme="light"][data-aesthetic="pop"] {
+  --accent:          #C2185B;
+  --accent-dim:      rgba(194, 24, 91, 0.1);
+  --accent-border:   rgba(194, 24, 91, 0.3);
+  --accent-secondary: #CE3570;
+  --accent-gold:     #CE3570;
+}
+
+/* ── Street — streetwear, hip-hop, skate. Impact, volt orange, sharp ── */
+:root[data-aesthetic="street"] {
+  --font-display:    Impact, 'Arial Black', 'Helvetica Neue', sans-serif;
+  --accent:          #FF8A4C;
+  --accent-dim:      rgba(255, 138, 76, 0.12);
+  --accent-border:   rgba(255, 138, 76, 0.32);
+  --accent-secondary: #FF9F6B;
+  --accent-gold:     #FF9F6B;
+  --radius-sm:       0px;
+  --radius-md:       2px;
+  --radius-lg:       4px;
+  --radius-xl:       6px;
+}
+:root[data-theme="light"][data-aesthetic="street"] {
+  --accent:          #C05621;
+  --accent-dim:      rgba(192, 86, 33, 0.1);
+  --accent-border:   rgba(192, 86, 33, 0.3);
+  --accent-secondary: #CD6A37;
+  --accent-gold:     #CD6A37;
+}
+
+/* ── Sport — athleisure, athletic. Verdana, electric blue ── */
+:root[data-aesthetic="sport"] {
+  --font-display:    Verdana, 'Segoe UI', Tahoma, sans-serif;
+  --accent:          #82B8E8;
+  --accent-dim:      rgba(130, 184, 232, 0.12);
+  --accent-border:   rgba(130, 184, 232, 0.32);
+  --accent-secondary: #98C5ED;
+  --accent-gold:     #98C5ED;
+}
+:root[data-theme="light"][data-aesthetic="sport"] {
+  --accent:          #2563A8;
+  --accent-dim:      rgba(37, 99, 168, 0.1);
+  --accent-border:   rgba(37, 99, 168, 0.3);
+  --accent-secondary: #3873B5;
+  --accent-gold:     #3873B5;
+}
+
+/* ── Mono — techwear, cyberpunk. Monospace, terminal green, sharp ── */
+:root[data-aesthetic="mono"] {
+  --font-display:    'Cascadia Code', 'SF Mono', Consolas, Menlo, monospace;
+  --accent:          #7FE0C3;
+  --accent-dim:      rgba(127, 224, 195, 0.12);
+  --accent-border:   rgba(127, 224, 195, 0.32);
+  --accent-secondary: #98E7CF;
+  --accent-gold:     #98E7CF;
+  --radius-sm:       0px;
+  --radius-md:       2px;
+  --radius-lg:       4px;
+  --radius-xl:       6px;
+}
+:root[data-theme="light"][data-aesthetic="mono"] {
+  --accent:          #0E7A5F;
+  --accent-dim:      rgba(14, 122, 95, 0.1);
+  --accent-border:   rgba(14, 122, 95, 0.3);
+  --accent-secondary: #238A70;
+  --accent-gold:     #238A70;
+}
+
+/* ── Underground — grunge, punk, goth. Typewriter, blood red ── */
+:root[data-aesthetic="underground"] {
+  --font-display:    'Courier New', Courier, monospace;
+  --accent:          #D4726A;
+  --accent-dim:      rgba(212, 114, 106, 0.12);
+  --accent-border:   rgba(212, 114, 106, 0.32);
+  --accent-secondary: #DC8880;
+  --accent-gold:     #DC8880;
+}
+:root[data-theme="light"][data-aesthetic="underground"] {
+  --accent:          #8C3730;
+  --accent-dim:      rgba(140, 55, 48, 0.1);
+  --accent-border:   rgba(140, 55, 48, 0.3);
+  --accent-secondary: #9C4842;
+  --accent-gold:     #9C4842;
+}
+
+/* ── Academia — dark/light academia, vintage. Palatino, bottle green ── */
+:root[data-aesthetic="academia"] {
+  --font-display:    'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  --accent:          #A3BC8F;
+  --accent-dim:      rgba(163, 188, 143, 0.12);
+  --accent-border:   rgba(163, 188, 143, 0.32);
+  --accent-secondary: #B2C7A1;
+  --accent-gold:     #B2C7A1;
+}
+:root[data-theme="light"][data-aesthetic="academia"] {
+  --accent:          #4F6B35;
+  --accent-dim:      rgba(79, 107, 53, 0.1);
+  --accent-border:   rgba(79, 107, 53, 0.3);
+  --accent-secondary: #5F7B45;
+  --accent-gold:     #5F7B45;
+}
+
+/* ── Utility — workwear, gorpcore, military. Condensed sans, olive ── */
+:root[data-aesthetic="utility"] {
+  --font-display:    'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --accent:          #B9B075;
+  --accent-dim:      rgba(185, 176, 117, 0.12);
+  --accent-border:   rgba(185, 176, 117, 0.32);
+  --accent-secondary: #C4BC88;
+  --accent-gold:     #C4BC88;
+  --radius-sm:       2px;
+  --radius-md:       4px;
+  --radius-lg:       6px;
+  --radius-xl:       8px;
+}
+:root[data-theme="light"][data-aesthetic="utility"] {
+  --accent:          #63602F;
+  --accent-dim:      rgba(99, 96, 47, 0.1);
+  --accent-border:   rgba(99, 96, 47, 0.3);
+  --accent-secondary: #73703F;
+  --accent-gold:     #73703F;
+}
+
+/* ── Romantic — cottagecore, fairycore. Cormorant, rose, soft corners ── */
+:root[data-aesthetic="romantic"] {
+  --font-display:    'Cormorant Garamond', Georgia, serif;
+  --accent:          #DBA6AE;
+  --accent-dim:      rgba(219, 166, 174, 0.12);
+  --accent-border:   rgba(219, 166, 174, 0.32);
+  --accent-secondary: #E2B6BD;
+  --accent-gold:     #E2B6BD;
+  --radius-sm:       6px;
+  --radius-md:       10px;
+  --radius-lg:       14px;
+  --radius-xl:       18px;
+}
+:root[data-theme="light"][data-aesthetic="romantic"] {
+  --accent:          #8E4F5D;
+  --accent-dim:      rgba(142, 79, 93, 0.1);
+  --accent-border:   rgba(142, 79, 93, 0.3);
+  --accent-secondary: #9C5F6C;
+  --accent-gold:     #9C5F6C;
+}

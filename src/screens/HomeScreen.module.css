@@ -81,7 +81,7 @@
 }
 
 .heroName {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 32px;
   font-weight: 700;
   color: #fff;
@@ -198,7 +198,7 @@
 }
 
 .greetingText {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
   color: var(--text);
@@ -342,7 +342,7 @@
 }
 
 .ctaTitle {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 700;
   color: #fff;
@@ -700,7 +700,7 @@
   min-width: 0;
 }
 .wardrobeCTATitle {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
@@ -868,7 +868,7 @@
   font-weight: 700;
   color: var(--text);
   margin: 0 0 3px;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
 }
 
 .dailyWeather {

@@ -6,6 +6,10 @@
       (function () {
         var t = localStorage.getItem('sartima_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', t);
+        if (localStorage.getItem('sartima_adaptive_theme') !== 'false') {
+          var f = localStorage.getItem('sartima_aesthetic_flavor');
+          if (f) document.documentElement.setAttribute('data-aesthetic', f);
+        }
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext'
 import styles from '../../screens/HomeScreen.module.css'
 
 export default function AestheticProfileCard({ navigate, gender }) {
-  const { state, dispatch } = useApp()
+  const { state } = useApp()
 
   const topStyles = useMemo(() => {
     const total = Object.values(state.styleScores).reduce((a, b) => a + b, 0)
@@ -33,7 +33,7 @@ export default function AestheticProfileCard({ navigate, gender }) {
           <div className={styles.aestheticBarGhost} style={{ width: '70%' }} />
           <div className={styles.aestheticBarGhost} style={{ width: '45%' }} />
         </div>
-        <button className={styles.quizCTABtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); navigate('quiz') }}>
+        <button className={styles.quizCTABtn} onClick={() => navigate('quiz:start')}>
           Take the style quiz to unlock your profile →
         </button>
       </section>

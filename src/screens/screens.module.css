@@ -187,7 +187,7 @@
   line-height: 1.05;
   margin: 0;
   letter-spacing: -0.04em;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .accent {
@@ -492,7 +492,7 @@
   color: #fff;
   margin: 0;
   letter-spacing: -0.03em;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .heroMixed {

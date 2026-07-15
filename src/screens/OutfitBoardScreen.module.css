@@ -477,7 +477,7 @@
 }
 
 .sheetTitle {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
@@ -568,7 +568,7 @@
 .emptyBoardsEmoji { font-size: 48px; line-height: 1; margin-bottom: 4px; }
 
 .emptyBoardsTitle {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
   color: var(--text);

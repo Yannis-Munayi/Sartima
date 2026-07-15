@@ -42,6 +42,9 @@
   --radius-lg:       10px;
   --radius-xl:       14px;
   --radius-full:     9999px;
+  /* Display font — overridden per aesthetic flavor via data-aesthetic on :root
+     (see src/styles/aestheticThemes.css) */
+  --font-display:    'Playfair Display', serif;
 }
 
 :root[data-theme="light"] {

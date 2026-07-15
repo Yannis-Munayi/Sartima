@@ -23,7 +23,7 @@
   color: var(--text);
   margin: 0 0 10px;
   line-height: 1.2;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
 }
 
 .title em {

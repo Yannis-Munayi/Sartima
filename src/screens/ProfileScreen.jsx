@@ -5,6 +5,7 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import { useNavigation } from '../context/NavigationContext'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
 import FeedbackSheet from '../components/FeedbackSheet'
 import CrashReportSheet from '../components/CrashReportSheet'
@@ -16,6 +17,7 @@ import styles from './ProfileScreen.module.css'
 export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }) {
   const { user, logout }  = useAuth()
   const { state, dispatch } = useApp()
+  const navigate = useNavigation()
   const { tier, isPro, usage, openPaywall } = useSubscription()
   const gender = state.gender
   const [quizzes, setQuizzes] = useState([])
@@ -272,7 +274,7 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
         {/* Quiz history */}
         <QuizHistorySection ref={quizSectionRef} quizzes={quizzes} loading={loading} gender={gender} />
 
-        <button className={styles.retakeBtn} onClick={() => { dispatch({ type: 'GO_TO_QUIZ' }); if (onBack) onBack() }}>
+        <button className={styles.retakeBtn} onClick={() => { if (navigate) { navigate('quiz:start') } else { dispatch({ type: 'GO_TO_QUIZ' }) } }}>
           Take quiz again
         </button>
 

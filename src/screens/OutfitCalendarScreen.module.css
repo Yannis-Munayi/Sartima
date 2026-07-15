@@ -34,7 +34,7 @@
   font-weight: 700;
   color: var(--text);
   margin: 0;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
 }
 
 /* â”€â”€ Weekday headers â”€â”€ */
@@ -181,7 +181,7 @@
   font-weight: 700;
   color: var(--text);
   margin: 0;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
 }
 
 .sheetClose {
