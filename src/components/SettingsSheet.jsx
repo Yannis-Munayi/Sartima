@@ -149,17 +149,27 @@ function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const { state }           = useApp()
   const { interests }       = useInterests()
-  const { adaptiveTheme, setAdaptiveTheme } = useAdaptiveTheme()
+  const { adaptiveTheme, setAdaptiveTheme, flavorPin, setFlavorPin } = useAdaptiveTheme()
 
-  const resolved   = resolveAestheticFlavor(state.styleScores, interests?.styleAffinities)
-  const flavorSub  = adaptiveTheme && resolved
-    ? `${AESTHETIC_FLAVORS[resolved.flavorId]?.label ?? ''} — themed to ${STYLES[resolved.styleId]?.name ?? 'your top aesthetic'}`
-    : 'Fonts & accent colors follow your top aesthetic'
+  const resolved  = resolveAestheticFlavor(state.styleScores, interests?.styleAffinities)
+  const pinned    = flavorPin ? AESTHETIC_FLAVORS[flavorPin] : null
+  const flavorSub = !adaptiveTheme
+    ? 'Fonts & accent colors follow your top aesthetic'
+    : pinned
+      ? `Pinned to ${pinned.label}`
+      : resolved
+        ? `${AESTHETIC_FLAVORS[resolved.flavorId]?.label ?? ''} — themed to ${STYLES[resolved.styleId]?.name ?? 'your top aesthetic'}`
+        : 'Fonts & accent colors follow your top aesthetic'
 
   function toggleAdaptive() {
     const next = !adaptiveTheme
     setAdaptiveTheme(next)
     trackEvent('adaptive_theme_toggled', { enabled: next })
+  }
+
+  function pickFlavor(flavorId) {
+    setFlavorPin(flavorId)
+    trackEvent('aesthetic_flavor_pinned', { flavor: flavorId ?? 'auto' })
   }
 
   return (
@@ -193,6 +203,32 @@ function ThemeToggle() {
           <span className={styles.toggleThumb} />
         </button>
       </div>
+      {adaptiveTheme && (
+        <>
+          <div style={{ height: 12 }} />
+          <p className={styles.settingsToggleLabel}>Theme flavor</p>
+          <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>
+            Auto follows your top aesthetic — or pin one you love
+          </p>
+          <div className={styles.occasionRow}>
+            <button
+              className={`${styles.occasionPill} ${!flavorPin ? styles.occasionPillActive : ''}`}
+              onClick={() => pickFlavor(null)}
+            >
+              ✦ Auto
+            </button>
+            {Object.values(AESTHETIC_FLAVORS).map((f) => (
+              <button
+                key={f.id}
+                className={`${styles.occasionPill} ${flavorPin === f.id ? styles.occasionPillActive : ''}`}
+                onClick={() => pickFlavor(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </section>
   )
 }

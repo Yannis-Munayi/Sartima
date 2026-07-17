@@ -48,3 +48,24 @@ test('adaptive theme toggle persists and clears the flavor attribute', async ({ 
   await page.locator('button[aria-label="Enable adaptive theme"]').click()
   expect(await page.evaluate(() => localStorage.getItem('sartima_adaptive_theme'))).toBe('true')
 })
+
+test('pinning a flavor applies it immediately, survives reload, and Auto reverts', async ({ page }) => {
+  await openSettings(page)
+
+  // Pin Street — applies without any quiz signal
+  await page.getByRole('button', { name: 'Street', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-aesthetic', 'street')
+  expect(await page.evaluate(() => localStorage.getItem('sartima_aesthetic_pin'))).toBe('street')
+
+  // Boot cache re-applies the pinned flavor before React mounts
+  await page.reload({ waitUntil: 'networkidle' })
+  await expect(page.locator('html')).toHaveAttribute('data-aesthetic', 'street')
+
+  // Back to Auto — signed out with no quiz signal, so the attribute clears
+  await dismissConsentBanner(page)
+  await page.getByRole('button', { name: /Profile/i }).first().click()
+  await page.locator('button[aria-label="Settings"]').click({ force: true })
+  await page.getByRole('button', { name: '✦ Auto', exact: true }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-aesthetic', /.+/)
+  expect(await page.evaluate(() => localStorage.getItem('sartima_aesthetic_pin'))).toBeNull()
+})

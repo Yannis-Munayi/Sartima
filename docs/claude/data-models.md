@@ -133,7 +133,7 @@ Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display.
 
 ### Adaptive aesthetic theming
 
-`data-aesthetic="<flavor>"` on `:root` (set by `useAestheticFlavor` from the user's top aesthetic; 51 aesthetics → 11 flavors in `src/data/aestheticThemes.js`) overrides `--font-display`, all `--accent*` vars and, for some flavors, the radius scale — see `src/styles/aestheticThemes.css`. Off switch: `localStorage sartima_adaptive_theme = 'false'`; resolved flavor cached in `sartima_aesthetic_flavor` for flash-free boot (inline script in `index.html`).
+`data-aesthetic="<flavor>"` on `:root` (set by `useAestheticFlavor` from the user's top aesthetic; 51 aesthetics → 11 flavors in `src/data/aestheticThemes.js`) overrides `--font-display`, all `--accent*` vars and, for some flavors, the radius scale — see `src/styles/aestheticThemes.css`. Off switch: `localStorage sartima_adaptive_theme = 'false'`; manual pin: `sartima_aesthetic_pin = '<flavor>'` (overrides the derived flavor); resolved flavor cached in `sartima_aesthetic_flavor` for flash-free boot (inline script in `index.html`).
 
 ### Border Radius
 

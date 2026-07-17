@@ -363,18 +363,27 @@ export function useShowQuizTab() {
   return { showQuizTab: show, setShowQuizTab: setShow }
 }
 
-// ── Adaptive aesthetic theme hook (cross-component reactive via custom event) ──
-// On/off switch for theming the UI to the user's top aesthetic. Default on.
-// The actual data-aesthetic attribute is managed by useAestheticFlavor.
+// ── Adaptive aesthetic theme hook (cross-component reactive via custom events) ──
+// On/off switch for theming the UI to the user's top aesthetic (default on),
+// plus an optional pin that locks the theme to a specific flavor instead of
+// following quiz results. The actual data-aesthetic attribute is managed by
+// useAestheticFlavor.
 const ADAPTIVE_THEME_EVENT = 'sartima:adaptive-theme-change'
+const AESTHETIC_PIN_EVENT  = 'sartima:aesthetic-pin-change'
 
 export function useAdaptiveTheme() {
   const [enabled, setEnabledState] = useState(() => localStorage.getItem('sartima_adaptive_theme') !== 'false')
+  const [pin, setPinState]         = useState(() => localStorage.getItem('sartima_aesthetic_pin'))
 
   useEffect(() => {
-    function onUpdate(e) { setEnabledState(e.detail !== false) }
-    window.addEventListener(ADAPTIVE_THEME_EVENT, onUpdate)
-    return () => window.removeEventListener(ADAPTIVE_THEME_EVENT, onUpdate)
+    function onToggle(e) { setEnabledState(e.detail !== false) }
+    function onPin(e)    { setPinState(e.detail ?? null) }
+    window.addEventListener(ADAPTIVE_THEME_EVENT, onToggle)
+    window.addEventListener(AESTHETIC_PIN_EVENT, onPin)
+    return () => {
+      window.removeEventListener(ADAPTIVE_THEME_EVENT, onToggle)
+      window.removeEventListener(AESTHETIC_PIN_EVENT, onPin)
+    }
   }, [])
 
   function setEnabled(v) {
@@ -382,7 +391,16 @@ export function useAdaptiveTheme() {
     setEnabledState(v)
     window.dispatchEvent(new CustomEvent(ADAPTIVE_THEME_EVENT, { detail: v }))
   }
-  return { adaptiveTheme: enabled, setAdaptiveTheme: setEnabled }
+
+  // flavorId from AESTHETIC_FLAVORS, or null to follow the top aesthetic
+  function setPin(flavorId) {
+    if (flavorId) localStorage.setItem('sartima_aesthetic_pin', flavorId)
+    else localStorage.removeItem('sartima_aesthetic_pin')
+    setPinState(flavorId ?? null)
+    window.dispatchEvent(new CustomEvent(AESTHETIC_PIN_EVENT, { detail: flavorId ?? null }))
+  }
+
+  return { adaptiveTheme: enabled, setAdaptiveTheme: setEnabled, flavorPin: pin, setFlavorPin: setPin }
 }
 
 // ── Closet sort hook ──────────────────────────────────────────────────────────
