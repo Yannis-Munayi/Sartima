@@ -1,14 +1,9 @@
 import { test, expect } from '@playwright/test'
-
-async function dismissConsentBanner(page) {
-  const decline = page.getByRole('button', { name: 'Decline', exact: true })
-  if (await decline.count()) {
-    await decline.first().click({ force: true }).catch(() => {})
-  }
-}
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 async function openSettings(page) {
   await page.goto('/')
+  await bypassSignupGate(page)
   await dismissConsentBanner(page)
   await page.getByRole('button', { name: /Profile/i }).first().click()
   await page.locator('button[aria-label="Settings"]').click({ force: true })
@@ -42,6 +37,7 @@ test('adaptive theme toggle persists and clears the flavor attribute', async ({ 
 
   // Off state survives a reload, then can be re-enabled
   await page.reload({ waitUntil: 'networkidle' })
+  await bypassSignupGate(page)
   await dismissConsentBanner(page)
   await page.getByRole('button', { name: /Profile/i }).first().click()
   await page.locator('button[aria-label="Settings"]').click({ force: true })
@@ -62,6 +58,7 @@ test('pinning a flavor applies it immediately, survives reload, and Auto reverts
   await expect(page.locator('html')).toHaveAttribute('data-aesthetic', 'street')
 
   // Back to Auto — signed out with no quiz signal, so the attribute clears
+  await bypassSignupGate(page)
   await dismissConsentBanner(page)
   await page.getByRole('button', { name: /Profile/i }).first().click()
   await page.locator('button[aria-label="Settings"]').click({ force: true })

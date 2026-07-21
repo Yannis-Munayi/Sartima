@@ -1,11 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-async function dismissConsentBanner(page) {
-  const decline = page.getByRole('button', { name: 'Decline', exact: true })
-  if (await decline.count()) {
-    await decline.first().click({ force: true }).catch(() => {})
-  }
-}
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 test.describe('anonymous smoke path', () => {
   let pageErrors
@@ -14,6 +8,7 @@ test.describe('anonymous smoke path', () => {
     pageErrors = []
     page.on('pageerror', (err) => pageErrors.push(err.message))
     await page.goto('/')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
   })
 

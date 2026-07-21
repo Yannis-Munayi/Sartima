@@ -1,17 +1,12 @@
 import { test, expect } from '@playwright/test'
-
-async function dismissConsentBanner(page) {
-  const decline = page.getByRole('button', { name: 'Decline', exact: true })
-  if (await decline.count()) {
-    await decline.first().click({ force: true }).catch(() => {})
-  }
-}
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 // Pro-gated Outfits sub-tabs must route non-Pro users through the real
 // openPaywall path — this is the top of the Stripe checkout funnel.
 test.describe('paywall gates (non-Pro user)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/#/daily')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
     await expect(page.getByText('Shop Scout', { exact: true }).first()).toBeVisible()
   })

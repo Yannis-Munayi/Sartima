@@ -1,11 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-async function dismissConsentBanner(page) {
-  const decline = page.getByRole('button', { name: 'Decline', exact: true })
-  if (await decline.count()) {
-    await decline.first().click({ force: true }).catch(() => {})
-  }
-}
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 // Core conversion funnel: home quiz CTA → 40 swipes in finite quiz mode →
 // results screen. The "/ 40" progress assertion also guards the regression
@@ -14,6 +8,7 @@ test('completing the style quiz from the home CTA reaches the results screen', a
   test.setTimeout(120_000)
 
   await page.goto('/')
+  await bypassSignupGate(page)
   await dismissConsentBanner(page)
 
   await page.getByRole('button', { name: /Take the style quiz/ }).click()

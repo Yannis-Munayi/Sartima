@@ -72,6 +72,18 @@ function seedProfileFromInterests(profile, interests) {
   if (recentLikes?.length) profile.recentLikes = [...recentLikes].slice(0, 10)
 }
 
+// Onboarding hands off answers straight through React state rather than the
+// persisted interests doc — `InterestContext` loads that doc once, the moment
+// it does the write may not have landed yet, so a brand-new account would
+// silently miss this warm start if it depended on the Firestore round-trip.
+function applyWarmStart(profile, warmStart) {
+  if (!warmStart) return
+  const { styleAffinities, brandAffinities, parentTypeAffinities } = warmStart
+  if (styleAffinities)      Object.assign(profile.styleAffinities,      styleAffinities)
+  if (brandAffinities)      Object.assign(profile.brandAffinities,      brandAffinities)
+  if (parentTypeAffinities) Object.assign(profile.parentTypeAffinities, parentTypeAffinities)
+}
+
 function genderFilter(gender) {
   return (p) =>
     p.gender === 'unisex' ||
@@ -192,7 +204,7 @@ function buildBatch(profile, batchSize, gender) {
   return diverse.map(({ product }) => product)
 }
 
-export function useDiscoveryQueue(gender = 'both', quizMode = false) {
+export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart = null) {
   const { interests }    = useInterests() ?? {}
   const [queue,          setQueue]          = useState([])
   const [currentIndex,   setIndex]          = useState(0)
@@ -246,6 +258,10 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false) {
         return
       }
     }
+
+    // Fresh-signup hand-off (see applyWarmStart) — only reached when there's
+    // no saved quiz progress to resume, i.e. this is genuinely a new queue.
+    applyWarmStart(profileRef.current, warmStart)
 
     const initial = buildBatch(profileRef.current, quizMode ? QUIZ_SIZE : BUFFER_SIZE, gender)
     setQueue(initial)

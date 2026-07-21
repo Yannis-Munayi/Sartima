@@ -58,6 +58,12 @@ import { SubscriptionProvider } from './context/SubscriptionContext'
 import { InterestProvider } from './context/InterestContext'
 import BrandScreen  from './screens/BrandScreen'
 import BrandsScreen from './screens/BrandsScreen'
+import SignupFlow   from './screens/signup/SignupFlow'
+
+const GUEST_BROWSING_KEY = 'sartima_guest_browsing'
+function isGuestBrowsing() {
+  try { return sessionStorage.getItem(GUEST_BROWSING_KEY) === 'true' } catch { return false }
+}
 
 // Screens where the tab bar is hidden (focused setup flow)
 const HIDE_TABS_ON = new Set([
@@ -154,6 +160,13 @@ function AppShell() {
   const [legalDoc, setLegalDoc]             = useState(null) // 'terms' | 'privacy' | null
   const [needsConsent, setNeedsConsent]     = useState(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  // Gates the whole app behind SignupFlow for signed-out visitors. Flipped
+  // true either by SignupFlow finishing (after it's applied the collected
+  // answers — see its own pendingUid effect) or by its guest escape hatch;
+  // gating on this local flag rather than `!!user` directly avoids a race
+  // where `user` turns truthy right after signup() resolves and would
+  // otherwise unmount SignupFlow before it finishes writing the answers.
+  const [entryDone, setEntryDone] = useState(() => !!user || isGuestBrowsing())
   const prevUserRef = useRef(user)
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
@@ -177,6 +190,7 @@ function AppShell() {
       setNeedsConsent(false)
       setNeedsOnboarding(false)
       userDocCheckedRef.current = null
+      if (!isGuestBrowsing()) setEntryDone(false)
     }
   }, [user])
 
@@ -333,6 +347,24 @@ function AppShell() {
   const mainStyle = isDesktop
     ? { flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }
     : {}
+
+  // Gates the entire app for signed-out visitors — see the entryDone comment
+  // above for why this checks the local flag rather than `!!user` directly.
+  if (!entryDone) {
+    return (
+      <SignupFlow
+        onDone={() => setEntryDone(true)}
+        onGuestContinue={() => {
+          try {
+            sessionStorage.setItem(GUEST_BROWSING_KEY, 'true')
+          } catch {
+            // non-fatal — worst case the gate reappears on next reload
+          }
+          setEntryDone(true)
+        }}
+      />
+    )
+  }
 
   // Consent must be recorded before anything else is usable
   if (user && needsConsent) {

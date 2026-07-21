@@ -33,6 +33,10 @@ const initialState = {
   quizMode: false,
   quizId: null,
   authReturnTo: null,
+  // One-shot hand-off from onboarding into the very first post-signup quiz —
+  // see useDiscoveryQueue's applyWarmStart. Not carried through RESTART/
+  // RESTART_QUIZ, which intentionally start cold.
+  quizWarmStart: null,
 }
 
 function shuffle(arr) {
@@ -251,6 +255,7 @@ function reducer(state, action) {
         currentItemIndex: 0,
         responses: {},
         styleScores: Object.fromEntries(Object.keys(STYLES).map((k) => [k, 0])),
+        quizWarmStart: action.warmStart ?? null,
       }
 
     case 'SET_QUIZ_RESULTS':

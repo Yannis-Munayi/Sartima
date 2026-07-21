@@ -363,7 +363,13 @@ export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'p
     )
     if (!res.ok) return { urls: [] }
     const data = await res.json()
-    return { urls: (data.photos ?? []).map((p) => p.src.large) }
+    // `large` caps at 940x650 with no dpr multiplier — on a portrait source
+    // that clips to ~430px wide, which upscales (blurs) once it's stretched
+    // across a full-width desktop hero or card. `large2x` renders the same
+    // bounding box at dpr=2 (~1880x1300), giving enough source resolution
+    // for large/high-DPI viewports while still respecting the source aspect
+    // ratio (no forced crop).
+    return { urls: (data.photos ?? []).map((p) => p.src.large2x) }
   }
 
   if (source === 'google') {
@@ -396,7 +402,12 @@ export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'p
     )
     if (!res.ok) return { urls: [] }
     const data = await res.json()
-    return { urls: (data.results ?? []).map((p) => p.urls.regular) }
+    // `regular` is fixed at 1080px wide, which blurs once stretched across a
+    // full-width desktop hero/card on a large or high-DPI viewport. Build a
+    // wider derivative from `raw` (must keep its ixid param per Unsplash API
+    // guidelines) instead of falling back to `full`, which is uncompressed
+    // and far heavier than needed.
+    return { urls: (data.results ?? []).map((p) => `${p.urls.raw}&w=1600&q=80&fit=max&auto=format`) }
   }
 
   return { urls: [] }

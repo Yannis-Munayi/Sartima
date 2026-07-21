@@ -24,7 +24,7 @@ export default function DiscoveryScreen() {
     currentProduct, remaining, onLike, onSkip, onPrev,
     styleScores, isQuizFinished, quizProgress, quizQueue, quizLikedItems,
     seeded, reset,
-  } = useDiscoveryQueue(gender, quizMode)
+  } = useDiscoveryQueue(gender, quizMode, state.quizWarmStart)
 
   const [showFilter,     setShowFilter]     = useState(false)
   const [filterSeasons,  setFilterSeasons]  = useState([])

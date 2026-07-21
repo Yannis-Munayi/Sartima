@@ -1,0 +1,133 @@
+.flow {
+  min-height: 100dvh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 24px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.topLink {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.topLink:hover { color: var(--text-dim); }
+
+.dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 40px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.2s;
+}
+
+.dotActive {
+  background: var(--accent);
+}
+
+.skipAll {
+  margin-top: auto;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.skipAll:hover { color: var(--text-dim); }
+
+/* ── Guest-warning modal ── */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-elevated);
+  border-radius: 20px 20px 0 0;
+  padding: 28px 24px 32px;
+  box-sizing: border-box;
+}
+
+.modalIcon { font-size: 28px; margin-bottom: 12px; }
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+}
+
+.modalBody {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.modalActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modalPrimaryBtn {
+  width: 100%;
+  padding: 15px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.modalSecondaryBtn {
+  width: 100%;
+  padding: 13px;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.modalSecondaryBtn:hover { color: var(--text-dim); }

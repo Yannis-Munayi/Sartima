@@ -42,6 +42,7 @@ export function AuthProvider({ children }) {
     // onAuthStateChanged already set `user` to the live User instance;
     // updateProfile mutated it in place, so no manual setUser needed here
     // (a spread copy would strip the User prototype methods).
+    return newUser
   }
 
   async function login(email, password) {

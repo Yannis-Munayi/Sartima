@@ -1,11 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-async function dismissConsentBanner(page) {
-  const decline = page.getByRole('button', { name: 'Decline', exact: true })
-  if (await decline.count()) {
-    await decline.first().click({ force: true }).catch(() => {})
-  }
-}
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 test.describe('hash routing', () => {
   let pageErrors
@@ -21,12 +15,14 @@ test.describe('hash routing', () => {
 
   test('deep link opens the Brands tab', async ({ page }) => {
     await page.goto('/#/brands')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
     await expect(page.getByRole('heading', { name: 'Brands' })).toBeVisible()
   })
 
   test('deep link opens an aesthetic detail screen', async ({ page }) => {
     await page.goto('/#/aesthetic/y2k')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
     await expect(page.getByRole('button', { name: 'Story', exact: true })).toBeVisible()
     expect(page.url()).toContain('#/aesthetic/y2k')
@@ -34,6 +30,7 @@ test.describe('hash routing', () => {
 
   test('tab clicks update the hash and back button restores the previous tab', async ({ page }) => {
     await page.goto('/')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
     await expect(page).toHaveURL(/#\/home$/)
 
@@ -47,6 +44,7 @@ test.describe('hash routing', () => {
 
   test('unknown hash falls back to home without crashing', async ({ page }) => {
     await page.goto('/#/definitely-not-a-tab')
+    await bypassSignupGate(page)
     await dismissConsentBanner(page)
     await expect(page.getByText('SARTIMA').first()).toBeVisible()
   })

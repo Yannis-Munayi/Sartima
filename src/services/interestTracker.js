@@ -166,10 +166,14 @@ function productDelta(product, strength) {
  *   'brandVisit'    — user opened a brand page
  *   'aestheticVisit'— user opened an aesthetic page (also +1 to that aesthetic's tally)
  *   'aestheticPin'  — user pinned an aesthetic (+5 to that aesthetic's tally)
+ *   'brandFavorite' — user favorited a brand by name at onboarding (+5 brand affinity,
+ *                     same `brandAffinities` map the discovery feed scores against —
+ *                     distinct from 'brandVisit', which only tallies brand-page visits)
  *   'quizComplete'  — quiz finished; bulk style affinity write
  *
  * payload for product signals:  { product: { brand, type|itemType, color, parentType, styleWeights } }
  * payload for 'brandVisit':     { brandId }
+ * payload for 'brandFavorite':  { brandName }
  * payload for 'aestheticVisit' / 'aestheticPin': { aestheticId }
  * payload for 'quizComplete':   { styleScores: { [aestheticId]: number } }
  */
@@ -211,6 +215,12 @@ export function recordSignal(user, signalType, payload) {
       const { aestheticId } = payload
       if (!aestheticId) return
       queueDelta(uid, { styleAffinities: { [aestheticId]: 5 } })
+      break
+    }
+    case 'brandFavorite': {
+      const { brandName } = payload
+      if (!brandName) return
+      queueDelta(uid, { brandAffinities: { [brandName]: 5 } })
       break
     }
     case 'quizComplete': {

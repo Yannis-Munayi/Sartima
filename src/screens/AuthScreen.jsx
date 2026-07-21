@@ -10,7 +10,7 @@ import styles from './AuthScreen.module.css'
 
 // ── Password strength ─────────────────────────────────────────────────────────
 
-function getStrength(pwd) {
+export function getStrength(pwd) {
   if (!pwd || pwd.length < 8) return 0
   let score = 0
   if (/[a-z]/.test(pwd)) score++
@@ -23,7 +23,7 @@ function getStrength(pwd) {
 const STRENGTH_LABEL = ['', 'Weak', 'Medium', 'Strong', 'Very strong']
 const STRENGTH_COLOR = ['', '#e05252', '#f5a623', '#4caf50', '#4caf50']
 
-function StrengthBar({ password }) {
+export function StrengthBar({ password }) {
   if (!password) return null
   const tooShort = password.length < 8
   const score    = tooShort ? 0 : getStrength(password)
@@ -55,7 +55,7 @@ function StrengthBar({ password }) {
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
-function EyeIcon() {
+export function EyeIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -64,7 +64,7 @@ function EyeIcon() {
   )
 }
 
-function EyeOffIcon() {
+export function EyeOffIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
@@ -73,7 +73,7 @@ function EyeOffIcon() {
   )
 }
 
-function GoogleIcon() {
+export function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -82,6 +82,21 @@ function GoogleIcon() {
       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
     </svg>
   )
+}
+
+// ── Firebase auth error → user-facing copy (shared across signup surfaces) ───
+
+export function friendlyError(code) {
+  switch (code) {
+    case 'auth/email-already-in-use':  return 'That email is already registered. Try signing in.'
+    case 'auth/invalid-email':         return 'Please enter a valid email address.'
+    case 'auth/weak-password':         return 'Password must be at least 8 characters.'
+    case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':    return 'Incorrect email or password.'
+    default:                           return 'Something went wrong. Please try again.'
+  }
 }
 
 // ── Consent checkboxes (shared by signup form + global ConsentGate) ──────────
@@ -234,19 +249,6 @@ export default function AuthScreen() {
       setError(friendlyError(err.code))
     } finally {
       setLoading(false)
-    }
-  }
-
-  function friendlyError(code) {
-    switch (code) {
-      case 'auth/email-already-in-use':  return 'That email is already registered. Try signing in.'
-      case 'auth/invalid-email':         return 'Please enter a valid email address.'
-      case 'auth/weak-password':         return 'Password must be at least 8 characters.'
-      case 'auth/too-many-requests':     return 'Too many attempts. Please wait a few minutes and try again.'
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-      case 'auth/invalid-credential':    return 'Incorrect email or password.'
-      default:                           return 'Something went wrong. Please try again.'
     }
   }
 
