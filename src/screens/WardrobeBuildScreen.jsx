@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useShop } from '../context/ShopContext'
 import { useInterests } from '../context/InterestContext'
-import { PIECE_BY_ID, STARTER_CAPSULE, BUDGET_BY_ID, recommendProducts, findComplements } from '../services/wardrobeRecommend'
+import { useStyleAffinity } from '../hooks/useStyleAffinity'
+import { getPieceOption, drawnPieceOptions, STARTER_CAPSULE, BUDGET_BY_ID, recommendProducts, findComplements } from '../services/wardrobeRecommend'
 import StepPieces from './wardrobeBuild/StepPieces'
 import StepBudget from './wardrobeBuild/StepBudget'
 import StepPriorities from './wardrobeBuild/StepPriorities'
@@ -16,8 +17,15 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
   const { shopList, addScoutedGroup } = useShop()
   const { interests } = useInterests() ?? {}
   const styleAffinities = interests?.styleAffinities ?? {}
+  const { affinity } = useStyleAffinity()
 
-  const hasInitial = !!(initialPiece && PIECE_BY_ID[initialPiece])
+  // Garment types the user is drawn to, offered above the basics
+  const drawnPieces = useMemo(
+    () => drawnPieceOptions(affinity, interests, gender),
+    [affinity, interests, gender],
+  )
+
+  const hasInitial = !!(initialPiece && getPieceOption(initialPiece))
 
   const [activeView, setActiveView] = useState('scout') // 'scout' | 'list'
   const [step, setStep]             = useState(hasInitial ? 2 : 1)
@@ -74,7 +82,7 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
   const recommendations = useMemo(() => {
     if (step < 4) return []
     return pieces.map((pieceId) => {
-      const option       = PIECE_BY_ID[pieceId]
+      const option       = getPieceOption(pieceId)
       if (!option) return null
       const budgetTier   = budgets[pieceId] ?? 'mid'
       const pieceFilters = filters[pieceId] ?? {}
@@ -190,7 +198,7 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
         {activeView === 'scout' && (
           <>
             {step === 1 && (
-              <StepPieces selected={pieces} onToggle={togglePiece}
+              <StepPieces selected={pieces} onToggle={togglePiece} drawnPieces={drawnPieces}
                 onNotSure={useStarterCapsule} onNext={() => setStep(2)} gender={gender}
               />
             )}

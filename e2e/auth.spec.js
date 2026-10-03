@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { dismissConsentBanner, bypassSignupGate } from './helpers.js'
 
 // UI-only coverage of the signup gate (no accounts are created, and the
 // email step's validateEmail call is stubbed, never live): the default
@@ -35,7 +36,13 @@ test.describe('signup gate (anonymous)', () => {
     await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible()
 
     // Back link returns to wherever the signup flow was left
-    await page.getByRole('button', { name: '← Back', exact: true }).click()
+    await page.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(page.getByRole('button', { name: /Mixed/ })).toBeVisible()
+
+    // Esc backs out of the login step too
+    await page.getByRole('button', { name: 'Log in', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible()
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: /Mixed/ })).toBeVisible()
   })
 
@@ -45,6 +52,35 @@ test.describe('signup gate (anonymous)', () => {
 
     await page.getByRole('button', { name: 'Continue as guest anyway', exact: true }).click()
     await expect(page.getByText('SARTIMA').first()).toBeVisible()
+  })
+})
+
+// The header "Sign in" button opens the full-screen auth screen from inside
+// the app; backing out must land on the tab it was opened from.
+test.describe('auth screen (opened from the app)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await bypassSignupGate(page)
+    await dismissConsentBanner(page)
+    await page.getByRole('button', { name: /^Search/ }).first().click()
+    await expect(page.getByText('Find something specific')).toBeVisible()
+  })
+
+  test('Back returns to the tab sign-in was opened from', async ({ page }) => {
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(page.getByText('Find something specific')).toBeVisible()
+    await expect(page).toHaveURL(/#\/search$/)
+  })
+
+  test('Esc backs out the same way', async ({ page }) => {
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeVisible()
+
+    await page.keyboard.press('Escape')
+    await expect(page.getByText('Find something specific')).toBeVisible()
   })
 })
 

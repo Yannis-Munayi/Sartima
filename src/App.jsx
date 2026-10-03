@@ -178,9 +178,15 @@ function AppShell() {
 
   const showTabs = !HIDE_TABS_ON.has(state.screen)
 
-  // Keep activeTab in sync when the quiz flow enters DISCOVERY
+  // Keep activeTab in sync when the quiz flow enters DISCOVERY. Leaving the
+  // auth screen restores the screen it was opened from (possibly an
+  // in-progress feed) — that's a return, not a quiz start, so the user stays
+  // on whichever tab they opened sign-in from.
+  const prevScreenRef = useRef(state.screen)
   useEffect(() => {
-    if (state.screen === SCREENS.DISCOVERY) {
+    const cameFrom = prevScreenRef.current
+    prevScreenRef.current = state.screen
+    if (state.screen === SCREENS.DISCOVERY && cameFrom !== SCREENS.AUTH) {
       setActiveTab('quiz')
     }
   }, [state.screen])

@@ -4,7 +4,7 @@ import { useInterests } from '../../context/InterestContext'
 import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import { resolveProductImage, getAltProductImage } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
-import { PIECE_BY_ID, PRIORITIES, BUDGET_BY_ID, countOutfits } from '../../services/wardrobeRecommend'
+import { getPieceOption, PRIORITIES, BUDGET_BY_ID, countOutfits } from '../../services/wardrobeRecommend'
 import styles from '../WardrobeBuildScreen.module.css'
 
 const PRICE_LABELS = { budget: 'Budget', mid: 'Mid-range', premium: 'Premium', luxury: 'Luxury' }
@@ -99,7 +99,7 @@ function ProductCard({ product, priorities, isSelected, onToggle }) {
 }
 
 function ComplementCard({ id, onAddPiece, gender }) {
-  const option = PIECE_BY_ID[id]
+  const option = getPieceOption(id)
   const [photo, setPhoto]   = useState(null)
   const [loaded, setLoaded] = useState(false)
   const cardRef  = useRef(null)

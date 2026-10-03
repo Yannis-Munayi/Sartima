@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { useAuth } from '../../context/AuthContext'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import { EyeIcon, EyeOffIcon, GoogleIcon, friendlyError } from '../AuthScreen'
 import Icon from '../../components/Icon'
 import styles from '../AuthScreen.module.css'
@@ -22,6 +23,8 @@ export default function LoginStep({ onDone, onBack }) {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  useEscapeKey(onBack)
 
   async function handleGoogle() {
     setError('')
@@ -71,9 +74,10 @@ export default function LoginStep({ onDone, onBack }) {
   }
 
   return (
-    <div className={styles.flow} style={{ padding: 'var(--space-6) var(--space-6) var(--space-10)' }}>
-      <button className={styles.forgotBtn} style={{ alignSelf: 'flex-start', marginBottom: 'var(--space-5)' }} onClick={onBack}>
-        ← Back
+    <div className={`${styles.flow} ${styles.flowWithBack}`}>
+      <button type="button" className={styles.backBtn} onClick={onBack}>
+        <Icon name="chevronLeft" size={18} />
+        Back
       </button>
 
       <div className={styles.iconBadge}><Icon name={mode === 'login' ? 'key' : 'lock'} size={22} /></div>

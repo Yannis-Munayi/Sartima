@@ -34,4 +34,21 @@ test('completing the style quiz from the home CTA reaches the results screen', a
   await expect(results).toBeVisible({ timeout: 15_000 })
   // A primary aesthetic was computed (not the "Not enough data yet" fallback)
   await expect(page.getByText('Not enough data yet')).toHaveCount(0)
+
+  // The browse tabs now rank by the result: the Aesthetics tab leads with
+  // the same aesthetic the results hero names
+  const primary = (await page.locator('[class*="heroStyleName"]').innerText()).trim()
+
+  await page.getByRole('button', { name: /^Aesthetics/ }).first().click()
+  await expect(page.getByText('sorted by your style', { exact: false })).toBeVisible()
+  const closest = page.locator('section', { has: page.getByRole('heading', { name: 'Closest to your style' }) })
+  await expect(closest.locator('[class*="cardName"]').first()).toHaveText(primary)
+
+  await page.getByRole('button', { name: /^Brands/ }).first().click()
+  await expect(page.getByRole('heading', { name: 'Closest to your style' })).toBeVisible()
+
+  // Search suggestions come from the profile, grouped by facet
+  await page.getByRole('button', { name: /^Search/ }).first().click()
+  await expect(page.getByText('Picked from your style profile', { exact: false })).toBeVisible()
+  await expect(page.getByText('Pieces', { exact: true })).toBeVisible()
 })

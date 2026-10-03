@@ -1,4 +1,4 @@
-import { PIECE_BY_ID, BUDGET_TIERS, COLOR_OPTIONS, MATERIAL_OPTIONS, SIZE_BY_ROLE } from '../../services/wardrobeRecommend'
+import { getPieceOption, BUDGET_TIERS, COLOR_OPTIONS, MATERIAL_OPTIONS, SIZE_BY_ROLE } from '../../services/wardrobeRecommend'
 import styles from '../WardrobeBuildScreen.module.css'
 
 export default function StepBudget({ pieces, budgets, onSetBudget, filters, onSetFilter, sizeSystem, onNext, onBack }) {
@@ -10,7 +10,8 @@ export default function StepBudget({ pieces, budgets, onSetBudget, filters, onSe
       <p className={styles.stepSub}>Set price range and preferences per piece.</p>
 
       {pieces.map((pieceId) => {
-        const piece    = PIECE_BY_ID[pieceId]
+        const piece    = getPieceOption(pieceId)
+        if (!piece) return null
         const selected = budgets[pieceId] ?? null
         const pf       = filters[pieceId] ?? {}
         const sizeOpts = (SIZE_BY_ROLE[piece.role] ?? SIZE_BY_ROLE.tops)[sizeSystem] ?? []

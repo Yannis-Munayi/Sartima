@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PRODUCTS } from '../data/products'
 import { useApp } from '../context/AppContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useStyleAffinity } from '../hooks/useStyleAffinity'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { buildSearchSuggestions, productAffinity } from '../services/styleRanking'
 import ProductImageToggle from '../components/ProductImageToggle'
 import ItemActionSheet from '../components/ItemActionSheet'
 import AuthWidget from '../components/AuthWidget'
@@ -11,12 +13,32 @@ import Icon from '../components/Icon'
 
 const MAX_RESULTS = 60
 
+// Shown until the user has a style profile to draw suggestions from
 const SUGGESTED_SEARCHES = [
   'Ralph Lauren', 'Denim', 'Oxford Shirt', 'Sneakers', 'Knitwear', 'Outerwear', 'Cargo Pants', 'Blazer',
 ]
 
 function genderFilter(gender) {
   return (p) => p.gender === 'unisex' || p.gender === gender || gender === 'both'
+}
+
+// How directly a product answers the query — lower is better, -1 is no
+// match. An exact brand / colour / type hit leads (so "Red" lists red items
+// before Red Wing boots), then partial brand, name, attribute and finally
+// description hits ("Gant" before descriptions that merely say "elegant").
+// Types are matched with hyphens as spaces so "oxford shirt" finds the
+// `oxford-shirt` type.
+function matchTier(p, query) {
+  const spaced = query.replace(/-/g, ' ')
+  const brand  = p.brand?.toLowerCase()
+  const color  = p.color?.toLowerCase()
+  const type   = p.type?.replace(/-/g, ' ')
+  if (brand === query || color === query || type === spaced) return 0
+  if (brand?.includes(query)) return 1
+  if (p.name.toLowerCase().includes(query)) return 2
+  if (type?.includes(spaced) || p.parentType?.toLowerCase().includes(query) || color?.includes(query)) return 3
+  if (p.description?.toLowerCase().includes(query)) return 4
+  return -1
 }
 
 function productToEntry(product) {
@@ -85,6 +107,7 @@ function SearchResultCard({ product, gender, onSelect }) {
 export default function SearchScreen({ forcedQuery }) {
   const { state } = useApp()
   const gender = state.gender
+  const { affinity, interests, hasProfile } = useStyleAffinity()
   const [search, setSearch] = useState('')
   const [activeItem, setActiveItem] = useState(null)
 
@@ -94,17 +117,33 @@ export default function SearchScreen({ forcedQuery }) {
 
   const query = search.toLowerCase().trim()
 
+  const catalog = useMemo(() => PRODUCTS.filter(genderFilter(gender)), [gender])
+
+  // Best match first, then — within equally good matches — best style fit
   const results = useMemo(() => {
     if (!query) return []
-    return PRODUCTS.filter(genderFilter(gender)).filter((p) =>
-      p.name.toLowerCase().includes(query) ||
-      p.brand?.toLowerCase().includes(query) ||
-      p.type?.toLowerCase().includes(query) ||
-      p.parentType?.toLowerCase().includes(query) ||
-      p.color?.toLowerCase().includes(query) ||
-      p.description?.toLowerCase().includes(query)
-    )
-  }, [query, gender])
+    const hits = []
+    for (const p of catalog) {
+      const tier = matchTier(p, query)
+      if (tier >= 0) hits.push({ p, tier, fit: hasProfile ? productAffinity(p, affinity) : 0 })
+    }
+    return hits
+      .sort((a, b) => a.tier - b.tier || b.fit - a.fit)
+      .map(({ p }) => p)
+  }, [query, catalog, hasProfile, affinity])
+
+  const suggestions = useMemo(
+    () => hasProfile ? buildSearchSuggestions(catalog, affinity, interests) : null,
+    [hasProfile, catalog, affinity, interests],
+  )
+
+  const suggestionGroups = suggestions
+    ? [
+        { label: 'Brands', items: suggestions.brands },
+        { label: 'Pieces', items: suggestions.pieces },
+        { label: 'Colors', items: suggestions.colors },
+      ].filter((g) => g.items.length > 0)
+    : []
 
   const shown = results.slice(0, MAX_RESULTS)
 
@@ -142,14 +181,39 @@ export default function SearchScreen({ forcedQuery }) {
           <div className={styles.empty}>
             <span className={styles.emptyIcon}><Icon name="search" size={24} /></span>
             <p className={styles.emptyTitle}>Find something specific</p>
-            <p className={styles.emptySub}>Search the full catalog by brand, item type, or color.</p>
-            <div className={styles.suggestions}>
-              {SUGGESTED_SEARCHES.map((s) => (
-                <button key={s} className={styles.suggestionChip} onClick={() => setSearch(s)}>
-                  {s}
-                </button>
-              ))}
-            </div>
+            {suggestionGroups.length > 0 ? (
+              <>
+                <p className={styles.emptySub}>
+                  Picked from your style profile, or search the full catalog by brand, item type, or color.
+                </p>
+                <div className={styles.suggestionGroups}>
+                  {suggestionGroups.map((group) => (
+                    <div key={group.label} className={styles.suggestionGroup}>
+                      <p className={styles.suggestionLabel}>{group.label}</p>
+                      <div className={styles.suggestions}>
+                        {group.items.map((s) => (
+                          <button key={s.label} className={styles.suggestionChip} onClick={() => setSearch(s.label)}>
+                            {s.hex && <span className={styles.swatch} style={{ background: s.hex }} aria-hidden="true" />}
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className={styles.emptySub}>Search the full catalog by brand, item type, or color.</p>
+                <div className={styles.suggestions}>
+                  {SUGGESTED_SEARCHES.map((s) => (
+                    <button key={s} className={styles.suggestionChip} onClick={() => setSearch(s)}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 

@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BRANDS } from '../data/brands'
 import { useNavigation } from '../context/NavigationContext'
+import { useStyleAffinity } from '../hooks/useStyleAffinity'
 import { fetchPhotosWithFallback } from '../services/stockPhotos'
+import { scoreBrands, sortByScore, splitByMatch } from '../services/styleRanking'
 import AuthWidget from '../components/AuthWidget'
 import styles from './BrandsScreen.module.css'
 
 const ALL_BRANDS = Object.values(BRANDS)
+
+// Brands at or above this share of the best brand fit are listed under
+// "Closest to your style"; the rest follow, still strongest first
+const MATCH_THRESHOLD = 0.35
 
 const POSITIONING_GROUPS = [
   { label: 'Luxury',       key: 'luxury' },
@@ -90,10 +96,14 @@ function BrandCard({ brand, onOpen }) {
 
 export default function BrandsScreen() {
   const navigate = useNavigation()
+  const { affinity, interests } = useStyleAffinity()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
 
   const query = search.toLowerCase().trim()
+
+  const brandScores = useMemo(() => scoreBrands(ALL_BRANDS, affinity, interests), [affinity, interests])
+  const isRanked    = Object.keys(brandScores).length > 0
 
   const displayBrands = useMemo(() => {
     let list = ALL_BRANDS
@@ -105,8 +115,15 @@ export default function BrandsScreen() {
         b.aesthetics?.some((a) => a.toLowerCase().includes(query))
       )
     }
-    return list
-  }, [filter, query])
+    return isRanked ? sortByScore(list, (b) => brandScores[b.id] ?? 0) : list
+  }, [filter, query, isRanked, brandScores])
+
+  // Default view once the user has a style profile: every brand, best fit
+  // first, in place of the positioning groups
+  const ranked = useMemo(
+    () => isRanked ? splitByMatch(ALL_BRANDS, (b) => brandScores[b.id] ?? 0, MATCH_THRESHOLD) : null,
+    [isRanked, brandScores],
+  )
 
   function handleOpen(id) {
     navigate('brand:' + id)
@@ -120,7 +137,9 @@ export default function BrandsScreen() {
         <div className={styles.headerTop}>
           <div>
             <h1 className={styles.title}>Brands</h1>
-            <p className={styles.sub}>{ALL_BRANDS.length} brands</p>
+            <p className={styles.sub}>
+              {ALL_BRANDS.length} brands{isRanked ? ' · sorted by your style' : ''}
+            </p>
           </div>
           <AuthWidget />
         </div>
@@ -172,6 +191,20 @@ export default function BrandsScreen() {
               ))}
             </div>
           )
+        ) : ranked ? (
+          [
+            { label: 'Closest to your style', items: ranked.matches },
+            { label: 'More to explore',       items: ranked.rest },
+          ].map(({ label, items }) => items.length > 0 && (
+            <section key={label} className={styles.section}>
+              <h2 className={styles.sectionLabel}>{label}</h2>
+              <div className={styles.grid}>
+                {items.map((b) => (
+                  <BrandCard key={b.id} brand={b} onOpen={handleOpen} />
+                ))}
+              </div>
+            </section>
+          ))
         ) : (
           POSITIONING_GROUPS.map((group) => {
             const grouped = ALL_BRANDS.filter((b) => b.positioning === group.key)

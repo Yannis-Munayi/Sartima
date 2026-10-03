@@ -11,7 +11,7 @@ Guidance for Claude Code when working in this repository.
 **Core features:**
 1. **Style Quiz** — Swipe like/skip on clothing items; computes affinity scores across 51 aesthetics. Finite 40-item quiz or infinite free discovery mode. The Discover tab is hideable from Settings.
 2. **Onboarding** — 4-step post-signup wizard (occupation → brands → referral → email). `onboardingComplete: true` saved to Firestore. Signup captures ToS/Privacy consent + 16+ age affirmation.
-3. **Discovery Feed** — Infinite product feed scored by style affinity (`brand × 10`, `type × 15`, `color × 5`, `style × 0.5`). Diversity-enforced, 30-item buffer.
+3. **Discovery Feed** — Infinite product feed scored by normalised affinities (`aesthetic × 30` + `top aesthetic × 12`, `type × 15`, `parentType × 6`, `brand × 8`, `color × 4`). Diversity-enforced, 30-item buffer.
 4. **Aesthetics** — 51 aesthetic profiles (minimalist, preppy, Y2K, gorpcore, dark academia…), each with Story/Items/Looks/Guide sub-tabs. Pinnable (free: 3).
 5. **Brands** — Brands tab with 190 brand profiles (`src/data/brands.js`): story, lines, collections, shoppable catalog products. Visits feed the interest graph.
 6. **Search** — Client-side text search over the full catalog with gender filter and photo↔gradient toggle.

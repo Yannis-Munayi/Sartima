@@ -9,6 +9,34 @@
   margin: 0 auto;
 }
 
+/* Screens that open with a back button sit it where the top padding was */
+.flowWithBack {
+  padding-top: var(--space-6);
+}
+
+.backBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-8) calc(-1 * var(--space-2));
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.backBtn:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
 .dots {
   display: flex;
   gap: var(--space-2);

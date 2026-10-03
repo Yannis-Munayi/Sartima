@@ -4,6 +4,7 @@ import { auth } from '../services/firebase'
 import { validateSignupEmail } from '../services/emailValidation'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import LegalModal from '../components/LegalModal'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE, LEGAL_VERSION } from '../data/legalContent'
 import styles from './AuthScreen.module.css'
@@ -165,6 +166,11 @@ export default function AuthScreen() {
   const [legalDoc, setLegalDoc]           = useState(null) // 'terms' | 'privacy' | null
   const [emailSuggestion, setEmailSuggestion] = useState(null) // { for: typed email, address: suggested }
 
+  // Back out to wherever sign-in was opened from. Esc does the same; the
+  // legal modal registers its own layer on top, so Esc closes that first.
+  const handleBack = () => dispatch({ type: 'CANCEL_AUTH' })
+  useEscapeKey(handleBack)
+
   function switchMode(next) {
     setMode(next)
     setError('')
@@ -266,10 +272,11 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className={styles.flow}>
-      <div className={styles.dots}>
-        <span className={`${styles.dot} ${styles.dotActive}`} />
-      </div>
+    <div className={`${styles.flow} ${styles.flowWithBack}`}>
+      <button type="button" className={styles.backBtn} onClick={handleBack}>
+        <Icon name="chevronLeft" size={18} />
+        Back
+      </button>
 
       <div className={styles.iconBadge}>
         <Icon name={mode === 'login' ? 'key' : mode === 'reset' ? 'lock' : 'userPlus'} size={22} />

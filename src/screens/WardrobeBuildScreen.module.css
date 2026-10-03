@@ -150,6 +150,21 @@
 }
 
 /* ── Piece grid ── */
+.pieceSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.pieceSectionLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
 .pieceGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

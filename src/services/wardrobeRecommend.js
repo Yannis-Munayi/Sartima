@@ -1,5 +1,6 @@
 import { PRODUCTS } from '../data/products'
 import { LOOKS } from '../data/looks'
+import { makeFacetRanker, titleCase } from './styleRanking'
 
 // ── Piece options shown in the wizard ────────────────────────────────────────
 
@@ -31,6 +32,89 @@ export const PIECE_OPTIONS = [
 ]
 
 export const PIECE_BY_ID = Object.fromEntries(PIECE_OPTIONS.map((p) => [p.id, p]))
+
+// ── Personal pieces ──────────────────────────────────────────────────────────
+// Beyond the basics above, the wizard offers catalog garment types the user
+// is drawn to. They live under `type:{catalogType}` ids so any step can
+// rebuild the option from the id alone — no extra state to thread through.
+
+const TYPE_PIECE_PREFIX = 'type:'
+
+// Catalog type → the basic piece that already covers it
+const BASIC_PIECE_FOR_TYPE = Object.fromEntries(
+  PIECE_OPTIONS.flatMap((piece) => piece.productTypes.map((type) => [type, piece.id])),
+)
+
+const ROLE_FOR_PARENT = { tops: 'tops', knitwear: 'tops', bottoms: 'bottoms', footwear: 'shoes', outerwear: 'outerwear' }
+
+// Activewear mixes tops and bottoms under one parent type
+const ACTIVEWEAR_BOTTOM = /legging|short|jogger|pant|tight|skirt/
+
+// Shop Scout builds clothing capsules, so accessories stay out of the picks
+const PERSONAL_PIECE_PARENTS = new Set(['tops', 'knitwear', 'bottoms', 'footwear', 'outerwear', 'activewear'])
+
+const PRODUCTS_BY_TYPE = PRODUCTS.reduce((acc, p) => {
+  (acc[p.type] ??= []).push(p)
+  return acc
+}, {})
+
+const typePieceCache = {}
+
+function buildTypePiece(type) {
+  const products = PRODUCTS_BY_TYPE[type]
+  if (!products?.length) return null
+
+  // Placeholder glyph, like the basics: the type's most common product emoji
+  const emojiCount = {}
+  for (const p of products) if (p.emoji) emojiCount[p.emoji] = (emojiCount[p.emoji] ?? 0) + 1
+  const emoji = Object.entries(emojiCount).sort(([, a], [, b]) => b - a)[0]?.[0] ?? ''
+
+  const parentType = products[0].parentType
+  const role = parentType === 'activewear'
+    ? (ACTIVEWEAR_BOTTOM.test(type) ? 'bottoms' : 'tops')
+    : ROLE_FOR_PARENT[parentType] ?? 'tops'
+  const name = titleCase(type)
+
+  return {
+    id: `${TYPE_PIECE_PREFIX}${type}`,
+    name,
+    emoji,
+    productTypes: [type],
+    parentType,
+    role,
+    photoQuery: `${name.toLowerCase()} fashion outfit`,
+    personal: true,
+  }
+}
+
+/** Resolves a piece id — a basic piece or a `type:{catalogType}` personal one. */
+export function getPieceOption(id) {
+  if (PIECE_BY_ID[id]) return PIECE_BY_ID[id]
+  if (typeof id !== 'string' || !id.startsWith(TYPE_PIECE_PREFIX)) return null
+  const type = id.slice(TYPE_PIECE_PREFIX.length)
+  if (!(type in typePieceCache)) typePieceCache[type] = buildTypePiece(type)
+  return typePieceCache[type]
+}
+
+/**
+ * The garment types the user is drawn to, as piece options, strongest first.
+ * A type a basic piece already covers comes back as that basic piece (so
+ * "Loafers" moves up rather than appearing twice); anything else becomes a
+ * personal `type:` piece. Empty without a style signal.
+ */
+export function drawnPieceOptions(affinity, interests, gender, limit = 6) {
+  const products = PRODUCTS.filter((p) => matchesScoutGender(p, gender) && PERSONAL_PIECE_PARENTS.has(p.parentType))
+  const topValues = makeFacetRanker(products, affinity, interests)
+  if (!topValues) return []
+
+  const picked = []
+  for (const type of topValues('type', limit * 2)) {
+    const option = getPieceOption(BASIC_PIECE_FOR_TYPE[type] ?? `${TYPE_PIECE_PREFIX}${type}`)
+    if (option && !picked.includes(option)) picked.push(option)
+    if (picked.length === limit) break
+  }
+  return picked
+}
 
 export const STARTER_CAPSULE = ['plain-tee', 'slim-jeans', 'hoodie', 'clean-sneakers', 'bomber']
 
@@ -139,13 +223,17 @@ function describeFilterMismatch(products, budgetTier, colorFilter) {
   return reasons.length ? reasons.join(' and ') : null
 }
 
+// Catalog products are tagged 'men' / 'women' / 'unisex' ('mens' / 'womens'
+// also accepted). The "Both" preference sees everything, like Search does.
+export function matchesScoutGender(p, gender) {
+  if (p.gender === 'unisex' || gender === 'both') return true
+  if (gender === 'men')   return p.gender === 'men' || p.gender === 'mens'
+  if (gender === 'women') return p.gender === 'women' || p.gender === 'womens'
+  return false
+}
+
 export function recommendProducts(pieceOption, budgetTier, priorities, gender, pieceFilters, maxCount = 10, specificName = null, styleAffinities = {}) {
-  const genderMatch = (p) => {
-    if (!gender || gender === 'nonbinary') return p.gender === 'unisex'
-    if (gender === 'men')   return p.gender === 'mens'  || p.gender === 'unisex'
-    if (gender === 'women') return p.gender === 'womens' || p.gender === 'unisex'
-    return p.gender === 'unisex'
-  }
+  const genderMatch = (p) => matchesScoutGender(p, gender)
 
   // All category candidates matching gender
   let allCandidates = PRODUCTS.filter(p => pieceOption.productTypes.includes(p.type) && genderMatch(p))
@@ -227,10 +315,11 @@ export function findComplements(selectedIds) {
 }
 
 export function countOutfits(selectedIds) {
-  const tops    = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'tops').length
-  const bottoms = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'bottoms').length
-  const shoes   = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'shoes').length
-  const outwear = selectedIds.filter((id) => PIECE_BY_ID[id]?.role === 'outerwear').length
+  const role    = (id) => getPieceOption(id)?.role
+  const tops    = selectedIds.filter((id) => role(id) === 'tops').length
+  const bottoms = selectedIds.filter((id) => role(id) === 'bottoms').length
+  const shoes   = selectedIds.filter((id) => role(id) === 'shoes').length
+  const outwear = selectedIds.filter((id) => role(id) === 'outerwear').length
   const t = Math.max(tops, 1)
   const b = Math.max(bottoms, 1)
   const s = Math.max(shoes, 1)

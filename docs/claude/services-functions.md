@@ -4,9 +4,9 @@
 
 ### Discovery Queue (`src/hooks/useDiscoveryQueue.js`)
 
-Core recommendation engine. Items scored by affinity weights derived from quiz responses. Diversity injector prevents repetitive results. Cold start shuffles randomly; subsequent batches are personalised. Queue is buffered 30 items ahead and refills automatically.
+Core recommendation engine. Items scored by affinity weights derived from quiz responses + the persisted interest graph. Diversity injector (≤3 per brand, ≤4 per type per batch, back-filled if short) prevents repetitive results. Cold start (no likes and no aesthetic tally) is a Fisher–Yates shuffle (`src/services/shuffle.js`); subsequent batches are personalised. Queue is buffered 30 items ahead and refills when ≤8 remain.
 
-Scoring weights: `brand × 10`, `type × 15`, `parentType × 4`, `color × 5`, `style × 0.5`, companion bonus `× 8–12`.
+Each affinity map is normalised to 0..1 against its own max before weighting (`WEIGHTS` in the hook): `aesthetic × 30` (× product styleWeight / 5), `topAesthetic × 12` extra for the user's #1 aesthetic, `type × 15`, `parentType × 6`, `brand × 8`, `color × 4`, companion bonus `+5` per recent like whose `outfitCompanions` lists the product's type (`+7.5` for its exact id), plus `0–0.5` random jitter.
 
 Exposes `seeded` (boolean — flips `true` after first seed effect) so `DiscoveryScreen` can distinguish the brief pre-seed loading frame from a genuinely empty queue. When `seeded && !currentProduct`, the screen shows an error state with a `reset()` retry button.
 
@@ -66,7 +66,16 @@ Shop Scout's engine and data: `PIECE_OPTIONS` (wizard piece list mapping to cata
 
 ### Interest Tracker (`src/services/interestTracker.js` + `InterestContext`)
 
-Long-term interest graph in `prefs/interests`: brand/type/style/color affinities, brand & aesthetic visit counts, recent likes (capped at 20). `recordSignal`-style writes are debounced and batched per user; reads happen once per sign-in via `InterestContext`. Used to personalise Shop Scout results and gap reasoning context.
+Long-term interest graph in `prefs/interests`: brand/type/style/color affinities, brand & aesthetic visit counts, recent likes (capped at 20). `recordSignal`-style writes are debounced and batched per user; reads happen once per sign-in via `InterestContext`. Used to personalise Shop Scout results, gap reasoning context, and the browse-tab ranking below.
+
+---
+
+### Style Ranking (`src/services/styleRanking.js` + `src/hooks/useStyleAffinity.js`)
+
+Personal ordering for the Aesthetics, Brands and Search tabs. `useStyleAffinity()` returns `{ affinity, interests, hasProfile }`. `affinity` is a 0–1 aesthetic map from `blendStyleAffinities()`, which blends the live quiz result (`state.styleScores`) with the persisted `styleAffinities`. The live half is needed because `InterestContext` doesn't reload after a quiz, so without it a quiz finished this session wouldn't reorder anything. The service is pure:
+- `splitByMatch` / `sortByScore`: strongest first, ties keep their incoming order
+- `scoreBrands`: a brand's best-matching aesthetic counts fully and each further one half as much, plus smaller boosts from liked brands and brand-page visits
+- `buildSearchSuggestions`: brand / piece / colour chips drawn from the 200 most-aligned catalog products, scored by aligned weight × √(over-representation vs the whole catalog), boosted by the interest graph's brand/type/colour tallies. Values need minimum catalog depth so every chip opens a real results page; vague types, colour combos and substring repeats ("Coat" vs "Overcoat") are skipped
 
 ---
 

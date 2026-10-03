@@ -52,20 +52,39 @@ function PieceCard({ piece, isSelected, onToggle, gender }) {
   )
 }
 
-export default function StepPieces({ selected, onToggle, onNotSure, onNext, gender }) {
+export default function StepPieces({ selected, onToggle, onNotSure, onNext, gender, drawnPieces = [] }) {
+  // Pieces picked for the user lead; basics they already cover aren't repeated
+  const drawnIds = new Set(drawnPieces.map((p) => p.id))
+  const basics   = PIECE_OPTIONS.filter((p) => !drawnIds.has(p.id))
+
+  const renderGrid = (list) => (
+    <div className={styles.pieceGrid}>
+      {list.map((piece) => (
+        <PieceCard key={piece.id} piece={piece}
+          isSelected={selected.includes(piece.id)}
+          onToggle={onToggle} gender={gender}
+        />
+      ))}
+    </div>
+  )
+
   return (
     <div className={styles.stepContent}>
       <h2 className={styles.stepTitle}>What pieces are you looking for?</h2>
       <p className={styles.stepSub}>Select everything you're interested in — no limits.</p>
 
-      <div className={styles.pieceGrid}>
-        {PIECE_OPTIONS.map((piece) => (
-          <PieceCard key={piece.id} piece={piece}
-            isSelected={selected.includes(piece.id)}
-            onToggle={onToggle} gender={gender}
-          />
-        ))}
-      </div>
+      {drawnPieces.length > 0 ? (
+        <>
+          <section className={styles.pieceSection}>
+            <h3 className={styles.pieceSectionLabel}>Picked for your style</h3>
+            {renderGrid(drawnPieces)}
+          </section>
+          <section className={styles.pieceSection}>
+            <h3 className={styles.pieceSectionLabel}>Wardrobe basics</h3>
+            {renderGrid(basics)}
+          </section>
+        </>
+      ) : renderGrid(PIECE_OPTIONS)}
 
       <button className={styles.notSureBtn} onClick={onNotSure}>
         Not sure yet? Show me a starter capsule

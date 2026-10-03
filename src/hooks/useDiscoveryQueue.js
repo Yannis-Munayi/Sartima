@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { PRODUCTS, PRODUCTS_BY_ID } from '../data/products'
 import { useInterests } from '../context/InterestContext'
 import { trackEvent } from '../services/firebase'
+import { shuffle } from '../services/shuffle'
 
 const BUFFER_SIZE      = 30
 const REFILL_THRESHOLD = 8
@@ -192,8 +193,7 @@ function buildBatch(profile, batchSize, gender) {
   // Cold start: no likes AND no aesthetic tally yet → random shuffle.
   // (A quiz-completed user has a tally even before their first swipe.)
   if (profile.recentLikes.length === 0 && Object.keys(profile.styleAffinities).length === 0) {
-    const shuffled = [...unseen].sort(() => Math.random() - 0.5)
-    return shuffled.slice(0, batchSize)
+    return shuffle(unseen).slice(0, batchSize)
   }
 
   const ranking = buildRanking(profile)

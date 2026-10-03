@@ -4,7 +4,7 @@
 
 | Screen | File | Description |
 |--------|------|-------------|
-| Auth | `AuthScreen.jsx` | Email/password + Google OAuth sign-in/up. Password strength indicator, email validation via `validateSignupEmail` → `validateEmail` Firebase Function (syntax, throwaway domains, mail server, "Did you mean …?" typo fix — shared with SignupFlow's email step). Signup requires ToS/Privacy + age-16+ consent checkboxes (stored on the user doc); new Google users get the same consent step via `recordConsent`. |
+| Auth | `AuthScreen.jsx` | Email/password + Google OAuth sign-in/up. Password strength indicator, email validation via `validateSignupEmail` → `validateEmail` Firebase Function (syntax, throwaway domains, mail server, "Did you mean …?" typo fix — shared with SignupFlow's email step). Signup requires ToS/Privacy + age-16+ consent checkboxes (stored on the user doc); new Google users get the same consent step via `recordConsent`. Opened by `GO_TO_AUTH`, which records `authFromScreen`; the Back button / Esc (`CANCEL_AUTH`) and finishing (`AUTH_FLOW_DONE`) both restore that screen, so the user lands back on the tab they opened sign-in from. |
 | Welcome | `WelcomeScreen.jsx` | Landing page for unauthenticated users with CTA. |
 | Onboarding | `onboarding/OnboardingFlow.jsx` | 4-step wizard: occupation → brands → referral → shopping email. Saves `onboardingComplete: true` to `users/{uid}`. |
 | Seasons | `SeasonScreen.jsx` | Multi-select season picker (Spring / Summer / Fall / Winter) to seed item pool. |
@@ -39,19 +39,19 @@ Section components live in `src/components/home/`. Order:
 The badge counts items whose `id` isn't in `localStorage sartima_seen_notifications`; opening the panel marks everything shown as seen. To add a new nudge, push another item in `useHomeNotifications`.
 
 ### Aesthetics (`ExploreScreen.jsx`)
-Grid of all 51 aesthetic styles grouped by category, with search and All / Saved / Popular filters. Tap any to open its `AestheticScreen`.
+Grid of all 51 aesthetic styles with search and All / Saved / Popular filters. Tap any to open its `AestheticScreen`. Before the user has any style signal the default view is grouped by category; once they do (quiz result or interest graph, via `useStyleAffinity`), it becomes one ranking — "Closest to your style" then "More to explore", strongest match first — and search results are ranked the same way.
 
 ### AestheticScreen (`AestheticScreen.jsx`)
 Deep-dive page per aesthetic, split into sub-tab components under `src/screens/aestheticScreen/`: `StoryTab` (origin/culture), `ItemsTab` (key pieces), `LooksTab` (outfit gallery), `GuideTab` (styling guide), plus shared header/pinning in `shared.jsx`. Users can pin aesthetics (free: 3 pins).
 
 ### Brands (`BrandsScreen.jsx`)
-Brand discovery index — cards for the ~190 profiled brands in `src/data/brands.js` with editorial imagery (Pexels). Tap opens `BrandScreen`.
+Brand discovery index — cards for the ~190 profiled brands in `src/data/brands.js` with editorial imagery (Pexels). Tap opens `BrandScreen`. Grouped by positioning until the user has a style signal; then ranked by `scoreBrands` (aesthetic fit plus liked-brand and visit signals) into "Closest to your style" / "More to explore", and positioning filters and search results are ranked too.
 
 ### BrandScreen (`BrandScreen.jsx`)
 Brand profile page with 4 sub-tabs: **Story** (history + positioning), **Lines** (sub-brands/diffusion lines with tier badges), **Collections** (current + iconic past collections), **Shop** (catalog products filtered to the brand, with like + wishlist actions). Records brand-visit signals via `interestTracker`. Back returns to the tab it was opened from (`brandFromTab`).
 
 ### Search (`SearchScreen.jsx`)
-Client-side text search over the full ~7,500-product catalog with suggested searches, gender filter, like/wishlist actions, and `ProductImageToggle` (real product photo ↔ colour gradient). Accepts `forcedQuery` from the guide tour.
+Client-side text search over the full ~7,500-product catalog with suggested searches, gender filter, like/wishlist actions, and `ProductImageToggle` (real product photo ↔ colour gradient). Accepts `forcedQuery` from the guide tour. Results are ordered by how directly they match (exact brand/colour/type, then partial brand, name, attributes, description), then by style fit. With a style profile, the empty state's suggestions are Brands / Pieces / Colors drawn from `buildSearchSuggestions`; otherwise a fixed list.
 
 ### Swipe / Discover (`DiscoveryScreen.jsx`)
 Infinite product feed in the main app (non-quiz mode). Same component as quiz flow but `quizMode: false`. The tab can be hidden entirely from Settings.

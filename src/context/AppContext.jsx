@@ -3,6 +3,7 @@ import { STYLES } from '../data/styles'
 import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_QUIZ_ITEMS } from '../data/aestheticItems'
 import { LABEL_WEIGHTS, getItemLabels } from '../data/labels'
+import { shuffle } from '../services/shuffle'
 
 const AppContext = createContext(null)
 
@@ -33,19 +34,12 @@ const initialState = {
   quizMode: false,
   quizId: null,
   authReturnTo: null,
+  // Screen the auth screen was opened from, restored when it closes
+  authFromScreen: null,
   // One-shot hand-off from onboarding into the very first post-signup quiz —
   // see useDiscoveryQueue's applyWarmStart. Not carried through RESTART/
   // RESTART_QUIZ, which intentionally start cold.
   quizWarmStart: null,
-}
-
-function shuffle(arr) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
 }
 
 function matchesGender(itemGender, preference) {
@@ -124,24 +118,40 @@ function recalculateScores(responses, itemQueue) {
   return scores
 }
 
+// Screens the auth screen can hand back to. Sign-in is only reachable from
+// screens that show the tab bar, so the setup screens never appear here.
+const AUTH_RETURN_SCREENS = new Set([SCREENS.WELCOME, SCREENS.DISCOVERY, SCREENS.RESULTS, SCREENS.PROFILE])
+
+function screenBeforeAuth(state) {
+  if (state.authReturnTo === 'results') return SCREENS.RESULTS
+  return AUTH_RETURN_SCREENS.has(state.authFromScreen) ? state.authFromScreen : SCREENS.WELCOME
+}
+
 function reducer(state, action) {
   switch (action.type) {
 
     case 'GO_TO_AUTH':
-      return { ...state, screen: SCREENS.AUTH, authReturnTo: action.returnTo ?? null }
+      return {
+        ...state,
+        screen: SCREENS.AUTH,
+        authReturnTo: action.returnTo ?? null,
+        authFromScreen: state.screen === SCREENS.AUTH ? state.authFromScreen : state.screen,
+      }
 
     case 'GO_TO_WELCOME':
       return { ...state, screen: SCREENS.WELCOME }
 
     // Auth screen finished (login / Google / guest) — return the user to the
-    // screen they came from (e.g. quiz results) instead of dropping them at
-    // the welcome screen. authReturnTo is kept so SET_ONBOARDING_COMPLETE can
-    // still honour it if an onboarding redirect interjects.
+    // screen they came from (quiz results, an in-progress feed) instead of
+    // dropping them at the welcome screen. authReturnTo is kept so
+    // SET_ONBOARDING_COMPLETE can still honour it if an onboarding redirect
+    // interjects.
     case 'AUTH_FLOW_DONE':
-      return {
-        ...state,
-        screen: state.authReturnTo === 'results' ? SCREENS.RESULTS : SCREENS.WELCOME,
-      }
+      return { ...state, screen: screenBeforeAuth(state) }
+
+    // Backed out of the auth screen without signing in
+    case 'CANCEL_AUTH':
+      return { ...state, screen: screenBeforeAuth(state), authReturnTo: null }
 
     case 'GO_TO_ONBOARDING':
       return { ...state, screen: SCREENS.ONBOARDING }

@@ -2,7 +2,9 @@
 import { STYLES, getStyleName } from '../data/styles'
 import { useExplore } from '../context/ExploreContext'
 import { useApp } from '../context/AppContext'
+import { useStyleAffinity } from '../hooks/useStyleAffinity'
 import { fetchPhotosWithFallback } from '../services/stockPhotos'
+import { sortByScore, splitByMatch } from '../services/styleRanking'
 import AestheticScreen from './AestheticScreen'
 import AuthWidget from '../components/AuthWidget'
 import styles from './ExploreScreen.module.css'
@@ -10,11 +12,15 @@ import Icon from '../components/Icon'
 
 const ALL_AESTHETICS = Object.values(STYLES)
 
+// Aesthetics at or above this share of the user's top affinity are listed
+// under "Closest to your style"; the rest follow, still strongest first
+const MATCH_THRESHOLD = 0.05
+
 // Simple category groupings for the grid header sections
 const GROUPS = [
   {
     label: 'Core',
-    ids: ['oldmoney', 'minimalist', 'streetwear', 'preppy', 'vintage', 'techwear', 'gorpcore', 'athleisure', 'normcore'],
+    ids: ['oldmoney', 'minimalist', 'streetwear', 'preppy', 'vintage', 'techwear', 'gorpcore', 'athleisure', 'athletic', 'normcore'],
   },
   {
     label: 'Academic & Refined',
@@ -42,6 +48,12 @@ const GROUP_MAP = GROUPS.reduce((acc, g) => {
   g.ids.forEach((id) => { acc[id] = g.label })
   return acc
 }, {})
+
+// Grouped-view order, used to break ties when ranking by affinity
+const DEFAULT_ORDER = [
+  ...GROUPS.flatMap((g) => g.ids).map((id) => STYLES[id]).filter(Boolean),
+  ...ALL_AESTHETICS.filter((s) => !GROUP_MAP[s.id]),
+]
 
 function AestheticCard({ style, onOpen, pinned, gender, groupLabel }) {
   const [photos, setPhotos]       = useState([])
@@ -185,6 +197,7 @@ export default function ExploreScreen() {
   const { savedAesthetics, openAesthetic, openAestheticTab, isSaved } = useExplore()
   const { state } = useApp()
   const gender = state.gender
+  const { affinity, hasProfile } = useStyleAffinity()
   const [search, setSearch]   = useState('')
   const [filter, setFilter]   = useState('all')
   const [showPinHint, setShowPinHint] = useState(
@@ -218,13 +231,21 @@ export default function ExploreScreen() {
         s.icons?.some((i) => i.toLowerCase().includes(query)))
     }
     if (query) {
-      return ALL_AESTHETICS.filter((s) =>
+      const matches = ALL_AESTHETICS.filter((s) =>
         s.name.toLowerCase().includes(query) ||
         s.tagline?.toLowerCase().includes(query) ||
         s.icons?.some((i) => i.toLowerCase().includes(query)))
+      return hasProfile ? sortByScore(matches, (s) => affinity[s.id] ?? 0) : matches
     }
     return null
-  }, [filter, query, savedAesthetics])
+  }, [filter, query, savedAesthetics, hasProfile, affinity])
+
+  // Default view once the user has a style profile: every aesthetic, most
+  // aligned first, in place of the category groups
+  const ranked = useMemo(
+    () => hasProfile ? splitByMatch(DEFAULT_ORDER, (s) => affinity[s.id] ?? 0, MATCH_THRESHOLD) : null,
+    [hasProfile, affinity],
+  )
 
   function handleOpen(id) {
     openAestheticTab(id)
@@ -242,7 +263,9 @@ export default function ExploreScreen() {
         <div className={styles.headerTop}>
           <div>
             <h1 className={styles.title}>Aesthetics</h1>
-            <p className={styles.sub}>{ALL_AESTHETICS.length} aesthetics</p>
+            <p className={styles.sub}>
+              {ALL_AESTHETICS.length} aesthetics{hasProfile ? ' · sorted by your style' : ''}
+            </p>
           </div>
           <AuthWidget />
         </div>
@@ -316,8 +339,27 @@ export default function ExploreScreen() {
           </div>
         )}
 
-        {/* Grouped view (default: filter=all, no search query) */}
-        {displayAesthetics === null && (
+        {/* Ranked view (default once the user has a style profile) */}
+        {displayAesthetics === null && ranked && (
+          <>
+            {[
+              { label: 'Closest to your style', items: ranked.matches },
+              { label: 'More to explore',       items: ranked.rest },
+            ].map(({ label, items }) => items.length > 0 && (
+              <section key={label} className={styles.section}>
+                <h2 className={styles.sectionLabel}>{label}</h2>
+                <div className={styles.grid}>
+                  {items.map((s) => (
+                    <AestheticCard key={`${s.id}-${gender}`} style={s} onOpen={handleOpen} pinned={isSaved(s.id)} gender={gender} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        )}
+
+        {/* Grouped view (default: filter=all, no search query, no style profile yet) */}
+        {displayAesthetics === null && !ranked && (
           <>
             {savedAesthetics.length > 0 && (
               <section className={styles.section}>
