@@ -1,4 +1,4 @@
-﻿.overlay {
+.overlay {
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -6,7 +6,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 80px; /* clears tab bar */
+  padding-bottom: var(--space-20); /* clears tab bar */
   pointer-events: none;
 }
 
@@ -15,13 +15,13 @@
   max-width: 480px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 0 20px 22px;
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   pointer-events: all;
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
   will-change: transform;
 }
@@ -31,10 +31,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0 4px;
+  padding: var(--space-3) 0 var(--space-1);
   cursor: grab;
   touch-action: none;
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .dragHandle:active { cursor: grabbing; }
@@ -42,16 +42,16 @@
 .dragPill {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
   background: var(--border-strong);
 }
 
 .interactiveHint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--accent);
   text-align: center;
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   letter-spacing: 0.2px;
 }
 
@@ -63,7 +63,7 @@
 /* Progress dots */
 .dots {
   display: flex;
-  gap: 5px;
+  gap: var(--space-1);
   align-items: center;
 }
 
@@ -72,24 +72,24 @@
   height: 6px;
   border-radius: 50%;
   background: var(--border-strong);
-  transition: all 0.2s;
+  transition: all var(--duration-base);
   flex-shrink: 0;
 }
 
 .dotDone {
-  background: rgba(184, 149, 106, 0.5);
+  background: color-mix(in srgb, var(--accent) 50%, transparent);
   width: 6px;
 }
 
 .dotActive {
   background: var(--accent);
   width: 18px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 /* Guide label */
 .guideLabel {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -104,7 +104,7 @@
 }
 
 .counter {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-faint);
   letter-spacing: 0.4px;
@@ -114,58 +114,58 @@
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-family: inherit;
   cursor: pointer;
   padding: 0;
-  transition: color 0.2s;
+  transition: color var(--duration-base);
 }
 
 .skipBtn:hover { color: var(--text-muted); }
 
 /* Content */
 .title {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 800;
   color: var(--text);
   margin: 0;
-  line-height: 1.3;
+  line-height: var(--leading-snug);
 }
 
 .desc {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
 }
 
 .note {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-style: italic;
   color: var(--text-faint);
-  margin: -6px 0 0;
-  line-height: 1.5;
+  margin: calc(-1 * var(--space-2)) 0 0;
+  line-height: var(--leading-normal);
 }
 
 /* Actions */
 .actions {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
 }
 
 .backBtn {
   flex: 1;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--duration-base);
 }
 
 .backBtn:hover {
@@ -175,16 +175,16 @@
 
 .nextBtn {
   flex: 2;
-  padding: 12px 0;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-3) 0;
+  background: var(--accent);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity var(--duration-base);
 }
 
 .nextBtn:hover { opacity: 0.88; }

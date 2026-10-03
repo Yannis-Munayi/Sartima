@@ -43,6 +43,7 @@ export function SubscriptionProvider({ children }) {
 
   const [tier, setTier]               = useState('free')
   const [usage, setUsage]             = useState({})
+  const [billing, setBilling]         = useState(null)
   const [paywallFeature, setPaywallFeature] = useState(null)
 
   // Resolve tier from Firebase custom claims
@@ -56,7 +57,7 @@ export function SubscriptionProvider({ children }) {
   }, [user])
 
   useEffect(() => {
-    if (!user) { setTier('free'); setUsage({}); return }
+    if (!user) { setTier('free'); setUsage({}); setBilling(null); return }
     // Initial tier resolution (no force-refresh)
     user.getIdTokenResult().then((result) => {
       const claims = result.claims
@@ -64,21 +65,35 @@ export function SubscriptionProvider({ children }) {
       else if (claims.sartima_tier === 'pro') setTier('pro')
       else setTier('free')
     })
-    // Watch for ?upgrade=success in URL — force-refresh token to pick up new claims
-    if (window.location.search.includes('upgrade=success')) {
-      refreshSubscription()
+    // Returning from Stripe Checkout — drop the flag so a reload doesn't re-trigger it.
+    // The claims refresh itself happens below, once the webhook updates the subscription doc.
+    if (/[?&](upgrade|pack)=success/.test(window.location.search)) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.hash)
     }
     // Live-sync usage counters from Firestore
-    const unsub = onSnapshot(
+    const unsubUsage = onSnapshot(
       doc(db, `users/${user.uid}/prefs/usage`),
       (snap) => setUsage((prev) => (snap.exists() ? { ...prev, ...snap.data() } : {})),
       () => {}
     )
-    return unsub
+    // Live-sync billing state. The webhook sets claims BEFORE writing this doc, so
+    // force-refreshing the token on each change picks up upgrades/downgrades immediately.
+    const unsubBilling = onSnapshot(
+      doc(db, `users/${user.uid}/prefs/subscription`),
+      (snap) => {
+        if (!snap.exists()) { setBilling(null); return }
+        setBilling(snap.data())
+        refreshSubscription().catch(() => {})
+      },
+      () => {}
+    )
+    return () => { unsubUsage(); unsubBilling() }
   }, [user, refreshSubscription])
 
   const limits = CLIENT_LIMITS[tier] ?? CLIENT_LIMITS.free
   const isPro  = tier === 'pro' || tier === 'admin'
+  // A renewal payment failed; graceEndsAt (ms) is when Pro access stops
+  const paymentDue = billing?.status === 'past_due' || billing?.status === 'unpaid'
 
   function isAtLimit(feature) {
     if (tier === 'admin') return false
@@ -107,7 +122,7 @@ export function SubscriptionProvider({ children }) {
 
   return (
     <SubscriptionContext.Provider value={{
-      tier, isPro, limits, usage,
+      tier, isPro, limits, usage, billing, paymentDue,
       isAtLimit, openPaywall, closePaywall, paywallFeature,
       refreshSubscription,
     }}>

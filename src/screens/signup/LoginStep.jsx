@@ -3,6 +3,7 @@ import { sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '../../services/firebase'
 import { useAuth } from '../../context/AuthContext'
 import { EyeIcon, EyeOffIcon, GoogleIcon, friendlyError } from '../AuthScreen'
+import Icon from '../../components/Icon'
 import styles from '../AuthScreen.module.css'
 
 // Minimal login-only surface reached via the "Log in" link on every signup
@@ -70,12 +71,12 @@ export default function LoginStep({ onDone, onBack }) {
   }
 
   return (
-    <div className={styles.flow} style={{ padding: '24px 24px 40px' }}>
-      <button className={styles.forgotBtn} style={{ alignSelf: 'flex-start', marginBottom: 20 }} onClick={onBack}>
+    <div className={styles.flow} style={{ padding: 'var(--space-6) var(--space-6) var(--space-10)' }}>
+      <button className={styles.forgotBtn} style={{ alignSelf: 'flex-start', marginBottom: 'var(--space-5)' }} onClick={onBack}>
         ← Back
       </button>
 
-      <div className={styles.iconBadge}>{mode === 'login' ? '🔑' : '🔒'}</div>
+      <div className={styles.iconBadge}><Icon name={mode === 'login' ? 'key' : 'lock'} size={22} /></div>
       <h1 className={styles.title}>
         {mode === 'login' ? <>Welcome<br /><em>back</em></> : <>Reset your<br /><em>password</em></>}
       </h1>

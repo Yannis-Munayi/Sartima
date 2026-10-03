@@ -1,4 +1,4 @@
-﻿.backdrop {
+.backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -12,10 +12,10 @@
   right: 0;
   z-index: 301;
   background: var(--bg-elevated);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
   border-top: 1px solid var(--border);
-  padding: 12px 20px 40px;
+  padding: var(--space-3) var(--space-5) var(--space-10);
   animation: sheetUp 0.22s ease-out;
   max-height: 90dvh;
   overflow-y: auto;
@@ -29,20 +29,20 @@
 .handle {
   width: 36px;
   height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 0 auto 16px;
+  border-radius: var(--radius-full);
+  background: var(--surface-strong);
+  margin: 0 auto var(--space-4);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .title {
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
   margin: 0;
@@ -52,10 +52,10 @@
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 16px;
+  font-size: var(--text-md);
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.15s;
+  padding: var(--space-1) var(--space-2);
+  transition: color var(--duration-fast);
   font-family: inherit;
 }
 .closeBtn:hover { color: var(--text); }
@@ -64,17 +64,17 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-5);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .label {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -92,20 +92,20 @@
 .categoryRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .categoryPill {
-  padding: 8px 14px;
-  border-radius: 99px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--duration-fast);
   white-space: nowrap;
 }
 .categoryPill:hover {
@@ -113,8 +113,8 @@
   color: var(--text-dim);
 }
 .categoryPillActive {
-  background: rgba(184, 149, 106, 0.15);
-  border-color: rgba(184, 149, 106, 0.5);
+  background: var(--accent-dim);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   color: var(--accent);
 }
 
@@ -122,26 +122,26 @@
 .textarea,
 .input {
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-family: inherit;
-  padding: 12px 14px;
+  padding: var(--space-3) var(--space-4);
   resize: none;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-fast);
   width: 100%;
   box-sizing: border-box;
 }
 .textarea::placeholder,
 .input::placeholder { color: var(--text-faint); }
 .textarea:focus,
-.input:focus { border-color: rgba(184, 149, 106, 0.5); }
+.input:focus { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
 
 /* Error */
 .error {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--accent);
   margin: 0;
 }
@@ -149,17 +149,17 @@
 /* Submit */
 .submitBtn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-4);
+  background: var(--accent);
   border: none;
-  border-radius: 13px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
-  box-shadow: 0 4px 20px rgba(184, 149, 106, 0.3);
+  transition: opacity var(--duration-fast);
+  box-shadow: var(--shadow-accent);
 }
 .submitBtn:hover:not(:disabled) { opacity: 0.88; }
 .submitBtn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -169,8 +169,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 24px 0 8px;
+  gap: var(--space-3);
+  padding: var(--space-6) 0 var(--space-2);
   text-align: center;
 }
 
@@ -183,37 +183,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: var(--text-2xl);
   color: #48c78e;
   line-height: 52px;
 }
 
 .successTitle {
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
   margin: 0;
 }
 
 .successSub {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-muted);
   margin: 0;
   max-width: 280px;
-  line-height: 1.5;
+  line-height: var(--leading-normal);
 }
 
 .doneBtn {
-  margin-top: 8px;
-  padding: 12px 32px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-8);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
-.doneBtn:hover { background: rgba(255, 255, 255, 0.12); }
+.doneBtn:hover { background: var(--surface-strong); }

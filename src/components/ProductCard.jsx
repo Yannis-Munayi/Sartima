@@ -7,6 +7,7 @@ import { BRAND_NAME_TO_ID } from '../data/brands'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import ProductImageToggle from './ProductImageToggle'
 import styles from './ProductCard.module.css'
+import Icon from './Icon'
 
 const SWIPE_THRESHOLD = 90
 const MAX_ROTATION    = 12
@@ -176,7 +177,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
             onClick={() => recordInterest?.('shop', { product })}
             aria-label="Shop this item"
           >
-            🛍
+            <Icon name="bag" size={16} />
           </a>
           <button
             className={`${styles.wishlistBtn} ${wishlisted ? styles.wishlistBtnActive : ''}`}

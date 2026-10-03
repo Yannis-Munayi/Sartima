@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import { STYLES, getPinterestUrl } from '../data/styles'
 import { LABEL_WEIGHTS, getItemLabels } from '../data/labels'
 import { fetchPhotosWithFallback } from '../services/stockPhotos'
+import Icon from '../components/Icon'
 import styles from './LikedScreen.module.css'
 
 function calculateAesthetics(likedItems) {
@@ -127,7 +128,7 @@ export default function LikedScreen() {
 
       {liked.length === 0 ? (
         <div className={styles.empty}>
-          <span className={styles.emptyIcon}>♥</span>
+          <span className={styles.emptyIcon}><Icon name="heart" size={24} /></span>
           <p className={styles.emptyTitle}>No liked items yet</p>
           <p className={styles.emptySub}>Swipe right on items in the Discover tab to like them.</p>
         </div>

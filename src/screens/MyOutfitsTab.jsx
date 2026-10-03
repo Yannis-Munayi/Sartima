@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useOutfitLog } from '../hooks/useOutfitLog'
 import { getWeatherEmoji } from '../services/weather'
 import styles from './DailyLookScreen.module.css'
+import Icon from '../components/Icon'
 
 const CATEGORY_EMOJIS = {
   tops: '👕', bottoms: '👖', outerwear: '🧥',
@@ -35,7 +36,7 @@ function OutfitBoardCard({ board, onEdit, onDelete }) {
             <div
               key={item.id}
               className={styles.boardThumb}
-              style={{ background: item.gradient ?? 'rgba(255,255,255,0.08)' }}
+              style={{ background: item.gradient ?? 'var(--surface-hover)' }}
             >
               {url && <img src={url} alt={item.name} className={styles.boardThumbImg} />}
             </div>
@@ -70,7 +71,7 @@ export default function MyOutfitsTab() {
     return (
       <div className={styles.myOutfitsTab}>
         <LockedOverlay message="Sign in to save and manage your outfits">
-          <div className={styles.boardsList} style={{ padding: '8px 0', filter: 'blur(4px)', pointerEvents: 'none' }}>
+          <div className={styles.boardsList} style={{ padding: 'var(--space-2) 0', filter: 'blur(4px)', pointerEvents: 'none' }}>
             {[{ name: 'Weekend Casual', count: 4 }, { name: 'Office Ready', count: 3 }].map((b) => (
               <div key={b.name} className={styles.outfitBoardCard}>
                 <div className={styles.boardInfo}>
@@ -106,7 +107,7 @@ export default function MyOutfitsTab() {
           {displayUrl ? (
             <img src={displayUrl} alt="Your try-on photo" className={styles.avatarCardThumb} />
           ) : (
-            <span className={styles.avatarCardEmoji}>🪞</span>
+            <span className={styles.avatarCardEmoji}><Icon name="user" size={24} /></span>
           )}
           {(uploading || prettifying) && (
             <div className={styles.avatarCardOverlay}>
@@ -204,7 +205,7 @@ export default function MyOutfitsTab() {
       {/* Empty state */}
       {!hasBoards && !hasLog && logEntries !== null && (
         <div className={styles.emptyState}>
-          <p className={styles.emptyEmoji}>👗</p>
+          <p className={styles.emptyEmoji}><Icon name="hanger" size={24} /></p>
           <p className={styles.emptyTitle}>No outfits yet</p>
           <p className={styles.emptySub}>
             Try on items from your closet — tap "Try On" on any piece to get started.

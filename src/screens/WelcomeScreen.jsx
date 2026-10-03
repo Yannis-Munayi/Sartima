@@ -17,7 +17,7 @@ export default function WelcomeScreen() {
       </div>
 
       <div className={styles.welcomeContent}>
-        <div className={styles.logoMark}>SL</div>
+        <img className={styles.logoMark} src="/logo.png" alt="Sartima" width="64" height="64" />
         <h1 className={styles.welcomeTitle}>
           Find your<br />
           <span className={styles.accent}>style.</span>
@@ -26,9 +26,9 @@ export default function WelcomeScreen() {
           Answer a few questions about what you're drawn to — we'll map your aesthetic and build your seasonal wardrobe blueprint.
         </p>
         <div className={styles.featurePills}>
-          <span className={styles.pill}>🌿 Season-aware</span>
-          <span className={styles.pill}>🎨 51 aesthetics</span>
-          <span className={styles.pill}>👔 8 categories</span>
+          <span className={styles.pill}>Season-aware</span>
+          <span className={styles.pill}>51 aesthetics</span>
+          <span className={styles.pill}>8 categories</span>
         </div>
         <button
           className={styles.primaryBtn}

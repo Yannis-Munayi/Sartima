@@ -28,7 +28,6 @@ export default function BrandsForYou({ navigate, gender }) {
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}>🏷️</span>
         <div>
           <h2 className={styles.sectionTitle}>Brands for you</h2>
           <p className={styles.sectionSub}>Based on your {topStyle?.name ?? 'top'} aesthetic</p>

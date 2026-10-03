@@ -186,7 +186,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
               <h3 className={styles.itemName}>{item.name}</h3>
               {item.brand && <p className={styles.itemBrand}>{item.brand}</p>}
               <p className={styles.itemMeta}>
-                {CATEGORIES.find((c) => c.id === item.category)?.emoji} {item.category}
+                {item.category}
                 {item.color ? ` · ${item.color}` : ''}
                 {item.price != null ? ` · $${item.price.toFixed(2)}` : ''}
               </p>
@@ -204,7 +204,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                   )}
                   {item.storageMethod && (
                     <span className={styles.carePill}>
-                      {item.storageMethod === 'hang' ? '🪝 Hang' : item.storageMethod === 'fold' ? '📦 Fold' : '🪝 Hang or fold'}
+                      {item.storageMethod === 'hang' ? 'Hang' : item.storageMethod === 'fold' ? 'Fold' : 'Hang or fold'}
                     </span>
                   )}
                   {item.careSymbols?.slice(0, 4).map((id) => {
@@ -217,7 +217,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                   })}
                   {washStatusLabel && (
                     <span className={`${styles.carePill} ${washStatusLabel === 'Due for wash' ? styles.carePillWarn : ''}`}>
-                      {washStatusLabel === 'Due for wash' ? '⚠ ' : ''}{washStatusLabel}
+                      {washStatusLabel}
                     </span>
                   )}
                 </div>
@@ -246,7 +246,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                   className={`${styles.actionBtn} ${styles.actionDanger}`}
                   onClick={() => setConfirmDelete(true)}
                 >
-                  🗑 Remove
+                  Remove
                 </button>
               </div>
 
@@ -297,7 +297,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
                     className={`${styles.chip} ${category === c.id ? styles.chipActive : ''}`}
                     onClick={() => setCategory(c.id)}
                   >
-                    {c.emoji} {c.label}
+                    {c.label}
                   </button>
                 ))}
               </div>
@@ -347,7 +347,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
               <p className={styles.labelHint}>Select the symbols from your garment's care label.</p>
               <CareSymbolPicker selected={careSymbols} onChange={setCareSymbols} />
 
-              <label className={styles.label} style={{ marginTop: 16 }}>How often to wash</label>
+              <label className={styles.label} style={{ marginTop: 'var(--space-4)' }}>How often to wash</label>
               <div className={styles.chipRow}>
                 {WASH_FREQUENCIES.map((f) => (
                   <button

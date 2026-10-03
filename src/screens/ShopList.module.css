@@ -1,31 +1,37 @@
-﻿/* ── Empty state ── */
+/* ── Empty state ── */
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px 32px;
+  padding: var(--space-20) var(--space-8);
   text-align: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .emptyIcon {
-  font-size: 48px;
-  line-height: 1;
-  margin-bottom: 4px;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .emptyTitle {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
   margin: 0;
 }
 
 .emptySub {
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--text-faint);
   margin: 0;
-  line-height: 1.6;
+  line-height: var(--leading-relaxed);
   max-width: 270px;
 }
 
@@ -33,23 +39,23 @@
 .list {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 12px;
+  padding: var(--space-4);
+  gap: var(--space-3);
 }
 
 /* ── Card ── */
 .card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
+  gap: var(--space-4);
+  padding: var(--space-4);
   width: 100%;
   background: none;
   border: none;
@@ -57,17 +63,17 @@
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
 
 .cardHeader:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface);
 }
 
 .cardPhoto {
   width: 60px;
   height: 60px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
@@ -82,12 +88,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.3s;
+  transition: opacity var(--duration-slow);
 }
 
 .cardEmoji {
-  font-size: 22px;
-  line-height: 1;
+  font-size: var(--text-2xl);
+  line-height: var(--leading-none);
   position: relative;
   z-index: 1;
 }
@@ -98,26 +104,26 @@
 }
 
 .cardName {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--text);
-  margin: 0 0 3px;
+  margin: 0 0 var(--space-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .cardFilters {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
-  margin: 0 0 3px;
+  margin: 0 0 var(--space-1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .cardCount {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--accent);
   margin: 0;
   font-weight: 600;
@@ -126,42 +132,42 @@
 .chevron {
   flex-shrink: 0;
   color: var(--text-faint);
-  transition: transform 0.2s;
+  transition: transform var(--duration-base);
 }
 
 /* ── Card body (expanded) ── */
 .cardBody {
-  padding: 0 14px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0 var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .storeList {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 10px;
+  margin-top: var(--space-3);
 }
 
 .storeRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 12px;
-  border-radius: 10px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--text);
-  transition: background 0.14s;
+  transition: background var(--duration-fast);
 }
 
 .storeRow:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface);
 }
 
 .storeRank {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--text-faint);
   width: 22px;
@@ -169,7 +175,7 @@
 }
 
 .storeName {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text);
   flex-shrink: 0;
@@ -177,7 +183,7 @@
 }
 
 .storeTagline {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   flex: 1;
   white-space: nowrap;
@@ -186,7 +192,7 @@
 }
 
 .shopNow {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--accent);
   flex-shrink: 0;
@@ -195,47 +201,47 @@
 /* ── Card actions ── */
 .cardActions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .reopenBtn {
   flex: 1;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  padding: var(--space-3);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.14s;
+  transition: background var(--duration-fast);
 }
-.reopenBtn:hover { background: rgba(255, 255, 255, 0.1); }
+.reopenBtn:hover { background: var(--surface-hover); }
 
 .removeBtn {
-  padding: 10px 16px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: rgba(220, 38, 38, 0.7);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.14s;
+  transition: background var(--duration-fast);
 }
 .removeBtn:hover { background: rgba(220, 38, 38, 0.15); }
 
 /* ── Section title (used to separate Scout Results / Saved Items) ── */
 .sectionTitle {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-faint);
   margin: 0;
-  padding: 16px 16px 6px;
+  padding: var(--space-4) var(--space-4) var(--space-2);
 }
 
 /* ── Scouted group product rows (expanded state) ── */
@@ -243,15 +249,15 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 10px;
+  margin-top: var(--space-3);
 }
 
 .productRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .productRow:last-child {
@@ -261,8 +267,8 @@
 .productRowPhoto {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
@@ -274,7 +280,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.3s;
+  transition: opacity var(--duration-slow);
 }
 
 .productRowBody {
@@ -286,7 +292,7 @@
 }
 
 .productRowBrand {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--text-faint);
   text-transform: uppercase;
@@ -295,7 +301,7 @@
 }
 
 .productRowName {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text);
   margin: 0;
@@ -305,7 +311,7 @@
 }
 
 .productRowDesc {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-faint);
   margin: 0;
   white-space: nowrap;
@@ -314,17 +320,17 @@
 }
 
 .productRowBuy {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--accent);
   text-decoration: none;
   flex-shrink: 0;
-  padding: 6px 10px;
-  background: rgba(184, 149, 106, 0.1);
-  border-radius: 8px;
-  transition: background 0.14s;
+  padding: var(--space-2) var(--space-3);
+  background: var(--accent-dim);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast);
 }
 
 .productRowBuy:hover {
-  background: rgba(184, 149, 106, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
 }

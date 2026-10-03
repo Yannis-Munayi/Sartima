@@ -10,6 +10,7 @@ import TryOnSheet from '../components/TryOnSheet'
 import ProductImageToggle from '../components/ProductImageToggle'
 import { TRYON_CATEGORIES } from '../services/tryOn'
 import styles from './WardrobeScreen.module.css'
+import Icon from '../components/Icon'
 
 // Ordered category buckets for grouping liked items
 const BUCKET_META = {
@@ -152,7 +153,7 @@ export default function WardrobeScreen() {
         </div>
         <div className={styles.lockedWrap}>
           <div className={styles.lockedContent}>
-            <div className={styles.grid} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', padding: '16px 0' }}>
+            <div className={styles.grid} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', padding: 'var(--space-4) 0' }}>
               {GHOST_ITEMS.map((item) => (
                 <div key={item.id} className={styles.item}>
                   <div className={styles.itemPhoto} style={{ background: item.gradient }}>
@@ -163,7 +164,7 @@ export default function WardrobeScreen() {
               ))}
             </div>
             <div className={styles.lockedOverlay}>
-              <span className={styles.lockIcon}>🔒</span>
+              <span className={styles.lockIcon}><Icon name="lock" size={20} /></span>
               <p className={styles.lockLabel}>Sign in to save your liked items</p>
             </div>
           </div>
@@ -194,7 +195,7 @@ export default function WardrobeScreen() {
 
       {liked.length === 0 && (
         <div className={styles.empty}>
-          <span className={styles.emptyIcon}>🤍</span>
+          <span className={styles.emptyIcon}><Icon name="heart" size={24} /></span>
           <p className={styles.emptyTitle}>Nothing liked yet</p>
           <p className={styles.emptySub}>
             Swipe right on items in Discover, or tap the heart on any card.

@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { useInterests } from '../context/InterestContext'
 import { getPinterestUrl } from '../data/styles'
 import styles from './ItemActionSheet.module.css'
+import Icon from './Icon'
 
 export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
   const { state } = useApp()
@@ -37,7 +38,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
             className={styles.actionBtn}
             onClick={onClose}
           >
-            <span className={styles.actionIcon}>📌</span>
+            <span className={styles.actionIcon}><Icon name="bookmark" /></span>
             <span className={styles.actionText}>View on Pinterest</span>
             <span className={styles.actionArrow}>↗</span>
           </a>
@@ -51,14 +52,14 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
               className={`${styles.actionBtn} ${styles.shopBtn}`}
               onClick={() => { recordInterest?.('shop', { product: item }); onClose() }}
             >
-              <span className={styles.actionIcon}>🛍️</span>
+              <span className={styles.actionIcon}><Icon name="bag" /></span>
               <span className={styles.actionText}>Shop at {item.brand}</span>
               <span className={styles.actionArrow}>↗</span>
             </a>
           ) : (
             /* ShopPanel for generic items */
             <button className={`${styles.actionBtn} ${styles.shopBtn}`} onClick={onShop}>
-              <span className={styles.actionIcon}>🛍️</span>
+              <span className={styles.actionIcon}><Icon name="bag" /></span>
               <span className={styles.actionText}>Shop this item</span>
               <span className={styles.actionArrow}>→</span>
             </button>
@@ -73,7 +74,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
               className={styles.actionBtn}
               onClick={() => { recordInterest?.('shop', { product: item }); onClose() }}
             >
-              <span className={styles.actionIcon}>🔍</span>
+              <span className={styles.actionIcon}><Icon name="search" /></span>
               <span className={styles.actionText}>Search {item.brand} for this</span>
               <span className={styles.actionArrow}>↗</span>
             </a>
@@ -85,7 +86,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
             className={`${styles.actionBtn} ${styles.removeBtn}`}
             onClick={onRemove}
           >
-            <span className={styles.actionIcon}>🗑️</span>
+            <span className={styles.actionIcon}><Icon name="trash" /></span>
             <span className={styles.actionText}>Remove from liked</span>
           </button>
         )}

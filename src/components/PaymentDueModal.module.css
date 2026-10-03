@@ -1,0 +1,116 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.65);
+  animation: fadeIn var(--duration-base) var(--ease-standard);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-7) var(--space-6) var(--space-6);
+  background: var(--bg-elevated);
+  border: 1px solid var(--danger-border);
+  border-top: 4px solid var(--danger);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: popIn var(--duration-slow) var(--ease-standard);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+
+.title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--text);
+}
+
+.body {
+  margin: 0 0 var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--text-muted);
+}
+
+.body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.primary,
+.secondary {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.primary {
+  margin-bottom: var(--space-2);
+  background: var(--danger);
+  border: none;
+  color: #FFFFFF;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondary {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .card {
+    animation: none;
+  }
+}

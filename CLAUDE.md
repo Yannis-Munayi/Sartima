@@ -108,7 +108,7 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 **Firebase Function calls** — Always use `httpsCallable(functions, 'functionName')`. Every function requires auth except `validateEmail` / `submitFeedback` / `submitCrashReport` / `searchImages` (guest browsing needs photos); the SDK passes the ID token automatically. Tier limits are re-enforced server-side — client `isAtLimit` checks are UX, not security.
 
-**New persistence** — Prefer a `prefs/{key}` document (already covered by Firestore rules). New subcollections require a new `match` block in `firestore.rules` and a redeploy before any writes.
+**New persistence** — Prefer a `prefs/{key}` document (already covered by Firestore rules), written with `savePrefsDoc(uid, key, data)` from `src/services/prefsDoc.js`. Never call `setDoc(...).catch()` from an effect: `setDoc` validates synchronously, so a bad value throws past the `.catch` and crashes the whole tree. Firestore is initialized with `ignoreUndefinedProperties`, so optional fields can be passed through as `undefined`. New subcollections require a new `match` block in `firestore.rules` and a redeploy before any writes.
 
 **Error logging** — Import `logError` / `logWarn` from `src/services/logger.js` in every service file. Never call `console.error` directly in services.
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { EyeIcon, EyeOffIcon, StrengthBar, getStrength } from '../AuthScreen'
 import stepStyles from '../onboarding/OnboardingStep.module.css'
 import styles from '../AuthScreen.module.css'
+import Icon from '../../components/Icon'
 
 export default function PasswordStep({ value, onNext }) {
   const [password, setPassword]     = useState(value)
@@ -18,7 +19,7 @@ export default function PasswordStep({ value, onNext }) {
 
   return (
     <div className={stepStyles.step}>
-      <div className={stepStyles.iconBadge}>🔒</div>
+      <div className={stepStyles.iconBadge}><Icon name="lock" size={22} /></div>
       <h1 className={stepStyles.title}>
         Choose a<br /><em>password</em>
       </h1>

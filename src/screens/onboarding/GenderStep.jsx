@@ -1,15 +1,16 @@
 import styles from './OnboardingStep.module.css'
+import Icon from '../../components/Icon'
 
 const OPTIONS = [
-  { id: 'women', label: 'Women', emoji: '👗' },
-  { id: 'men',   label: 'Men',   emoji: '👔' },
-  { id: 'both',  label: 'Mixed', emoji: '✨' },
+  { id: 'women', label: 'Women' },
+  { id: 'men',   label: 'Men' },
+  { id: 'both',  label: 'Mixed' },
 ]
 
 export default function GenderStep({ value, onSelect, onSkip }) {
   return (
     <div className={styles.step}>
-      <div className={styles.iconBadge}>🛍️</div>
+      <div className={styles.iconBadge}><Icon name="bag" size={22} /></div>
       <h1 className={styles.title}>
         Who are you<br /><em>shopping for?</em>
       </h1>
@@ -22,7 +23,6 @@ export default function GenderStep({ value, onSelect, onSkip }) {
             className={`${styles.tile} ${value === opt.id ? styles.tileActive : ''}`}
             onClick={() => onSelect(opt.id)}
           >
-            <span className={styles.tileEmoji}>{opt.emoji}</span>
             <span className={styles.tileLabel}>{opt.label}</span>
           </button>
         ))}

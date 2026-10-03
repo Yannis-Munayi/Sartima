@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { generateTrip } from '../services/tripAI'
 import LockedOverlay from '../components/LockedOverlay'
 import styles from './TripPlannerScreen.module.css'
+import Icon from '../components/Icon'
 
 const CATEGORY_EMOJIS = {
   tops: '👕', bottoms: '👖', outerwear: '🧥',
@@ -54,7 +55,7 @@ export default function TripPlannerScreen() {
           <div className={styles.results} style={{ pointerEvents: 'none' }}>
             <h2 className={styles.resultTitle}>Paris, France · 3 nights</h2>
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>🧳 Packing List</h3>
+              <h3 className={styles.sectionTitle}>Packing list</h3>
               <div className={styles.packingList}>
                 {ghostPacking.map((name) => (
                   <div key={name} className={styles.packingItem}>
@@ -65,7 +66,7 @@ export default function TripPlannerScreen() {
               </div>
             </section>
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>📅 Daily Outfits</h3>
+              <h3 className={styles.sectionTitle}>Daily outfits</h3>
               {ghostDays.map((label) => (
                 <div key={label} className={styles.dayPlan}>
                   <p className={styles.dayLabel}>{label}</p>
@@ -128,7 +129,7 @@ export default function TripPlannerScreen() {
 
           {/* Packing list */}
           <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>🧳 Packing List</h3>
+            <h3 className={styles.sectionTitle}>Packing list</h3>
             <div className={styles.packingList}>
               {result.packingList.map((item, i) => {
                 const closetItem = item.itemId ? result.itemMap[item.itemId] : null
@@ -144,7 +145,7 @@ export default function TripPlannerScreen() {
                       </div>
                     ) : (
                       <div className={styles.packThumb}>
-                        <span>🛍️</span>
+                        <Icon name="bag" size={18} />
                       </div>
                     )}
                     <div className={styles.packInfo}>
@@ -162,7 +163,7 @@ export default function TripPlannerScreen() {
 
           {/* Daily outfits */}
           <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>👗 Daily Outfits</h3>
+            <h3 className={styles.sectionTitle}>Daily outfits</h3>
             <div className={styles.dayList}>
               {result.dailyOutfits.map((day, i) => {
                 const items = (day.itemIds ?? []).map((id) => result.itemMap[id]).filter(Boolean)
@@ -192,7 +193,7 @@ export default function TripPlannerScreen() {
           {/* Gap items */}
           {result.gapItems?.length > 0 && (
             <section className={styles.section}>
-              <h3 className={styles.sectionTitle}>🛍️ Consider Buying</h3>
+              <h3 className={styles.sectionTitle}>Consider buying</h3>
               <ul className={styles.gapList}>
                 {result.gapItems.map((g, i) => <li key={i} className={styles.gapItem}>{g}</li>)}
               </ul>

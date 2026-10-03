@@ -9,20 +9,20 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   color: var(--accent);
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s, background 0.15s;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--duration-fast), background var(--duration-fast);
 }
 
 .launcher:hover {
-  transform: scale(1.06);
-  background: rgba(184, 149, 106, 0.14);
+  transform: scale(1.04);
+  background: var(--accent-dim);
 }
 
 .launcher:active {

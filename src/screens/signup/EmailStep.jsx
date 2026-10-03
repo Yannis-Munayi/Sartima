@@ -3,6 +3,7 @@ import { httpsCallable } from 'firebase/functions'
 import { functions } from '../../services/firebase'
 import stepStyles from '../onboarding/OnboardingStep.module.css'
 import styles from '../AuthScreen.module.css'
+import Icon from '../../components/Icon'
 
 export default function EmailStep({ value, onNext }) {
   const [email, setEmail]       = useState(value)
@@ -31,7 +32,7 @@ export default function EmailStep({ value, onNext }) {
 
   return (
     <div className={stepStyles.step}>
-      <div className={stepStyles.iconBadge}>✉️</div>
+      <div className={stepStyles.iconBadge}><Icon name="mail" size={22} /></div>
       <h1 className={stepStyles.title}>
         What's your<br /><em>email?</em>
       </h1>

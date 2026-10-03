@@ -22,7 +22,6 @@ export default function AestheticProfileCard({ navigate, gender }) {
     return (
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <span className={styles.sectionIcon}>✦</span>
           <div>
             <h2 className={styles.sectionTitle}>Your Aesthetic Profile</h2>
             <p className={styles.sectionSub}>Rate looks to reveal your style breakdown</p>
@@ -43,7 +42,6 @@ export default function AestheticProfileCard({ navigate, gender }) {
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}>✦</span>
         <div>
           <h2 className={styles.sectionTitle}>Your Aesthetic Profile</h2>
           <p className={styles.sectionSub}>{swipedCount} looks rated · updates live as you swipe</p>

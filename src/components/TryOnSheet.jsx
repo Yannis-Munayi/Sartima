@@ -8,6 +8,7 @@ import { generateTryOnResult, TRYON_CATEGORIES } from '../services/tryOn'
 import { purchaseTryOnPackSession } from '../services/subscriptionService'
 import { recordSignal } from '../services/interestTracker'
 import styles from './TryOnSheet.module.css'
+import Icon from './Icon'
 
 const MAX_PIECES = 3
 
@@ -246,7 +247,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
           {/* No avatar — upload inline */}
           {!avatarUrl && (
             <div className={styles.noAvatar}>
-              <p className={styles.noAvatarEmoji}>🪞</p>
+              <p className={styles.noAvatarEmoji}><Icon name="user" size={24} /></p>
               <p className={styles.noAvatarTitle}>Add a photo of yourself</p>
               <p className={styles.noAvatarSub}>
                 Upload a full-body photo in fitted clothing. The AI will dress you in the selected items.
@@ -353,7 +354,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
           {/* Error */}
           {phase === 'error' && (
             <div className={styles.errorView}>
-              <p className={styles.errorEmoji}>⚠️</p>
+              <p className={styles.errorEmoji}><Icon name="alert" size={24} /></p>
               <p className={styles.errorTitle}>{outOfCredits ? 'Out of Try-On credits' : 'Generation failed'}</p>
               <p className={styles.errorSub}>{errorMessage ?? 'Check your connection and try again.'}</p>
               {outOfCredits && isPro ? (
@@ -393,7 +394,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
               onClick={handleSave}
               disabled={saved}
             >
-              {saved ? '✓ Saved' : '♥ Save Look'}
+              {saved ? 'Saved' : 'Save look'}
             </button>
           </div>
         )}

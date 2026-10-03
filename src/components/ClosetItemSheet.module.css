@@ -1,4 +1,4 @@
-﻿.overlay {
+.overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.6);
@@ -13,7 +13,7 @@
   max-width: 480px;
   max-height: 90dvh;
   background: var(--bg-card);
-  border-radius: 24px 24px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -23,18 +23,18 @@
 .handle {
   width: 36px;
   height: 4px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
-  margin: 12px auto 0;
+  background: var(--surface-strong);
+  border-radius: var(--radius-full);
+  margin: var(--space-3) auto 0;
   flex-shrink: 0;
 }
 
-/* â”€â”€ Photo â”€â”€ */
+/* ── Photo ── */
 .photoWrap {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: rgba(255,255,255,0.04);
+  background: var(--surface);
   flex-shrink: 0;
 }
 
@@ -58,77 +58,77 @@
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background: rgba(184, 149, 106, 0.9);
+  background: color-mix(in srgb, var(--accent) 90%, transparent);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 8px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
-/* â”€â”€ Body â”€â”€ */
+/* ── Body ── */
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px 32px;
+  padding: var(--space-4) var(--space-5) var(--space-8);
 }
 
 .itemName {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--text);
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
   font-family: var(--font-display);
 }
 
 .itemBrand {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-faint);
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-2);
 }
 
 .itemMeta {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-dim);
-  margin: 0 0 20px;
+  margin: 0 0 var(--space-5);
   text-transform: capitalize;
 }
 
-/* â”€â”€ Actions â”€â”€ */
+/* ── Actions ── */
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .actionBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
-  padding: 13px 16px;
+  padding: var(--space-3) var(--space-4);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-fast);
 }
 
 .actionBtn:hover { border-color: var(--accent); }
 .actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.actionDanger { color: #ff6b6b; }
-.actionDanger:hover { border-color: #ff6b6b; }
+.actionDanger { color: var(--danger); }
+.actionDanger:hover { border-color: var(--danger); }
 
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,255,255,0.2);
+  border: 2px solid var(--border-strong);
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -137,34 +137,34 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* â”€â”€ Confirm delete â”€â”€ */
+/* ── Confirm delete ── */
 .confirmBox {
-  margin-top: 12px;
-  padding: 14px;
+  margin-top: var(--space-3);
+  padding: var(--space-4);
   background: rgba(255,107,107,0.08);
   border: 1px solid rgba(255,107,107,0.2);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .confirmText {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text);
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
 }
 
 .confirmBtns {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .confirmCancel {
   flex: 1;
-  padding: 10px;
+  padding: var(--space-3);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -172,44 +172,44 @@
 
 .confirmDelete {
   flex: 1;
-  padding: 10px;
-  background: #ff6b6b;
+  padding: var(--space-3);
+  background: var(--danger);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
 }
 
-/* â”€â”€ Edit mode â”€â”€ */
+/* ── Edit mode ── */
 .editTitle {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
   font-family: var(--font-display);
 }
 
 .label {
   display: block;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-faint);
-  margin: 14px 0 6px;
+  margin: var(--space-4) 0 var(--space-2);
 }
 
 .input {
   width: 100%;
-  padding: 11px 14px;
+  padding: var(--space-3) var(--space-4);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
@@ -220,21 +220,21 @@
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .chip {
-  padding: 6px 12px;
+  padding: var(--space-2) var(--space-3);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   color: var(--text-faint);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   text-transform: capitalize;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
 }
 
 .chipActive {
@@ -244,25 +244,25 @@
 }
 
 .error {
-  font-size: 13px;
-  color: #ff6b6b;
-  margin: 8px 0 0;
+  font-size: var(--text-sm);
+  color: var(--danger);
+  margin: var(--space-2) 0 0;
 }
 
 .editBtns {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 
 .cancelBtn {
   flex: 1;
-  padding: 13px;
+  padding: var(--space-3);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--text-faint);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -270,12 +270,12 @@
 
 .saveBtn {
   flex: 1;
-  padding: 13px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-3);
+  background: var(--accent);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
@@ -287,32 +287,32 @@
 .careSummary {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 16px;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
 }
 
 .carePill {
-  padding: 4px 10px;
+  padding: var(--space-1) var(--space-3);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-xs);
   color: var(--text-dim);
   font-weight: 500;
 }
 
 .carePillWarn {
-  border-color: rgba(184, 149, 106, 0.5);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   color: var(--accent);
-  background: rgba(184, 149, 106, 0.08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .symbolMini {
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--text-dim);
 }
@@ -321,8 +321,8 @@
 .sectionDivider {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 20px 0 4px;
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-1);
 }
 
 .sectionDivider::before,
@@ -334,7 +334,7 @@
 }
 
 .sectionDivider span {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -343,15 +343,15 @@
 }
 
 .labelHint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
 }
 
 /* ── Last washed date row ── */
 .dateRow {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -360,17 +360,17 @@
 }
 
 .todayBtn {
-  padding: 11px 14px;
+  padding: var(--space-3) var(--space-4);
   background: none;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
   flex-shrink: 0;
 }
 

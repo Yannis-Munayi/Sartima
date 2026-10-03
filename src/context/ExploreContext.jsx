@@ -1,6 +1,7 @@
 ﻿import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
+import { savePrefsDoc } from '../services/prefsDoc'
 import { useAuth } from './AuthContext'
 import { useSubscription } from './SubscriptionContext'
 import { recordSignal } from '../services/interestTracker'
@@ -59,11 +60,7 @@ export function ExploreProvider({ children }) {
   // Persist to Firestore — only after the initial load has completed
   useEffect(() => {
     if (!user || !loadReady || loadedUid.current !== user.uid) return
-    setDoc(
-      doc(db, 'users', user.uid, 'prefs', 'savedAesthetics'),
-      { ids: savedAesthetics },
-      { merge: true }
-    ).catch(() => {})
+    savePrefsDoc(user.uid, 'savedAesthetics', { ids: savedAesthetics })
   }, [savedAesthetics, user, loadReady])
 
   const openAestheticTab = useCallback((id) => {

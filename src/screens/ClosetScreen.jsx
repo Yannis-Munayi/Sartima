@@ -14,6 +14,7 @@ import OutfitBoardScreen from './OutfitBoardScreen'
 import { CARE_SYMBOLS, WASH_FREQUENCIES } from '../data/careSymbols'
 import { TRYON_CATEGORIES } from '../services/tryOn'
 import styles from './ClosetScreen.module.css'
+import Icon from '../components/Icon'
 
 const CATEGORY_EMOJI = {
   tops: '👕', bottoms: '👖', outerwear: '🧥',
@@ -114,9 +115,9 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
             {isStale(item) && (
               <span
                 title={item.lastWorn ? `Not worn since ${item.lastWorn}` : 'Not logged as worn yet'}
-                style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 20, background: 'rgba(0,0,0,0.55)', color: 'var(--text-dim, #fff)', backdropFilter: 'blur(4px)' }}
+                style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 'var(--text-2xs)', fontWeight: 700, padding: 'var(--space-0-5) var(--space-2)', borderRadius: 'var(--radius-lg)', background: 'rgba(0,0,0,0.55)', color: 'var(--text-dim, #fff)', backdropFilter: 'blur(4px)' }}
               >
-                💤 {STALE_DAYS}+ days
+                Unworn {STALE_DAYS}+ days
               </span>
             )}
           </div>
@@ -183,11 +184,11 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
               <div className={styles.backInfoRow}>
                 {item.storageMethod && (
                   <span className={styles.backInfoItem}>
-                    {item.storageMethod === 'hang' ? '🪝' : '📦'} {item.storageMethod === 'hang-or-fold' ? 'Hang or fold' : item.storageMethod === 'hang' ? 'Hang' : 'Fold'}
+                    {item.storageMethod === 'hang-or-fold' ? 'Hang or fold' : item.storageMethod === 'hang' ? 'Hang' : 'Fold'}
                   </span>
                 )}
                 {freqLabel && (
-                  <span className={styles.backInfoItem}>♻ {freqLabel}</span>
+                  <span className={styles.backInfoItem}>{freqLabel}</span>
                 )}
               </div>
             )}
@@ -200,7 +201,7 @@ function ClosetItemCard({ item, isFlipped, onFlip, onEdit, editMode, onRemove, o
             )}
 
             {/* Wear count + cost-per-wear */}
-            <p className={styles.backMuted} style={{ marginTop: 4 }}>
+            <p className={styles.backMuted} style={{ marginTop: 'var(--space-1)' }}>
               {item.timesWorn ? `Worn ${item.timesWorn}× · last ${item.lastWorn}` : 'Not logged as worn yet'}
               {item.price != null && item.timesWorn > 0 && ` · $${(item.price / item.timesWorn).toFixed(2)}/wear`}
             </p>
@@ -264,7 +265,7 @@ function MyClosetTab() {
     ]
     return (
       <LockedOverlay message="Sign in to build your digital closet">
-        <div className={styles.grid} style={{ padding: '16px 0' }}>
+        <div className={styles.grid} style={{ padding: 'var(--space-4) 0' }}>
           {ghostItems.map((item) => (
             <div key={item.id} className={styles.itemCard}>
               <div className={styles.itemPhoto} style={{ background: item.bg }}>
@@ -291,7 +292,7 @@ function MyClosetTab() {
   if (closetError) {
     return (
       <div className={styles.emptyState}>
-        <p className={styles.emptyEmoji}>⚠️</p>
+        <p className={styles.emptyEmoji}><Icon name="alert" size={24} /></p>
         <p className={styles.emptyTitle}>Couldn't load your closet</p>
         <p className={styles.emptySub}>Check your connection and try again</p>
         <button className={styles.fab} style={{ position: 'static', marginTop: '1rem' }} onClick={retryLoadCloset}>
@@ -312,7 +313,7 @@ function MyClosetTab() {
               className={`${styles.filterChip} ${activeFilter === f.id ? styles.filterChipActive : ''}`}
               onClick={() => { setFilter(f.id); setEditMode(false); setFlippedId(null) }}
             >
-              <span className={styles.filterEmoji}>{f.emoji}</span> {f.label}
+              {f.label}
               {f.id !== 'all' && (closetByCategory[f.id]?.length ?? 0) > 0 && (
                 <span className={styles.filterCount}>
                   {closetByCategory[f.id].length}
@@ -334,7 +335,7 @@ function MyClosetTab() {
       {/* Item grid */}
       {displayed.length === 0 ? (
         <div className={styles.emptyState}>
-          <p className={styles.emptyEmoji}>🪣</p>
+          <p className={styles.emptyEmoji}><Icon name="hanger" size={24} /></p>
           <p className={styles.emptyTitle}>
             {activeFilter === 'all' ? 'Your closet is empty' : `No ${activeFilter} yet`}
           </p>
@@ -370,12 +371,12 @@ function MyClosetTab() {
             <p className={styles.addSheetSub}>How would you like to add an item?</p>
             <div className={styles.addSheetOptions}>
               <button className={styles.addOption} onClick={() => { setShowAddSheet(false); setShowUpload(true) }}>
-                <span className={styles.addOptionIcon}>📸</span>
+                <span className={styles.addOptionIcon}><Icon name="camera" size={20} /></span>
                 <span className={styles.addOptionLabel}>Upload Photo</span>
                 <span className={styles.addOptionSub}>Single piece or AI outfit scan</span>
               </button>
               <button className={styles.addOption} onClick={() => { setShowAddSheet(false); setShowSearch(true) }}>
-                <span className={styles.addOptionIcon}>🔍</span>
+                <span className={styles.addOptionIcon}><Icon name="search" size={20} /></span>
                 <span className={styles.addOptionLabel}>Search Catalog</span>
                 <span className={styles.addOptionSub}>Find and add items by name or brand</span>
               </button>

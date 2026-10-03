@@ -112,7 +112,7 @@ export default function DiscoveryScreen() {
   }
 
   const filterLabel = activeSeasons.length > 0
-    ? activeSeasons.map((s) => SEASONS.find((x) => x.id === s)?.emoji ?? s).join(' ')
+    ? activeSeasons.map((s) => SEASONS.find((x) => x.id === s)?.label ?? s).join(', ')
     : 'All seasons'
 
   return (
@@ -181,7 +181,7 @@ export default function DiscoveryScreen() {
                   className={`${styles.chip} ${filterSeasons.includes(s.id) ? styles.chipActive : ''}`}
                   onClick={() => toggleSeason(s.id)}
                 >
-                  {s.emoji} {s.label}
+                  {s.label}
                 </button>
               ))}
             </div>

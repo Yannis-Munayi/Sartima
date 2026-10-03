@@ -7,6 +7,7 @@ import { useApp } from '../context/AppContext'
 import LegalModal from '../components/LegalModal'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE, LEGAL_VERSION } from '../data/legalContent'
 import styles from './AuthScreen.module.css'
+import Icon from '../components/Icon'
 
 // ── Password strength ─────────────────────────────────────────────────────────
 
@@ -39,13 +40,13 @@ export function StrengthBar({ password }) {
           <div
             key={i}
             className={styles.strengthSegment}
-            style={{ background: !tooShort && score >= i ? barColor : 'rgba(255,255,255,0.1)' }}
+            style={{ background: !tooShort && score >= i ? barColor : 'var(--surface-hover)' }}
           />
         ))}
       </div>
       <span
         className={styles.strengthLabel}
-        style={{ color: tooShort ? 'rgba(255,255,255,0.25)' : STRENGTH_COLOR[Math.min(score, 4)] || STRENGTH_COLOR[1] }}
+        style={{ color: tooShort ? 'var(--text-faint)' : STRENGTH_COLOR[Math.min(score, 4)] || STRENGTH_COLOR[1] }}
       >
         {label}
       </span>
@@ -259,7 +260,7 @@ export default function AuthScreen() {
       </div>
 
       <div className={styles.iconBadge}>
-        {mode === 'login' ? '🔑' : mode === 'reset' ? '🔒' : '✨'}
+        <Icon name={mode === 'login' ? 'key' : mode === 'reset' ? 'lock' : 'userPlus'} size={22} />
       </div>
 
       <h1 className={styles.title}>

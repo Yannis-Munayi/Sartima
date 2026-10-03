@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { STYLES, getStyleName } from '../../data/styles'
 import styles from './OnboardingStep.module.css'
+import Icon from '../../components/Icon'
 
 const REQUIRED = 3
 const ALL_IDS  = Object.keys(STYLES)
@@ -24,7 +25,7 @@ export default function AestheticsStep({ selected, gender, onSelect, onNext, onS
 
   return (
     <div className={styles.step}>
-      <div className={styles.iconBadge}>🎨</div>
+      <div className={styles.iconBadge}><Icon name="compass" size={22} /></div>
       <h1 className={styles.title}>
         Pick <em>3 aesthetics</em><br />that speak to you
       </h1>
@@ -44,7 +45,7 @@ export default function AestheticsStep({ selected, gender, onSelect, onNext, onS
             className={`${styles.brandChip} ${selected.includes(id) ? styles.brandChipActive : ''}`}
             onClick={() => toggle(id)}
           >
-            {STYLES[id].icon} {getStyleName(STYLES[id], gender)}
+            {getStyleName(STYLES[id], gender)}
             {selected.includes(id) && <span className={styles.brandCheck}>✓</span>}
           </button>
         ))}
@@ -54,7 +55,7 @@ export default function AestheticsStep({ selected, gender, onSelect, onNext, onS
         className={styles.nextBtn}
         onClick={onNext}
         disabled={!canContinue}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 'var(--space-5)' }}
       >
         {canContinue ? 'Continue' : `${selected.length} of ${REQUIRED} selected`}
       </button>

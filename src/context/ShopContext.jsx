@@ -1,6 +1,7 @@
 ﻿import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
+import { savePrefsDoc } from '../services/prefsDoc'
 import { useAuth } from './AuthContext'
 
 const ShopContext = createContext(null)
@@ -55,11 +56,7 @@ export function ShopProvider({ children }) {
   // Persist both lists to Firestore — only after initial load completes
   useEffect(() => {
     if (!user || !loadReady || loadedUid.current !== user.uid) return
-    setDoc(
-      doc(db, 'users', user.uid, 'prefs', 'shopList'),
-      { items: shopList, scoutedGroups },
-      { merge: true }
-    ).catch(() => {})
+    savePrefsDoc(user.uid, 'shopList', { items: shopList, scoutedGroups })
   }, [shopList, scoutedGroups, user, loadReady])
 
   // ── ShopPanel items ───────────────────────────────────────────────────────

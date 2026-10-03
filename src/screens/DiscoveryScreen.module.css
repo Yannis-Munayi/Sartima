@@ -1,4 +1,4 @@
-﻿.screen {
+.screen {
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -12,15 +12,15 @@
   justify-content: center;
   height: 100dvh;
   color: var(--text-faint);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 /* ── Header ── */
 .header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 52px 16px 12px;
+  gap: var(--space-3);
+  padding: var(--space-14) var(--space-4) var(--space-3);
   flex-shrink: 0;
 }
 
@@ -28,7 +28,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface-hover);
   border: none;
   display: flex;
   align-items: center;
@@ -36,11 +36,11 @@
   color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .prevBtn:hover {
-  background: rgba(255, 255, 255, 0.13);
+  background: var(--surface-strong);
   color: var(--text);
 }
 
@@ -50,7 +50,7 @@
 }
 
 .counter {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-faint);
   letter-spacing: 0.2px;
@@ -59,18 +59,18 @@
 .filterBtn {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-1);
   background: var(--surface);
   border: none;
-  border-radius: 20px;
-  padding: 7px 12px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-3);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .filterBtn:hover {
@@ -81,17 +81,17 @@
 /* ── Quiz progress bar ── */
 .quizProgressBar {
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2);
 }
 
 .quizProgressFill {
   height: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
-  border-radius: 2px;
-  transition: width 0.3s ease;
+  border-radius: var(--radius-xs);
+  transition: width var(--duration-slow) ease;
 }
 
 /* ── Card area ── */
@@ -103,28 +103,28 @@
 
 /* ── Results CTA bar ── */
 .ctaBar {
-  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
 .ctaBtn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-4);
+  background: var(--accent);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(184, 149, 106, 0.35);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  box-shadow: var(--shadow-accent);
 }
 
 .ctaBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(184, 149, 106, 0.45);
+  box-shadow: var(--shadow-accent);
 }
 
 /* ── Filter sheet ── */
@@ -142,12 +142,12 @@
   right: 0;
   z-index: 151;
   background: var(--bg-elevated);
-  border-radius: 20px 20px 0 0;
-  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
-  padding: 16px 24px calc(32px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-top: 1px solid var(--border, var(--border));
+  padding: var(--space-4) var(--space-6) calc(var(--space-8) + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
   max-width: 480px;
   margin: 0 auto;
 }
@@ -155,59 +155,59 @@
 .sheetHandle {
   width: 36px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 2px;
-  margin: 0 auto 4px;
+  background: var(--surface-strong);
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-1);
 }
 
 .sheetTitle {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
   margin: 0;
 }
 
 .sheetSub {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint, rgba(255,255,255,0.35));
-  margin: -8px 0 0;
+  margin: calc(-1 * var(--space-2)) 0 0;
 }
 
 .chipRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .chip {
-  padding: 9px 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   color: var(--text-muted, rgba(255,255,255,0.55));
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
 }
 
 .chipActive {
-  background: rgba(184, 149, 106, 0.15);
-  border-color: rgba(184, 149, 106, 0.4);
+  background: var(--accent-dim);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   color: var(--accent);
 }
 
 .applyBtn {
-  padding: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-4);
+  background: var(--accent);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }

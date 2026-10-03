@@ -3,7 +3,7 @@
   background: var(--bg);
   display: flex;
   flex-direction: column;
-  padding: 24px 24px 40px;
+  padding: var(--space-6) var(--space-6) var(--space-10);
   max-width: 480px;
   margin: 0 auto;
 }
@@ -12,35 +12,35 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 18px;
-  margin-bottom: 20px;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
 }
 
 .topLink {
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
 }
 
 .topLink:hover { color: var(--text-dim); }
 
 .dots {
   display: flex;
-  gap: 6px;
-  margin-bottom: 40px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-10);
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  transition: background 0.2s;
+  background: var(--surface-strong);
+  transition: background var(--duration-base);
 }
 
 .dotActive {
@@ -52,11 +52,11 @@
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   text-align: center;
 }
 
@@ -77,42 +77,40 @@
   width: 100%;
   max-width: 480px;
   background: var(--bg-elevated);
-  border-radius: 20px 20px 0 0;
-  padding: 28px 24px 32px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-7) var(--space-6) var(--space-8);
   box-sizing: border-box;
 }
 
-.modalIcon { font-size: 28px; margin-bottom: 12px; }
-
 .modalTitle {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 800;
   color: var(--text);
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
   font-family: var(--font-display);
 }
 
 .modalBody {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
   color: var(--text-muted);
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-6);
 }
 
 .modalActions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .modalPrimaryBtn {
   width: 100%;
-  padding: 15px;
+  padding: var(--space-4);
   background: var(--text);
   color: var(--bg);
   border: none;
-  border-radius: 14px;
-  font-size: 15px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
@@ -120,11 +118,11 @@
 
 .modalSecondaryBtn {
   width: 100%;
-  padding: 13px;
+  padding: var(--space-3);
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;

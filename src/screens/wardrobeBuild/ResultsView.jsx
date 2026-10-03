@@ -34,7 +34,7 @@ function ProductPhoto({ product }) {
 
   return (
     <div ref={ref} className={styles.productPhoto}
-      style={{ background: product.gradient ?? 'rgba(255,255,255,0.05)' }}
+      style={{ background: product.gradient ?? 'var(--surface)' }}
     >
       <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.productPhotoImg} />
     </div>
@@ -202,7 +202,6 @@ export default function ResultsView({ recommendations, complements, budgets, pri
           return (
             <div key={pieceId} className={styles.pieceGroup}>
               <div className={styles.pieceGroupHeader}>
-                <span className={styles.pieceGroupEmoji}>{option.emoji}</span>
                 <span className={styles.pieceGroupName}>
                   {specificName || option.name}
                 </span>

@@ -99,7 +99,7 @@ function PinterestIcon() {
 
 function ShareResults({ primaryStyle, gender }) {
   const [copied, setCopied] = useState(false)
-  const text = `My style aesthetic is ${getStyleName(primaryStyle, gender)} — I just took the Sartima quiz! 🎨`
+  const text = `My style aesthetic is ${getStyleName(primaryStyle, gender)} — I just took the Sartima quiz.`
   const url  = window.location.href
 
   async function handleShare() {
@@ -174,9 +174,9 @@ export default function ResultsScreen() {
 
   if (topStyles.length === 0) {
     return (
-      <div className={styles.screen} style={{ alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+      <div className={styles.screen} style={{ alignItems: 'center', justifyContent: 'center', gap: 'var(--space-6)' }}>
         <h2 style={{ color: '#fff', textAlign: 'center' }}>Not enough data yet</h2>
-        <p style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+        <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>
           Go back and interact with more items to get a reading.
         </p>
         <button className={styles.primaryBtn} onClick={() => dispatch({ type: 'RESTART' })}>

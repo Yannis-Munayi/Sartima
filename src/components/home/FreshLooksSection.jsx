@@ -116,7 +116,6 @@ export default function FreshLooksSection({ gender, navigate }) {
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionIcon}>✨</span>
         <div>
           <h2 className={styles.sectionTitle}>Fresh Looks Today</h2>
           <p className={styles.sectionSub}>Refreshes daily · tap ♥ to like</p>

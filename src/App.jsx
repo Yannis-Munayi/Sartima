@@ -53,6 +53,7 @@ import GuideTour from './components/GuideTour'
 import GuideLauncherButton from './components/GuideLauncherButton'
 import Toast           from './components/Toast'
 import PaywallModal    from './components/PaywallModal'
+import PaymentDueModal from './components/PaymentDueModal'
 import { GuideProvider } from './context/GuideContext'
 import { SubscriptionProvider } from './context/SubscriptionContext'
 import { InterestProvider } from './context/InterestContext'
@@ -100,26 +101,26 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
         width: '100%', maxWidth: 480,
         background: 'var(--bg-elevated)',
         borderRadius: '8px 8px 0 0',
-        padding: '28px 24px 40px',
+        padding: 'var(--space-7) var(--space-6) var(--space-10)',
         borderTop: '1px solid var(--border)',
       }}>
-        <div style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.12)', borderRadius: 2, margin: '0 auto 28px' }} />
-        <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px', letterSpacing: '0.01em' }}>
+        <div style={{ width: 28, height: 2, background: 'var(--border-strong)', borderRadius: 'var(--radius-xs)', margin: '0 auto var(--space-7)' }} />
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--text)', margin: '0 0 var(--space-2)', letterSpacing: '0.01em' }}>
           Quiz in progress
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 28px', lineHeight: 1.65 }}>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '0 0 var(--space-7)', lineHeight: 'var(--leading-relaxed)' }}>
           You've rated <strong style={{ color: 'var(--text-dim)', fontWeight: 600 }}>{progress} of {total}</strong> items.
           Continue the quiz to get your results, or switch to free discovery.
         </p>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <button
             onClick={onDiscover}
             style={{
-              flex: 1, padding: '13px 0',
+              flex: 1, padding: 'var(--space-3) 0',
               background: 'transparent',
               border: '1px solid var(--border-strong)',
-              borderRadius: 4, color: 'var(--text-muted)',
-              fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+              borderRadius: 'var(--radius-xs)', color: 'var(--text-muted)',
+              fontSize: 'var(--text-2xs)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
               letterSpacing: '1.5px', textTransform: 'uppercase',
             }}
           >
@@ -128,11 +129,11 @@ function ResumeModal({ progress, total, onContinue, onDiscover }) {
           <button
             onClick={onContinue}
             style={{
-              flex: 1, padding: '13px 0',
+              flex: 1, padding: 'var(--space-3) 0',
               background: 'var(--accent)',
               border: 'none',
-              borderRadius: 4, color: '#0B0907',
-              fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+              borderRadius: 'var(--radius-xs)', color: '#0B0907',
+              fontSize: 'var(--text-2xs)', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
               letterSpacing: '1.5px', textTransform: 'uppercase',
             }}
           >
@@ -468,6 +469,7 @@ function AppShell() {
 
         <Toast />
         <PaywallModal />
+        <PaymentDueModal />
 
         {legalVersionMismatch ? (
           <LegalUpdateBanner

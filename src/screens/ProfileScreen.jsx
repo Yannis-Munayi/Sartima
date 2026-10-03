@@ -13,12 +13,19 @@ import SettingsSheet, { GearIcon } from '../components/SettingsSheet'
 import StyleEvolutionChart from '../components/StyleEvolutionChart'
 import QuizHistorySection from './QuizHistorySection'
 import styles from './ProfileScreen.module.css'
+import Icon from '../components/Icon'
 
 export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }) {
   const { user, logout }  = useAuth()
   const { state, dispatch } = useApp()
   const navigate = useNavigation()
-  const { tier, isPro, usage, openPaywall } = useSubscription()
+  const { tier, isPro, usage, billing, paymentDue, openPaywall } = useSubscription()
+  // Canceled subscriptions keep Pro until the paid period ends
+  const isCanceling = billing?.cancelAtPeriodEnd || (billing?.status === 'canceled' && billing?.downgradeAt)
+  const proEndMs    = billing?.downgradeAt ?? billing?.currentPeriodEnd
+  const proEndDate  = isCanceling && proEndMs
+    ? new Date(proEndMs).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })
+    : null
   const gender = state.gender
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -115,7 +122,7 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
                 ))}
               </div>
               <div className={styles.lockedOverlay}>
-                <span className={styles.lockIcon}>🔒</span>
+                <span className={styles.lockIcon}><Icon name="lock" size={20} /></span>
                 <p className={styles.lockLabel}>Take the quiz to reveal your aesthetics</p>
               </div>
             </div>
@@ -128,7 +135,7 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
               <div className={styles.quizList} style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none' }}>
                 {previewQuizzes.map((q, i) => (
                   <div key={i} className={styles.quizCard}>
-                    <div className={styles.quizCardHeader} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16 }}>
+                    <div className={styles.quizCardHeader} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)' }}>
                       <div className={styles.quizSwatch} style={{ background: q.gradient }} />
                       <div>
                         <p className={styles.quizPrimary}>{q.label}</p>
@@ -139,7 +146,7 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
                 ))}
               </div>
               <div className={styles.lockedOverlay}>
-                <span className={styles.lockIcon}>🔒</span>
+                <span className={styles.lockIcon}><Icon name="lock" size={20} /></span>
                 <p className={styles.lockLabel}>Sign in to save your quiz history</p>
               </div>
             </div>
@@ -158,11 +165,11 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
             <p className={styles.supportHeading}>Help &amp; Feedback</p>
             <div className={styles.supportRow}>
               <button className={styles.supportBtn} onClick={() => setShowFeedback(true)}>
-                <span className={styles.supportIcon}>💬</span>
+                <span className={styles.supportIcon}><Icon name="message" size={16} /></span>
                 Send Feedback
               </button>
               <button className={styles.supportBtn} onClick={() => setShowCrashReport(true)}>
-                <span className={styles.supportIcon}>🐛</span>
+                <span className={styles.supportIcon}><Icon name="alert" size={16} /></span>
                 Report a Problem
               </button>
             </div>
@@ -212,16 +219,24 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
         {/* Subscription */}
         <section className={styles.section}>
           {isPro ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-4) var(--space-4)', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
               <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Sartima Pro</p>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
-                  {usage.tryOns != null ? `${usage.tryOns ?? 0} / 30 try-ons used this month` : 'Active'}
-                </p>
+                <p style={{ margin: 0, fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Sartima Pro</p>
+                {paymentDue ? (
+                  <p style={{ margin: 'var(--space-0-5) 0 0', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--danger)' }}>
+                    Payment failed — update your billing
+                  </p>
+                ) : (
+                  <p style={{ margin: 'var(--space-0-5) 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                    {proEndDate
+                      ? `Canceled — Pro until ${proEndDate}`
+                      : usage.tryOns != null ? `${usage.tryOns ?? 0} / 30 try-ons used this month` : 'Active'}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => openBillingPortal()}
-                style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 6, padding: '7px 12px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.5px' }}
+                style={{ fontSize: 'var(--text-2xs)', fontWeight: 600, color: 'var(--text-muted)', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 'var(--space-2) var(--space-3)', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.5px' }}
               >
                 Manage billing
               </button>
@@ -229,13 +244,13 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
           ) : (
             <button
               onClick={() => openPaywall('upgrade')}
-              style={{ width: '100%', padding: '16px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
               <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Upgrade to Pro</p>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>Unlimited outfits, try-on, trip packer &amp; more</p>
+                <p style={{ margin: 0, fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--accent)' }}>Upgrade to Pro</p>
+                <p style={{ margin: 'var(--space-0-5) 0 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Unlimited outfits, try-on, trip packer &amp; more</p>
               </div>
-              <span style={{ fontSize: 18, color: 'var(--text-muted)' }}>›</span>
+              <span style={{ fontSize: 'var(--text-lg)', color: 'var(--text-muted)' }}>›</span>
             </button>
           )}
         </section>
@@ -282,11 +297,11 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
           <p className={styles.supportHeading}>Help &amp; Feedback</p>
           <div className={styles.supportRow}>
             <button className={styles.supportBtn} onClick={() => setShowFeedback(true)}>
-              <span className={styles.supportIcon}>💬</span>
+              <span className={styles.supportIcon}><Icon name="message" size={16} /></span>
               Send Feedback
             </button>
             <button className={styles.supportBtn} onClick={() => setShowCrashReport(true)}>
-              <span className={styles.supportIcon}>🐛</span>
+              <span className={styles.supportIcon}><Icon name="alert" size={16} /></span>
               Report a Problem
             </button>
           </div>

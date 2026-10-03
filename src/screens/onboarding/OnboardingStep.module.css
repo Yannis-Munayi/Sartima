@@ -1,4 +1,4 @@
-﻿/* â”€â”€ Shared step layout â”€â”€ */
+/* ── Shared step layout ── */
 .step {
   display: flex;
   flex-direction: column;
@@ -6,23 +6,23 @@
 }
 
 .iconBadge {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--accent-dim);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .title {
-  font-size: 32px;
+  font-size: var(--text-4xl);
   font-weight: 800;
   color: var(--text);
-  margin: 0 0 10px;
-  line-height: 1.2;
+  margin: 0 0 var(--space-3);
+  line-height: var(--leading-tight);
   font-family: var(--font-display);
 }
 
@@ -32,63 +32,60 @@
 }
 
 .sub {
-  font-size: 14px;
-  color: var(--text-faint);
-  margin: 0 0 28px;
-  line-height: 1.6;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-7);
+  line-height: var(--leading-relaxed);
 }
 
-/* â”€â”€ Occupation tiles â”€â”€ */
+/* ── Single-select tiles ── */
 .tileGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
 .tile {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 14px;
+  align-items: center;
+  min-height: 56px;
+  padding: var(--space-4);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--duration-fast), background var(--duration-fast);
 }
 
-.tile:hover { border-color: rgba(184, 149, 106,0.5); }
+.tile:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
 
 .tileActive {
-  background: rgba(184, 149, 106,0.12);
+  background: var(--accent-dim);
   border-color: var(--accent);
 }
 
-.tileEmoji { font-size: 22px; }
-
 .tileLabel {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text);
   font-family: inherit;
 }
 
-/* â”€â”€ Brand search â”€â”€ */
+/* ── Brand search ── */
 .searchInput, .emailInput {
   width: 100%;
-  padding: 13px 16px;
+  padding: var(--space-3) var(--space-4);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
-  margin-bottom: 14px;
+  margin-bottom: var(--space-4);
 }
 
 .searchInput:focus, .emailInput:focus { border-color: var(--accent); }
@@ -96,30 +93,30 @@
 .chipGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   max-height: 240px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: var(--space-1);
 }
 
 .brandChip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
 }
 
 .brandChipActive {
-  background: rgba(184, 149, 106,0.15);
+  background: var(--accent-dim);
   border-color: var(--accent);
   color: var(--text);
   font-weight: 700;
@@ -127,75 +124,41 @@
 
 .brandCheck {
   color: var(--accent);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 800;
 }
 
-/* â”€â”€ Referral sources â”€â”€ */
-.sourceGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.sourceBtn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.sourceBtn:hover {
-  border-color: var(--accent);
-  background: rgba(184, 149, 106,0.06);
-}
-
-.sourceEmoji { font-size: 20px; flex-shrink: 0; }
-
-.sourceLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  font-family: inherit;
-}
-
-/* â”€â”€ CTA buttons â”€â”€ */
+/* ── CTA buttons ── */
 .nextBtn {
   width: 100%;
-  padding: 15px;
+  padding: var(--space-4);
   background: var(--text);
   color: var(--bg);
   border: none;
-  border-radius: 14px;
-  font-size: 15px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--duration-fast);
 }
 
 .nextBtn:disabled {
-  background: rgba(255,255,255,0.15);
+  background: var(--surface-strong);
   color: var(--text-faint);
   cursor: not-allowed;
 }
 
 .skipBtn {
-  margin-top: 12px;
+  margin-top: var(--space-3);
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  padding: 10px 0;
+  padding: var(--space-3) 0;
   text-align: center;
 }
 

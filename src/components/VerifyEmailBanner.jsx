@@ -32,7 +32,7 @@ export default function VerifyEmailBanner() {
   return (
     <div className={styles.banner} role="status">
       <span className={styles.text}>
-        📧 Verify your email — we sent a link to <strong>{user.email}</strong>
+        Verify your email — we sent a link to <strong>{user.email}</strong>
       </span>
       <div className={styles.actions}>
         <button

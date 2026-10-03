@@ -11,9 +11,9 @@ export default defineConfig({
       manifest: {
         name: 'Sartima',
         short_name: 'Sartima',
-        description: 'Discover your personal fashion aesthetic',
-        theme_color: '#0f0f0f',
-        background_color: '#0f0f0f',
+        description: 'Find your aesthetic, get outfits from your own closet, and see which pieces are worth buying next.',
+        theme_color: '#F7F4EE',
+        background_color: '#F7F4EE',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

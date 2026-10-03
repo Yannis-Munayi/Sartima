@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import LegalModal from '../components/LegalModal'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE, LEGAL_VERSION } from '../data/legalContent'
 import { ConsentCheckboxes } from './AuthScreen'
+import Icon from '../components/Icon'
 import styles from './AuthScreen.module.css'
 
 /**
@@ -41,7 +42,7 @@ export default function ConsentGate({ onDone }) {
         <span className={`${styles.dot} ${styles.dotActive}`} />
       </div>
 
-      <div className={styles.iconBadge}>✨</div>
+      <div className={styles.iconBadge}><Icon name="shield" size={22} /></div>
 
       <h1 className={styles.title}>One last<br /><em>thing</em></h1>
       <p className={styles.sub}>Please confirm the following to keep using your account.</p>

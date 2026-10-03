@@ -1,4 +1,4 @@
-﻿/* ── Scene wrapper ── */
+/* ── Scene wrapper ── */
 .scene {
   width: 100%;
   max-width: 420px;
@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 /* ── Swipe card ── */
@@ -14,9 +14,9 @@
   position: relative;
   width: 100%;
   height: 520px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-lg);
   background: var(--bg-elevated);
   will-change: transform;
   touch-action: none;
@@ -35,7 +35,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.35s ease;
+  transition: opacity var(--duration-slow) ease;
 }
 
 .pulsing {
@@ -75,14 +75,14 @@
 .skipOverlay { background: rgba(244, 67, 54, 0.55); }
 
 .swipeStamp {
-  font-size: 1.6rem;
-  font-weight: 900;
+  font-size: var(--text-3xl);
+  font-weight: 800;
   color: #fff;
   letter-spacing: 0.05em;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   border: 3px solid rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
-  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-5);
   transform: rotate(-15deg);
 }
 
@@ -97,7 +97,7 @@
   right: 14px;
   z-index: 10;
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -110,13 +110,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   text-decoration: none;
-  transition: background 0.15s, transform 0.15s;
+  transition: background var(--duration-fast), transform var(--duration-fast);
   cursor: pointer;
 }
 
-.shopBtn:hover { background: rgba(184, 149, 106, 0.65); transform: scale(1.1); }
+.shopBtn:hover { background: color-mix(in srgb, var(--accent) 65%, transparent); transform: scale(1.04); }
 
 .wishlistBtn {
   width: 36px;
@@ -131,11 +131,11 @@
   justify-content: center;
   color: #fff;
   padding: 0;
-  transition: background 0.15s, color 0.15s, transform 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
 }
 
-.wishlistBtn:hover    { background: rgba(0, 0, 0, 0.65); transform: scale(1.1); }
-.wishlistBtnActive    { color: var(--accent); background: rgba(184, 149, 106, 0.2); }
+.wishlistBtn:hover    { background: rgba(0, 0, 0, 0.65); transform: scale(1.04); }
+.wishlistBtnActive    { color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); }
 
 /* ── Product info overlay ── */
 .frontInfo {
@@ -143,11 +143,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 18px 20px 20px;
+  padding: var(--space-5) var(--space-5) var(--space-5);
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .brandPill {
@@ -155,12 +155,12 @@
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(6px);
   color: rgba(255, 255, 255, 0.9);
-  font-size: 0.65rem;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 20px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-lg);
   width: fit-content;
   border: none;
 }
@@ -168,20 +168,20 @@
 .brandPillLink {
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
 .brandPillLink:hover {
-  background: rgba(184, 149, 106, 0.4);
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .itemName {
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   font-weight: 800;
   color: #fff;
   margin: 0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: var(--leading-tight);
 }
 
 :global([data-theme="light"]) .itemName {
@@ -197,7 +197,7 @@
 .metaRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .colorDot {
@@ -209,7 +209,7 @@
 }
 
 .colorLabel {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.75);
   font-weight: 600;
   text-transform: capitalize;
@@ -218,26 +218,26 @@
 .pricePill {
   background: rgba(0, 0, 0, 0.4);
   color: rgba(255, 255, 255, 0.75);
-  font-size: 0.65rem;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.05em;
-  padding: 2px 7px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
 }
 
 .itemDesc {
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.65);
   margin: 0;
-  line-height: 1.4;
+  line-height: var(--leading-normal);
 }
 
 /* ── Action buttons ── */
 .actionRow {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: var(--space-10);
   align-items: center;
 }
 
@@ -250,17 +250,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  box-shadow: var(--shadow-md);
 }
 
-.actionBtn:hover  { transform: scale(1.1); }
+.actionBtn:hover  { transform: scale(1.04); }
 .actionBtn:active { transform: scale(0.95); }
 
 .skipBtn {
   background: #1e1e1e;
   color: var(--text-muted);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border: 1.5px solid var(--border);
 }
 
 .likeBtn {

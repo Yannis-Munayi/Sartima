@@ -4,7 +4,6 @@ export default function GuestWarningModal({ onKeepGoing, onContinueAsGuest }) {
   return (
     <div className={styles.modalBackdrop} onClick={onKeepGoing}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalIcon}>✨</div>
         <h2 className={styles.modalTitle}>Wait — don't miss out</h2>
         <p className={styles.modalBody}>
           These questions feed straight into your recommendations — the aesthetics,

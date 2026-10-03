@@ -775,14 +775,43 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY)
 }
 
+// Billing lifecycle (users/{uid}/prefs/subscription mirrors Stripe; claims grant access):
+// - Renewal fails (past_due/unpaid) → Pro kept for GRACE_PERIOD_MS from the first
+//   failure; the client shows a red warning while graceEndsAt is set.
+// - User cancels → Pro kept until the end of the period they paid for.
+// Delayed downgrades live in billingDowngrades/{uid} { downgradeAt } and are applied
+// by the hourly enforceBillingDowngrades sweep.
+const GRACE_PERIOD_MS     = 7 * 24 * 60 * 60 * 1000
+const TRYON_PACK_CREDITS  = 30
+const LIVE_SUB_STATUSES   = ['active', 'trialing', 'past_due', 'unpaid']
+const ACCOUNT_DELETED_TAG = 'account_deleted'
+
+const subscriptionRef = (uid) => admin.firestore().doc(`users/${uid}/prefs/subscription`)
+const downgradeRef    = (uid) => admin.firestore().doc(`billingDowngrades/${uid}`)
+
+// Merge into existing claims — setCustomUserClaims replaces the whole object,
+// so writing { sartima_tier } alone would wipe sartima_role: 'admin'.
+async function setTierClaim(uid, tier) {
+  const user = await admin.auth().getUser(uid)
+  await admin.auth().setCustomUserClaims(uid, { ...(user.customClaims ?? {}), sartima_tier: tier })
+}
+
+// Stripe API 2025-03-31+ moved current_period_end from the subscription onto its items
+function periodEndMs(sub) {
+  const secs = sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end
+  return secs ? secs * 1000 : null
+}
+
 // Resolve or create a Stripe customer for the given uid
 async function getOrCreateCustomer(stripe, uid) {
-  const subSnap = await admin.firestore().doc(`users/${uid}/prefs/subscription`).get()
+  const subSnap = await subscriptionRef(uid).get()
   if (subSnap.exists && subSnap.data().stripeCustomerId) {
     return subSnap.data().stripeCustomerId
   }
   const user     = await admin.auth().getUser(uid)
   const customer = await stripe.customers.create({ email: user.email, metadata: { uid } })
+  // Persist now so abandoned checkouts don't leave a new orphan customer each time
+  await subscriptionRef(uid).set({ stripeCustomerId: customer.id }, { merge: true })
   return customer.id
 }
 
@@ -792,17 +821,26 @@ export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, inv
   const plan   = request.data.plan === 'annual' ? 'annual' : 'monthly'
   const stripe = getStripe()
 
+  // Already subscribed (including a failed renewal) — they should manage billing
+  // in the portal, not start a second subscription and get double-charged.
+  const subSnap = await subscriptionRef(uid).get()
+  const current = subSnap.exists ? subSnap.data() : {}
+  if (current.stripeSubscriptionId && LIVE_SUB_STATUSES.includes(current.status)) {
+    throw new HttpsError('already-exists', 'already_subscribed')
+  }
+
   const priceId    = plan === 'annual' ? process.env.STRIPE_PRICE_ID_ANNUAL : process.env.STRIPE_PRICE_ID_MONTHLY
   const customerId = await getOrCreateCustomer(stripe, uid)
   const appUrl     = process.env.APP_URL ?? 'https://sartima.ca'
 
   const session = await stripe.checkout.sessions.create({
-    customer:    customerId,
-    mode:        'subscription',
-    line_items:  [{ price: priceId, quantity: 1 }],
-    success_url: `${appUrl}?upgrade=success`,
-    cancel_url:  appUrl,
-    metadata:    { uid },
+    customer:          customerId,
+    mode:              'subscription',
+    line_items:        [{ price: priceId, quantity: 1 }],
+    success_url:       `${appUrl}?upgrade=success`,
+    cancel_url:        appUrl,
+    metadata:          { uid },
+    subscription_data: { metadata: { uid } },
   })
 
   return { url: session.url }
@@ -811,7 +849,7 @@ export const createStripeCheckout = onCall({ timeoutSeconds: 30, cors: true, inv
 export const createStripeBillingPortal = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public', secrets: ['STRIPE_SECRET_KEY'] }, async (request) => {
   requireAuth(request)
   const uid    = request.auth.uid
-  const subDoc = await admin.firestore().doc(`users/${uid}/prefs/subscription`).get()
+  const subDoc = await subscriptionRef(uid).get()
   if (!subDoc.exists || !subDoc.data().stripeCustomerId) {
     throw new HttpsError('not-found', 'No active subscription found')
   }
@@ -840,11 +878,139 @@ export const purchaseTryOnPack = onCall({ timeoutSeconds: 30, cors: true, invoke
     line_items:  [{ price: process.env.STRIPE_PRICE_ID_TRYON_PACK, quantity: 1 }],
     success_url: `${appUrl}?pack=success`,
     cancel_url:  appUrl,
-    metadata:    { uid, type: 'tryon_pack', qty: '30' },
+    metadata:    { uid, type: 'tryon_pack', qty: String(TRYON_PACK_CREDITS) },
   })
 
   return { url: session.url }
 })
+
+// Called for checkout.session.completed and checkout.session.async_payment_succeeded
+async function fulfillCheckout(session) {
+  const uid = session.metadata?.uid
+  if (!uid) return
+  // Delayed payment methods (e.g. pre-authorized debit) complete checkout before the
+  // money arrives — fulfil only once async_payment_succeeded reports it paid.
+  if (session.payment_status === 'unpaid') return
+
+  if (session.mode === 'subscription') {
+    await setTierClaim(uid, 'pro')
+    await downgradeRef(uid).delete()
+    await subscriptionRef(uid).set({
+      stripeCustomerId:     session.customer,
+      stripeSubscriptionId: session.subscription,
+      status:               'active',
+      cancelAtPeriodEnd:    false,
+      paymentFailedAt:      null,
+      graceEndsAt:          null,
+      downgradeAt:          null,
+      updatedAt:            FieldValue.serverTimestamp(),
+    }, { merge: true })
+  } else if (session.mode === 'payment' && session.metadata?.type === 'tryon_pack') {
+    // Marker + credit commit atomically, keyed on the session so a redelivered event
+    // (or completed + async_payment_succeeded for one session) never credits twice.
+    const db    = admin.firestore()
+    const batch = db.batch()
+    batch.create(db.doc(`fulfilledCheckouts/${session.id}`), {
+      uid, type: 'tryon_pack', createdAt: FieldValue.serverTimestamp(),
+    })
+    batch.set(db.doc(`users/${uid}/prefs/usage`),
+      { tryOnCredits: FieldValue.increment(TRYON_PACK_CREDITS) },
+      { merge: true })
+    try {
+      await batch.commit()
+    } catch (err) {
+      if (err.code !== 6) throw err // 6 = ALREADY_EXISTS → already fulfilled
+    }
+  }
+}
+
+// Resolve the Sartima uid for a subscription event, or null if it should be ignored
+// (unknown customer, deleted account, or a stale subscription that isn't the user's current one).
+async function uidForSubscription(sub) {
+  if (sub.cancellation_details?.comment === ACCOUNT_DELETED_TAG) return null
+
+  let uid = sub.metadata?.uid
+  if (!uid) {
+    const customer = await getStripe().customers.retrieve(sub.customer)
+    uid = customer.deleted ? null : customer.metadata?.uid
+  }
+  if (!uid) return null
+
+  try {
+    await admin.auth().getUser(uid)
+  } catch (err) {
+    if (err.code === 'auth/user-not-found') return null
+    throw err
+  }
+
+  const subSnap  = await subscriptionRef(uid).get()
+  const storedId = subSnap.exists ? subSnap.data().stripeSubscriptionId : null
+  if (storedId && storedId !== sub.id) return null
+  return uid
+}
+
+async function syncSubscription(sub) {
+  const uid = await uidForSubscription(sub)
+  if (!uid) return
+
+  const now    = Date.now()
+  const update = {
+    status:            sub.status,
+    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+    currentPeriodEnd:  periodEndMs(sub),
+    updatedAt:         FieldValue.serverTimestamp(),
+  }
+
+  if (sub.status === 'active' || sub.status === 'trialing') {
+    // Paid up — new, renewed, or recovered from a failed payment (restores Pro even
+    // if the grace period already ran out). A pending cancellation keeps Pro too:
+    // Stripe sends customer.subscription.deleted when the paid period ends.
+    await setTierClaim(uid, 'pro')
+    await downgradeRef(uid).delete()
+    Object.assign(update, { paymentFailedAt: null, graceEndsAt: null, downgradeAt: null })
+  } else if (sub.status === 'past_due' || sub.status === 'unpaid') {
+    // Renewal failed — grace period runs from the FIRST failure, not each retry
+    const existing    = (await subscriptionRef(uid).get()).data() ?? {}
+    const graceEndsAt = existing.graceEndsAt ?? now + GRACE_PERIOD_MS
+    await downgradeRef(uid).set({ uid, downgradeAt: graceEndsAt, reason: 'payment_failed' })
+    Object.assign(update, {
+      paymentFailedAt: existing.paymentFailedAt ?? now,
+      graceEndsAt,
+      downgradeAt:     graceEndsAt,
+    })
+  }
+
+  await subscriptionRef(uid).set(update, { merge: true })
+}
+
+async function endSubscription(sub) {
+  const uid = await uidForSubscription(sub)
+  if (!uid) return
+
+  const now      = Date.now()
+  const existing = (await subscriptionRef(uid).get()).data() ?? {}
+  // Ended for non-payment → access ends with the grace period. Otherwise the user
+  // canceled: they keep Pro through the period they paid for. With the portal's
+  // cancel-at-period-end that's now; an immediate cancellation still honours it.
+  const nonPayment  = sub.cancellation_details?.reason === 'payment_failed' || existing.graceEndsAt != null
+  const downgradeAt = nonPayment ? (existing.graceEndsAt ?? now) : (periodEndMs(sub) ?? now)
+
+  if (downgradeAt <= now) {
+    await setTierClaim(uid, 'free')
+    await downgradeRef(uid).delete()
+  } else {
+    await downgradeRef(uid).set({ uid, downgradeAt, reason: nonPayment ? 'payment_failed' : 'canceled' })
+  }
+
+  await subscriptionRef(uid).set({
+    status:            'canceled',
+    cancelAtPeriodEnd: false,
+    paymentFailedAt:   null,
+    graceEndsAt:       null,
+    downgradeAt:       downgradeAt > now ? downgradeAt : null,
+    updatedAt:         FieldValue.serverTimestamp(),
+  }, { merge: true })
+}
 
 export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public', secrets: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'] }, async (req, res) => {
   const sig = req.headers['stripe-signature']
@@ -860,57 +1026,52 @@ export const stripeWebhook = onRequest({ timeoutSeconds: 60, invoker: 'public', 
     return
   }
 
-  const db = admin.firestore()
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object
-    const uid     = session.metadata?.uid
-    if (!uid) { res.json({ ok: true }); return }
-
-    if (session.mode === 'subscription') {
-      await admin.auth().setCustomUserClaims(uid, { sartima_tier: 'pro' })
-      await db.doc(`users/${uid}/prefs/subscription`).set({
-        stripeCustomerId:     session.customer,
-        stripeSubscriptionId: session.subscription,
-        status:               'active',
-        updatedAt:            FieldValue.serverTimestamp(),
-      }, { merge: true })
-    } else if (session.mode === 'payment' && session.metadata?.type === 'tryon_pack') {
-      await db.doc(`users/${uid}/prefs/usage`).set(
-        { tryOnCredits: FieldValue.increment(30) },
-        { merge: true }
-      )
+  // Every handler is idempotent, so a 500 here safely lets Stripe retry
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded':
+        await fulfillCheckout(event.data.object)
+        break
+      case 'customer.subscription.updated':
+        await syncSubscription(event.data.object)
+        break
+      case 'customer.subscription.deleted':
+        await endSubscription(event.data.object)
+        break
     }
-  }
-
-  if (event.type === 'customer.subscription.updated') {
-    const sub      = event.data.object
-    const customer = await getStripe().customers.retrieve(sub.customer)
-    const uid      = customer.metadata?.uid
-    if (!uid) { res.json({ ok: true }); return }
-
-    await db.doc(`users/${uid}/prefs/subscription`).set({
-      status:            sub.status,
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
-      currentPeriodEnd:  sub.current_period_end,
-      updatedAt:         FieldValue.serverTimestamp(),
-    }, { merge: true })
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const sub      = event.data.object
-    const customer = await getStripe().customers.retrieve(sub.customer)
-    const uid      = customer.metadata?.uid
-    if (!uid) { res.json({ ok: true }); return }
-
-    await admin.auth().setCustomUserClaims(uid, { sartima_tier: 'free' })
-    await db.doc(`users/${uid}/prefs/subscription`).set({
-      status:    'canceled',
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true })
+  } catch (err) {
+    console.error(`stripeWebhook ${event.type} (${event.id}) failed:`, err)
+    res.status(500).send('Webhook handler failed')
+    return
   }
 
   res.json({ ok: true })
+})
+
+// Applies delayed downgrades: grace periods that ran out, and canceled
+// subscriptions whose paid period has ended.
+export const enforceBillingDowngrades = onSchedule('every 60 minutes', async () => {
+  const due = await admin.firestore().collection('billingDowngrades')
+    .where('downgradeAt', '<=', Date.now())
+    .get()
+
+  for (const snap of due.docs) {
+    const uid = snap.id
+    try {
+      await setTierClaim(uid, 'free')
+      await subscriptionRef(uid).set({
+        downgradeAt: null,
+        updatedAt:   FieldValue.serverTimestamp(),
+      }, { merge: true })
+    } catch (err) {
+      if (err.code !== 'auth/user-not-found') {
+        console.error(`enforceBillingDowngrades: ${uid} failed:`, err)
+        continue // keep the doc so the next run retries
+      }
+    }
+    await snap.ref.delete()
+  }
 })
 
 // Full account deletion — cancels billing, wipes Storage photos and the
@@ -922,15 +1083,20 @@ export const deleteAccount = onCall({ timeoutSeconds: 120, cors: true, invoker: 
   const uid = request.auth.uid
   const db  = admin.firestore()
 
-  const subSnap = await db.doc(`users/${uid}/prefs/subscription`).get()
-  const stripeSubscriptionId = subSnap.exists ? subSnap.data().stripeSubscriptionId : null
-  if (stripeSubscriptionId) {
+  const subSnap = await subscriptionRef(uid).get()
+  const { stripeSubscriptionId, status } = subSnap.exists ? subSnap.data() : {}
+  if (stripeSubscriptionId && status !== 'canceled') {
     try {
-      await getStripe().subscriptions.cancel(stripeSubscriptionId)
+      // Tagged so the resulting customer.subscription.deleted webhook is ignored
+      // instead of racing this deletion and re-creating the subscription doc
+      await getStripe().subscriptions.cancel(stripeSubscriptionId, {
+        cancellation_details: { comment: ACCOUNT_DELETED_TAG },
+      })
     } catch (err) {
       if (err.code !== 'resource_missing') throw err
     }
   }
+  await downgradeRef(uid).delete()
 
   const bucket = admin.storage().bucket()
   await bucket.deleteFiles({ prefix: `users/${uid}/wardrobe/` })

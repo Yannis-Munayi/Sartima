@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSubscription } from '../context/SubscriptionContext'
-import { createCheckoutSession } from '../services/subscriptionService'
+import { createCheckoutSession, openBillingPortal } from '../services/subscriptionService'
 import { useAuth } from '../context/AuthContext'
 import LegalModal from './LegalModal'
 import { TERMS_OF_SERVICE } from '../data/legalContent'
@@ -72,23 +72,22 @@ export default function PaywallModal() {
 
   const copy = FEATURE_COPY[paywallFeature] ?? FEATURE_COPY.upgrade
 
-  async function handleMonthly() {
+  async function startCheckout(plan) {
     try {
-      await createCheckoutSession(user?.uid, 'monthly')
-    } catch {
-      // subscriptionService will handle redirect; errors mean Stripe not yet configured
+      await createCheckoutSession(user?.uid, plan)
+    } catch (err) {
+      // Already has a subscription (e.g. a failed renewal) — send them to fix it
+      // in the billing portal instead of starting a second one
+      if (err?.code === 'functions/already-exists') {
+        await openBillingPortal().catch(() => {})
+      }
+      // Other errors mean Stripe isn't configured yet
     }
     closePaywall()
   }
 
-  async function handleAnnual() {
-    try {
-      await createCheckoutSession(user?.uid, 'annual')
-    } catch {
-      // same
-    }
-    closePaywall()
-  }
+  const handleMonthly = () => startCheckout('monthly')
+  const handleAnnual  = () => startCheckout('annual')
 
   return (
     <div style={{
@@ -101,27 +100,27 @@ export default function PaywallModal() {
           width: '100%', maxWidth: 480,
           background: 'var(--bg-elevated)',
           borderRadius: '12px 12px 0 0',
-          padding: '28px 24px 44px',
+          padding: 'var(--space-7) var(--space-6) var(--space-12)',
           borderTop: '1px solid var(--border)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ width: 32, height: 3, background: 'var(--border-strong)', borderRadius: 2, margin: '0 auto 24px' }} />
+        <div style={{ width: 32, height: 3, background: 'var(--border-strong)', borderRadius: 'var(--radius-xs)', margin: '0 auto var(--space-6)' }} />
 
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', margin: '0 0 8px' }}>
+        <p style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', margin: '0 0 var(--space-2)' }}>
           Sartima Pro
         </p>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 24, fontWeight: 600, color: 'var(--text)', margin: '0 0 6px', letterSpacing: '0.01em' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--text)', margin: '0 0 var(--space-2)', letterSpacing: '0.01em' }}>
           {copy.headline}
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '0 0 var(--space-5)', lineHeight: 'var(--leading-relaxed)' }}>
           {copy.sub}
         </p>
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 var(--space-7)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {copy.bullets.map((b) => (
-            <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--text-dim)' }}>
-              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 14, lineHeight: 1 }}>✓</span>
+            <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontSize: 'var(--text-sm)', color: 'var(--text-dim)' }}>
+              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 'var(--text-base)', lineHeight: 'var(--leading-none)' }}>✓</span>
               {b}
             </li>
           ))}
@@ -130,10 +129,10 @@ export default function PaywallModal() {
         <button
           onClick={handleMonthly}
           style={{
-            width: '100%', padding: '14px 0', marginBottom: 10,
+            width: '100%', padding: 'var(--space-4) 0', marginBottom: 'var(--space-3)',
             background: 'var(--accent)', border: 'none',
-            borderRadius: 6, color: '#0B0907',
-            fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
+            borderRadius: 'var(--radius-sm)', color: '#0B0907',
+            fontSize: 'var(--text-xs)', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer',
             letterSpacing: '1.5px', textTransform: 'uppercase',
           }}
         >
@@ -142,18 +141,18 @@ export default function PaywallModal() {
         <button
           onClick={handleAnnual}
           style={{
-            width: '100%', padding: '13px 0',
+            width: '100%', padding: 'var(--space-3) 0',
             background: 'transparent',
             border: '1px solid var(--border-strong)',
-            borderRadius: 6, color: 'var(--text-muted)',
-            fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
+            borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)',
+            fontSize: 'var(--text-xs)', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer',
             letterSpacing: '1.5px', textTransform: 'uppercase',
           }}
         >
           Annual — $49.99 / year (save 40%)
         </button>
 
-        <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: '14px 0 0', lineHeight: 1.5, textAlign: 'center' }}>
+        <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-faint)', margin: 'var(--space-4) 0 0', lineHeight: 'var(--leading-normal)', textAlign: 'center' }}>
           Subscriptions auto-renew until canceled. Cancel anytime from Settings → Manage subscription.
           No refunds for partial billing periods. See{' '}
           <button

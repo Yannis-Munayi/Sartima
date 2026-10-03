@@ -8,11 +8,6 @@ import { getGapReasoning } from '../services/gapReasoning'
 import { dismissGap, loadDismissedCategories } from '../services/gapDismissals'
 import { trackEvent } from '../services/firebase'
 
-const CATEGORY_EMOJIS = {
-  tops: '👕', bottoms: '👖', outerwear: '🧥',
-  dresses: '👗', footwear: '👟', accessories: '👜',
-}
-
 // Representative Shop Scout piece per gap category — deep-links the CTA into
 // a pre-filled wizard step instead of a blank browse. 'accessories' has no
 // Shop Scout piece today, so it falls back to the unfiltered wizard entry.
@@ -27,7 +22,7 @@ const GAP_CATEGORY_TO_PIECE = {
 const MIN_CLOSET_FOR_OUTFITS = 3
 
 // Everything the Home bell surfaces, as a flat list of
-// { id, icon, title, body, onOpen, onDismiss? }.
+// { id, icon, title, body, onOpen, onDismiss? } — icon is an <Icon> name.
 //
 // - Closet prompt: shown until the closet has enough items for daily AI outfits.
 // - Wardrobe gap: cheap deficit from useClosetGaps (closet vs. capsuleBaseline,
@@ -79,7 +74,7 @@ export function useHomeNotifications({ navigate, panelOpen }) {
   if (!user || closetItems.length < MIN_CLOSET_FOR_OUTFITS) {
     items.push({
       id:     'closet-cta',
-      icon:   '🪣',
+      icon:   'hanger',
       title:  'Build your digital closet',
       body:   `Add ${MIN_CLOSET_FOR_OUTFITS}+ items to unlock daily AI outfits`,
       onOpen: () => navigate('daily'),
@@ -89,7 +84,7 @@ export function useHomeNotifications({ navigate, panelOpen }) {
   if (topGap) {
     items.push({
       id:    `gap:${topGap.category}`,
-      icon:  CATEGORY_EMOJIS[topGap.category] ?? '🧩',
+      icon:  'layers',
       title: `You're light on ${topGap.category}`,
       body:  reasoning || `${topGap.owned} of ${topGap.target} — round out your closet`,
       onOpen: () => {

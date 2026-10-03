@@ -1,6 +1,7 @@
 ﻿import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
+import { savePrefsDoc } from '../services/prefsDoc'
 import { useAuth } from './AuthContext'
 import { recordSignal } from '../services/interestTracker'
 import { inferStyleWeights } from '../services/styleInference'
@@ -65,11 +66,7 @@ export function ClosetProvider({ children }) {
   // Persist whenever items change (after initial load)
   useEffect(() => {
     if (!user || !loadReady.current || loadedUid.current !== user.uid) return
-    setDoc(
-      doc(db, 'users', user.uid, 'prefs', PREF_DOC),
-      { items },
-      { merge: true }
-    ).catch(() => {})
+    savePrefsDoc(user.uid, PREF_DOC, { items })
   }, [items, user])
 
   const addToCloset = useCallback((item) => {

@@ -1,6 +1,7 @@
 ﻿import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
+import { savePrefsDoc } from '../services/prefsDoc'
 import { useAuth } from './AuthContext'
 import { showToast } from '../components/Toast'
 import { useSubscription } from './SubscriptionContext'
@@ -33,7 +34,7 @@ function usePersistedList(user, docId) {
 
   useEffect(() => {
     if (!user || !loadReady || loadedUid.current !== user.uid) return
-    setDoc(doc(db, 'users', user.uid, 'prefs', docId), { items: list }, { merge: true }).catch(() => {})
+    savePrefsDoc(user.uid, docId, { items: list })
   }, [list, user, loadReady, docId])
 
   return [list, setList]
@@ -52,7 +53,7 @@ export function WishlistProvider({ children }) {
     }
     setWishlist((prev) => {
       if (prev.some((e) => e.id === entry.id)) return prev
-      showToast('Saved to wishlist 🤍')
+      showToast('Saved to wishlist')
       return [{ ...entry, addedAt: Date.now() }, ...prev]
     })
   }, [setWishlist, wishlist, user])
@@ -71,7 +72,7 @@ export function WishlistProvider({ children }) {
     }
     setLiked((prev) => {
       if (prev.some((e) => e.id === entry.id)) return prev
-      showToast('Liked ❤️')
+      showToast('Added to liked')
       return [{ ...entry, addedAt: Date.now() }, ...prev]
     })
   }, [setLiked, isPro, liked, limits, openPaywall, user])

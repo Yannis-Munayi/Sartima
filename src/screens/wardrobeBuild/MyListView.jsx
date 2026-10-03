@@ -7,6 +7,7 @@ import { resolveProductImage, getAltProductImage } from '../../services/productI
 import ProductImageToggle from '../../components/ProductImageToggle'
 import ShopPanel from '../../components/ShopPanel'
 import listStyles from '../ShopList.module.css'
+import Icon from '../../components/Icon'
 
 function ProductRowPhoto({ product }) {
   const [photo, setPhoto] = useState(null)
@@ -44,7 +45,7 @@ function ScoutedGroupCard({ group, onRemove }) {
   return (
     <div className={listStyles.card}>
       <button className={listStyles.cardHeader} onClick={() => setOpen(!open)}>
-        <div className={listStyles.cardPhoto} style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div className={listStyles.cardPhoto} style={{ background: 'var(--surface-hover)' }}>
           <span className={listStyles.cardEmoji}>{group.emoji}</span>
         </div>
         <div className={listStyles.cardInfo}>
@@ -120,7 +121,7 @@ function ShopItemCard({ entry, onRemove, onReopen }) {
   return (
     <div className={listStyles.card}>
       <button className={listStyles.cardHeader} onClick={() => setOpen(!open)}>
-        <div className={listStyles.cardPhoto} style={{ background: item.gradient ?? 'rgba(255,255,255,0.06)' }}>
+        <div className={listStyles.cardPhoto} style={{ background: item.gradient ?? 'var(--surface-hover)' }}>
           {photo && (
             <img src={photo} alt={item.name} className={listStyles.cardImg}
               style={{ opacity: loaded ? 1 : 0 }}
@@ -150,7 +151,7 @@ function ShopItemCard({ entry, onRemove, onReopen }) {
                 className={listStyles.storeRow}
               >
                 <span className={listStyles.storeRank}>#{i + 1}</span>
-                <span className={listStyles.storeName}>{r.emoji} {r.name}</span>
+                <span className={listStyles.storeName}>{r.name}</span>
                 <span className={listStyles.storeTagline}>{r.tagline}</span>
                 <span className={listStyles.shopNow}>Shop →</span>
               </a>
@@ -176,7 +177,7 @@ export default function MyListView() {
     <div>
       {isEmpty && (
         <div className={listStyles.empty}>
-          <span className={listStyles.emptyIcon}>🛍️</span>
+          <span className={listStyles.emptyIcon}><Icon name="bag" size={24} /></span>
           <p className={listStyles.emptyTitle}>Nothing here yet</p>
           <p className={listStyles.emptySub}>
             Complete a Scout search to save products here, or tap "Shop this item" anywhere in the app.

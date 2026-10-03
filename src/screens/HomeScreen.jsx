@@ -24,10 +24,10 @@ const SEASON_PICKS = {
 const TRENDING = ['preppy', 'y2k', 'techwear', 'indie', 'hiphop', 'skater', 'grunge', 'athleisure', 'edgy', 'scandi']
 
 const SEASON_META = {
-  winter: { icon: '❄️', label: 'Winter Picks',  sub: 'Layers, texture, warmth' },
-  spring: { icon: '🌸', label: 'Spring Picks',  sub: 'Light layers, fresh palettes' },
-  summer: { icon: '☀️', label: 'Summer Picks',  sub: 'Breathable, bold, bright' },
-  fall:   { icon: '🍂', label: 'Fall Picks',    sub: 'Earth tones, rich textures' },
+  winter: { label: 'Winter Picks',  sub: 'Layers, texture, warmth' },
+  spring: { label: 'Spring Picks',  sub: 'Light layers, fresh palettes' },
+  summer: { label: 'Summer Picks',  sub: 'Breathable, bold, bright' },
+  fall:   { label: 'Fall Picks',    sub: 'Earth tones, rich textures' },
 }
 
 function getSeason() {
@@ -92,7 +92,6 @@ export default function HomeScreen({ startGuide }) {
         {savedAesthetics.length > 0 && (
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionIcon}>📌</span>
               <div>
                 <h2 className={styles.sectionTitle}>Your Saved Aesthetics</h2>
                 <p className={styles.sectionSub}>{savedAesthetics.length} pinned from Explore</p>
@@ -106,7 +105,6 @@ export default function HomeScreen({ startGuide }) {
         {savedAesthetics.length === 0 && (
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionIcon}>{meta.icon}</span>
               <div>
                 <h2 className={styles.sectionTitle}>{meta.label}</h2>
                 <p className={styles.sectionSub}>{meta.sub}</p>
@@ -119,7 +117,6 @@ export default function HomeScreen({ startGuide }) {
         {/* Trending — 2-column grid instead of another carousel */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>🔥</span>
             <div style={{ flex: 1 }}>
               <h2 className={styles.sectionTitle}>Trending Now</h2>
               <p className={styles.sectionSub}>Styles gaining momentum</p>

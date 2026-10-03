@@ -1,20 +1,21 @@
 ﻿import styles from './OnboardingStep.module.css'
+import Icon from '../../components/Icon'
 
 const OCCUPATIONS = [
-  { id: 'student',    label: 'Student',           emoji: '📚' },
-  { id: 'creative',   label: 'Creative / Arts',   emoji: '🎨' },
-  { id: 'office',     label: 'Office / Corporate',emoji: '💼' },
-  { id: 'retail',     label: 'Retail / Service',  emoji: '🛍️' },
-  { id: 'tech',       label: 'Tech',              emoji: '💻' },
-  { id: 'healthcare', label: 'Healthcare',        emoji: '🏥' },
-  { id: 'freelance',  label: 'Freelance',         emoji: '🎯' },
-  { id: 'other',      label: 'Other',             emoji: '✦'  },
+  { id: 'student',    label: 'Student' },
+  { id: 'creative',   label: 'Creative / Arts' },
+  { id: 'office',     label: 'Office / Corporate' },
+  { id: 'retail',     label: 'Retail / Service' },
+  { id: 'tech',       label: 'Tech' },
+  { id: 'healthcare', label: 'Healthcare' },
+  { id: 'freelance',  label: 'Freelance' },
+  { id: 'other',      label: 'Other' },
 ]
 
 export default function OccupationScreen({ value, onSelect, onSkip }) {
   return (
     <div className={styles.step}>
-      <div className={styles.iconBadge}>💼</div>
+      <div className={styles.iconBadge}><Icon name="briefcase" size={22} /></div>
       <h1 className={styles.title}>
         What <em>do you do</em><br />for work?
       </h1>
@@ -26,8 +27,7 @@ export default function OccupationScreen({ value, onSelect, onSkip }) {
             key={occ.id}
             className={`${styles.tile} ${value === occ.id ? styles.tileActive : ''}`}
             onClick={() => onSelect(occ.id)}
-          >
-            <span className={styles.tileEmoji}>{occ.emoji}</span>
+          >
             <span className={styles.tileLabel}>{occ.label}</span>
           </button>
         ))}

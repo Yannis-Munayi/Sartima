@@ -92,7 +92,7 @@ function GuideItem({ type, catLabel, catId, aestheticId, isOpen, onToggle, gende
               )}
               {womenPhotos.length > 0 && (
                 <>
-                  {menPhotos.length > 0 && <p className={styles.piecesLabel} style={{ marginTop: 12 }}>Women</p>}
+                  {menPhotos.length > 0 && <p className={styles.piecesLabel} style={{ marginTop: 'var(--space-3)' }}>Women</p>}
                   <div className={styles.outfitGrid}>
                     {womenPhotos.map((url, i) => (
                       <OutfitPhoto key={`w${i}`} url={url}
@@ -146,7 +146,6 @@ export default function GuideTab({ aestheticId }) {
       {categories.map((cat) => (
         <section key={cat.id} className={styles.guideSection}>
           <div className={styles.guideSectionHeader}>
-            <span className={styles.guideSectionEmoji}>{cat.emoji}</span>
             <div>
               <p className={styles.guideSectionTitle}>{cat.label}</p>
               <p className={styles.guideSectionIntro}>{cat.intro}</p>

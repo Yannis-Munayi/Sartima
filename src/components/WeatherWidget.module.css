@@ -1,6 +1,6 @@
-﻿.skeleton {
+.skeleton {
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: rgba(255,255,255,0.06);
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -13,14 +13,14 @@
 .widget {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
-.weatherEmoji { font-size: 22px; flex-shrink: 0; }
+.weatherEmoji { font-size: var(--text-2xl); flex-shrink: 0; }
 
 .info {
   flex: 1;
@@ -30,33 +30,33 @@
 }
 
 .temp {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--text);
 }
 
 .desc {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   text-transform: capitalize;
 }
 
 .humidity {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   flex-shrink: 0;
 }
 
-/* â”€â”€ Compact variant (used in HomeScreen strip) â”€â”€ */
+/* ── Compact variant (used in HomeScreen strip) ── */
 .compact {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  background: rgba(255,255,255,0.07);
-  border-radius: 20px;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: var(--surface-hover);
+  border-radius: var(--radius-lg);
 }
 
-.emoji { font-size: 14px; }
-.compactTemp { font-size: 13px; font-weight: 700; color: var(--text); }
-.compactCity { font-size: 12px; color: var(--text-faint); }
+.emoji { font-size: var(--text-base); }
+.compactTemp { font-size: var(--text-sm); font-weight: 700; color: var(--text); }
+.compactCity { font-size: var(--text-xs); color: var(--text-faint); }

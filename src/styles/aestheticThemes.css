@@ -1,9 +1,10 @@
 /* ── Adaptive aesthetic theming ─────────────────────────────────────────────
    Applied via `data-aesthetic` on :root (see src/hooks/useAestheticFlavor.js
    and src/data/aestheticThemes.js). Each flavor overrides the display font,
-   the accent palette and (for a few) border radii. Dark-theme values live in
-   the single-attribute block; the light block re-declares every accent var so
-   it always wins over :root[data-theme="light"] regardless of source order.
+   the accent palette and (for a few) the radius scale (xs/sm/md/lg, see
+   index.css). Dark-theme values live in the single-attribute block; the light
+   block re-declares every accent var so it always wins over
+   :root[data-theme="light"] regardless of source order.
 
    Accent alpha conventions match index.css: dim .12 / border .32 on dark,
    dim .10 / border .30 on light. */
@@ -67,10 +68,10 @@
   --accent-border:   rgba(244, 143, 177, 0.32);
   --accent-secondary: #F7A6C1;
   --accent-gold:     #F7A6C1;
-  --radius-sm:       6px;
-  --radius-md:       10px;
-  --radius-lg:       14px;
-  --radius-xl:       18px;
+  --radius-xs:       6px;
+  --radius-sm:       12px;
+  --radius-md:       16px;
+  --radius-lg:       24px;
 }
 :root[data-theme="light"][data-aesthetic="pop"] {
   --accent:          #C2185B;
@@ -88,10 +89,10 @@
   --accent-border:   rgba(255, 138, 76, 0.32);
   --accent-secondary: #FF9F6B;
   --accent-gold:     #FF9F6B;
-  --radius-sm:       0px;
+  --radius-xs:       0px;
+  --radius-sm:       2px;
   --radius-md:       2px;
   --radius-lg:       4px;
-  --radius-xl:       6px;
 }
 :root[data-theme="light"][data-aesthetic="street"] {
   --accent:          #C05621;
@@ -126,10 +127,10 @@
   --accent-border:   rgba(127, 224, 195, 0.32);
   --accent-secondary: #98E7CF;
   --accent-gold:     #98E7CF;
-  --radius-sm:       0px;
+  --radius-xs:       0px;
+  --radius-sm:       2px;
   --radius-md:       2px;
   --radius-lg:       4px;
-  --radius-xl:       6px;
 }
 :root[data-theme="light"][data-aesthetic="mono"] {
   --accent:          #0E7A5F;
@@ -181,10 +182,10 @@
   --accent-border:   rgba(185, 176, 117, 0.32);
   --accent-secondary: #C4BC88;
   --accent-gold:     #C4BC88;
-  --radius-sm:       2px;
+  --radius-xs:       2px;
+  --radius-sm:       4px;
   --radius-md:       4px;
-  --radius-lg:       6px;
-  --radius-xl:       8px;
+  --radius-lg:       8px;
 }
 :root[data-theme="light"][data-aesthetic="utility"] {
   --accent:          #63602F;
@@ -202,10 +203,10 @@
   --accent-border:   rgba(219, 166, 174, 0.32);
   --accent-secondary: #E2B6BD;
   --accent-gold:     #E2B6BD;
-  --radius-sm:       6px;
-  --radius-md:       10px;
-  --radius-lg:       14px;
-  --radius-xl:       18px;
+  --radius-xs:       6px;
+  --radius-sm:       12px;
+  --radius-md:       16px;
+  --radius-lg:       24px;
 }
 :root[data-theme="light"][data-aesthetic="romantic"] {
   --accent:          #8E4F5D;

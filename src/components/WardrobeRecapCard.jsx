@@ -63,64 +63,64 @@ export default function WardrobeRecapCard() {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 250,
       background: 'rgba(0,0,0,0.7)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-5)',
     }} onClick={handleClose}>
       <div
         style={{
           width: '100%', maxWidth: 380,
-          background: 'var(--bg-elevated)', borderRadius: 20,
-          padding: '28px 22px', border: '1px solid var(--border)',
+          background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)',
+          padding: 'var(--space-7) var(--space-6)', border: '1px solid var(--border)',
           textAlign: 'center',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', margin: '0 0 8px' }}>
+        <p style={{ fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', margin: '0 0 var(--space-2)' }}>
           {MONTH_NAME} Recap
         </p>
-        <h2 style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', serif", fontSize: 24, fontWeight: 600, color: 'var(--text)', margin: '0 0 20px' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 600, color: 'var(--text)', margin: '0 0 var(--space-5)' }}>
           Your wardrobe this month
         </h2>
 
         {photoUrl && (
-          <div style={{ width: 96, height: 96, borderRadius: '50%', overflow: 'hidden', margin: '0 auto 12px', border: '3px solid var(--accent)' }}>
+          <div style={{ width: 96, height: 96, borderRadius: '50%', overflow: 'hidden', margin: '0 auto var(--space-3)', border: '3px solid var(--accent)' }}>
             <img src={photoUrl} alt={recap.mostWornItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         )}
         {recap.mostWornItem && (
-          <p style={{ fontSize: 13, color: 'var(--text-dim)', margin: '0 0 20px' }}>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-dim)', margin: '0 0 var(--space-5)' }}>
             Most worn: <strong>{recap.mostWornItem.name}</strong> ({recap.mostWornCount}×)
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-around', margin: '0 0 20px', padding: '16px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', margin: '0 0 var(--space-5)', padding: 'var(--space-4) 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
           <div>
-            <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.outfitsLogged}</p>
-            <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: 0 }}>outfits logged</p>
+            <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.outfitsLogged}</p>
+            <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-faint)', margin: 0 }}>outfits logged</p>
           </div>
           <div>
-            <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.uniqueItemsWorn}/{recap.totalClosetItems}</p>
-            <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: 0 }}>pieces worn</p>
+            <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.uniqueItemsWorn}/{recap.totalClosetItems}</p>
+            <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-faint)', margin: 0 }}>pieces worn</p>
           </div>
           <div>
-            <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.repeatRate}%</p>
-            <p style={{ fontSize: 11, color: 'var(--text-faint)', margin: 0 }}>repeat rate</p>
+            <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text)', margin: 0 }}>{recap.repeatRate}%</p>
+            <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--text-faint)', margin: 0 }}>repeat rate</p>
           </div>
         </div>
 
         {recap.ghostCount > 0 && (
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 20px', lineHeight: 1.5 }}>
-            👻 {recap.ghostCount} closet {recap.ghostCount === 1 ? 'piece' : 'pieces'} went unworn this month.
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '0 0 var(--space-5)', lineHeight: 'var(--leading-normal)' }}>
+            {recap.ghostCount} closet {recap.ghostCount === 1 ? 'piece' : 'pieces'} went unworn this month.
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <button
             onClick={handleShare}
             disabled={sharing}
             style={{
-              flex: 1, padding: '13px 0',
-              background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 6,
-              color: 'var(--text-muted)', fontSize: 12, fontWeight: 600,
+              flex: 1, padding: 'var(--space-3) 0',
+              background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontWeight: 600,
               letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer',
             }}
           >
@@ -129,9 +129,9 @@ export default function WardrobeRecapCard() {
           <button
             onClick={handleClose}
             style={{
-              flex: 1, padding: '13px 0',
-              background: 'var(--accent)', border: 'none', borderRadius: 6,
-              color: '#0B0907', fontSize: 12, fontWeight: 700,
+              flex: 1, padding: 'var(--space-3) 0',
+              background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)',
+              color: '#0B0907', fontSize: 'var(--text-xs)', fontWeight: 700,
               letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer',
             }}
           >

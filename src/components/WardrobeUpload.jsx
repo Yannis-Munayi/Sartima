@@ -10,6 +10,7 @@ import {
   inferColorGroup,
 } from '../data/careSymbols'
 import styles from './WardrobeUpload.module.css'
+import Icon from './Icon'
 
 const CATEGORIES = [
   { id: 'tops',        label: 'Tops',       emoji: '👕' },
@@ -136,7 +137,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
       <button className={styles.photoZone} onClick={() => fileRef.current?.click()}>
         {preview
           ? <img src={preview} alt="preview" className={styles.photoPreview} />
-          : <span className={styles.photoPlaceholder}>📷 Tap to choose photo</span>
+          : <span className={styles.photoPlaceholder}><Icon name="camera" size={20} /> Tap to choose photo</span>
         }
       </button>
       <input
@@ -163,7 +164,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
             className={`${styles.catPill} ${category === c.id ? styles.catPillActive : ''}`}
             onClick={() => setCategory(c.id)}
           >
-            {c.emoji} {c.label}
+            {c.label}
           </button>
         ))}
       </div>
@@ -174,7 +175,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
         className={styles.careToggle}
         onClick={() => setShowCare((v) => !v)}
       >
-        <span>🏷 Add care label</span>
+        <span>Add care label</span>
         <span className={styles.careToggleChevron}>{showCare ? '▲' : '▼'}</span>
       </button>
 
@@ -306,7 +307,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
       <button className={styles.photoZone} onClick={() => fileRef.current?.click()}>
         {preview
           ? <img src={preview} alt="outfit preview" className={styles.photoPreview} />
-          : <span className={styles.photoPlaceholder}>📸 Tap to choose outfit photo</span>
+          : <span className={styles.photoPlaceholder}><Icon name="camera" size={20} /> Tap to choose outfit photo</span>
         }
       </button>
       <input
@@ -357,7 +358,6 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
                     disabled={!item.include}
                   />
                   <span className={styles.detectedMeta}>
-                    {CATEGORIES.find((c) => c.id === item.category)?.emoji}{' '}
                     {item.color} · {CATEGORIES.find((c) => c.id === item.category)?.label}
                   </span>
                 </div>
@@ -390,7 +390,7 @@ export default function WardrobeUpload({ uid, onSave, onClose }) {
             <p className={styles.modeSub}>Upload a single piece or let AI analyze a full outfit.</p>
             <div className={styles.modeButtons}>
               <button className={styles.modeBtn} onClick={() => setMode('piece')}>
-                <span className={styles.modeBtnIcon}>👕</span>
+                <span className={styles.modeBtnIcon}><Icon name="hanger" size={20} /></span>
                 <span className={styles.modeBtnLabel}>Add a Piece</span>
                 <span className={styles.modeBtnSub}>Upload one clothing item</span>
               </button>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BRANDS } from '../../data/brands'
 import styles from './OnboardingStep.module.css'
+import Icon from '../../components/Icon'
 
 const MAX_BRANDS = 5
 
@@ -26,7 +27,7 @@ export default function BrandsStep({ selected, onSelect, onNext, onSkip }) {
 
   return (
     <div className={styles.step}>
-      <div className={styles.iconBadge}>🏷️</div>
+      <div className={styles.iconBadge}><Icon name="tag" size={22} /></div>
       <h1 className={styles.title}>
         Any <em>favorite</em><br />brands?
       </h1>
@@ -55,7 +56,7 @@ export default function BrandsStep({ selected, onSelect, onNext, onSkip }) {
       <button
         className={styles.nextBtn}
         onClick={onNext}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 'var(--space-5)' }}
       >
         {selected.length > 0 ? `Continue (${selected.length} selected)` : 'Continue'}
       </button>

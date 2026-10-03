@@ -15,6 +15,7 @@ import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import { getWeather, getWeatherEmoji } from '../services/weather'
 import WeatherWidget from '../components/WeatherWidget'
 import styles from './DailyLookScreen.module.css'
+import Icon from '../components/Icon'
 
 // Normalize a liked quiz/product item to the shape generateOutfit expects
 function normalizeLiked(item) {
@@ -273,7 +274,7 @@ export default function TodayTab() {
               </div>
             ))}
           </div>
-          <div className={styles.reasoningBox} style={{ marginTop: 12 }}>
+          <div className={styles.reasoningBox} style={{ marginTop: 'var(--space-3)' }}>
             <p className={styles.reasoningText}>A clean, versatile outfit perfect for a casual day out. The white oxford pairs seamlessly with slim chinos for a put-together look.</p>
           </div>
         </LockedOverlay>
@@ -301,7 +302,7 @@ export default function TodayTab() {
             </button>
           ))}
         </div>
-        <p className={styles.emptyEmoji}>🪣</p>
+        <p className={styles.emptyEmoji}><Icon name="hanger" size={24} /></p>
         <p className={styles.emptyTitle}>Not enough items</p>
         <p className={styles.emptySub}>{hint}</p>
       </div>
@@ -349,7 +350,6 @@ export default function TodayTab() {
                   onClick={() => handleOccasionPick(occ.id)}
                 >
                   {isLocked && <span className={styles.proLockBadge}>Pro</span>}
-                  <span className={styles.occasionCardEmoji}>{occ.emoji}</span>
                   <span className={styles.occasionCardLabel}>{occ.label}</span>
                   <span className={styles.occasionCardDesc}>{occ.desc}</span>
                 </button>
@@ -389,7 +389,7 @@ export default function TodayTab() {
               ].join(' ')}
               onClick={() => handleOccasionSwitch(occ.id)}
             >
-              {occ.emoji} {occ.label}
+              {occ.label}
             </button>
           )
         })}
@@ -420,8 +420,8 @@ export default function TodayTab() {
           )}
 
           {outfit.missingCategory && (
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '8px 0 0', lineHeight: 1.5 }}>
-              🧩 You're light on {outfit.missingCategory} — that's the closest outfit I could build from your closet.
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: 'var(--space-2) 0 0', lineHeight: 'var(--leading-normal)' }}>
+              You're light on {outfit.missingCategory} — that's the closest outfit I could build from your closet.
             </p>
           )}
 
@@ -445,7 +445,7 @@ export default function TodayTab() {
                 className={styles.logBtn}
                 onClick={() => setShowLogForm(true)}
               >
-                📔 Log this outfit
+                Log this outfit
               </button>
             ) : (
               <div className={styles.logSuccess}>Outfit logged ✓</div>
@@ -474,7 +474,7 @@ export default function TodayTab() {
         </>
       ) : (
         <div className={styles.emptyState}>
-          <p className={styles.emptyEmoji}>👗</p>
+          <p className={styles.emptyEmoji}><Icon name="hanger" size={24} /></p>
           <p className={styles.emptyTitle}>
             {genError ? 'Generation failed' : 'No outfit generated yet'}
           </p>

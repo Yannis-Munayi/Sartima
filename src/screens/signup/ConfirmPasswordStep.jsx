@@ -4,6 +4,7 @@ import LegalModal from '../../components/LegalModal'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE } from '../../data/legalContent'
 import stepStyles from '../onboarding/OnboardingStep.module.css'
 import styles from '../AuthScreen.module.css'
+import Icon from '../../components/Icon'
 
 export default function ConfirmPasswordStep({ password, onSubmit, saving, error }) {
   const [confirm, setConfirm]             = useState('')
@@ -24,7 +25,7 @@ export default function ConfirmPasswordStep({ password, onSubmit, saving, error 
 
   return (
     <div className={stepStyles.step}>
-      <div className={stepStyles.iconBadge}>✅</div>
+      <div className={stepStyles.iconBadge}><Icon name="check" size={22} /></div>
       <h1 className={stepStyles.title}>
         Confirm your<br /><em>password</em>
       </h1>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useHomeNotifications } from '../../hooks/useHomeNotifications'
 import { trackEvent } from '../../services/firebase'
+import Icon from '../Icon'
 import styles from './NotificationBell.module.css'
 
 // Ids of notifications the user has already seen in the panel — drives the
@@ -104,13 +105,13 @@ export default function NotificationBell({ navigate }) {
           <p className={styles.panelTitle}>Notifications</p>
 
           {items.length === 0 ? (
-            <p className={styles.empty}>You're all caught up ✨</p>
+            <p className={styles.empty}>You're all caught up.</p>
           ) : (
             <ul className={styles.list}>
               {items.map((item) => (
                 <li key={item.id} className={styles.item}>
                   <button className={styles.itemMain} onClick={() => handleOpenItem(item)}>
-                    <span className={styles.itemIcon}>{item.icon}</span>
+                    <span className={styles.itemIcon}><Icon name={item.icon} size={16} /></span>
                     <span className={styles.itemText}>
                       <span className={styles.itemTitle}>{item.title}</span>
                       <span className={styles.itemBody}>{item.body}</span>

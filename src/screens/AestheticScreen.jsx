@@ -97,11 +97,10 @@ export default function AestheticScreen({ aestheticId, forceSubTab }) {
           onClick={handleSaveToggle}
           title={saved ? 'Unpin this tab' : 'Pin this tab'}
         >
-          {saved ? '📌 Saved' : '+ Save tab'}
+          {saved ? 'Saved' : 'Save'}
         </button>
 
         <div className={styles.heroContent}>
-          <span className={styles.heroIcon}>{style.icon}</span>
           <h1 className={styles.heroName}>{getStyleName(style, gender)}</h1>
           <p className={styles.heroTagline}>{style.tagline}</p>
           {style.description && (
@@ -116,7 +115,7 @@ export default function AestheticScreen({ aestheticId, forceSubTab }) {
           rel="noopener noreferrer"
           className={styles.pinterestBtn}
         >
-          📌 Pinterest
+          Pinterest ↗
         </a>
       </div>
 

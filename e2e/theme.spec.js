@@ -13,7 +13,7 @@ async function openSettings(page) {
 test('theme toggle flips data-theme and persists across reload', async ({ page }) => {
   await openSettings(page)
 
-  await page.getByRole('button', { name: '☀️ Light', exact: true }).click()
+  await page.getByRole('button', { name: 'Light', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
 
   await page.reload({ waitUntil: 'networkidle' })
@@ -22,7 +22,7 @@ test('theme toggle flips data-theme and persists across reload', async ({ page }
   expect(stored).toBe('light')
 
   await openSettings(page)
-  await page.getByRole('button', { name: '🌑 Dark', exact: true }).click()
+  await page.getByRole('button', { name: 'Dark', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
 

@@ -22,19 +22,21 @@ function ErrorFallback() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', gap: 16,
-      background: '#0C0A08', color: '#fff', padding: 24, textAlign: 'center',
+      alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)',
+      background: 'var(--bg)', color: 'var(--text)', padding: 'var(--space-6)', textAlign: 'center',
     }}>
-      <p style={{ fontSize: 40, margin: 0 }}>⚠️</p>
-      <p style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>Something went wrong</p>
-      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', margin: 0, maxWidth: 320 }}>
+      <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0 }}>
+        Something went wrong
+      </p>
+      <p style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-normal)', color: 'var(--text-muted)', margin: 0, maxWidth: 320 }}>
         Sartima hit an unexpected error. Reloading usually fixes it.
       </p>
       <button
         onClick={() => window.location.reload()}
         style={{
-          marginTop: 8, padding: '12px 28px', background: '#B8956A', border: 'none',
-          borderRadius: 8, color: '#0B0907', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          marginTop: 'var(--space-3)', padding: 'var(--space-3) var(--space-8)', background: 'var(--accent)',
+          border: 'none', borderRadius: 'var(--radius-md)', color: 'var(--bg)', fontSize: 'var(--text-sm)',
+          fontWeight: 700, cursor: 'pointer',
         }}
       >
         Reload

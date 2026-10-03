@@ -184,7 +184,7 @@ function WashTogetherSection() {
 
             {conflict && (
               <div className={styles.conflictWarning}>
-                ⚠ Contains dry-clean only items — wash separately
+                Contains dry-clean-only items. Wash these separately.
               </div>
             )}
 

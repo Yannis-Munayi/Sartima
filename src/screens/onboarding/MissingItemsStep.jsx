@@ -1,5 +1,6 @@
 import { CATEGORIES } from '../../data/categories'
 import styles from './OnboardingStep.module.css'
+import Icon from '../../components/Icon'
 
 export default function MissingItemsStep({ selected, onSelect, onNext, onSkip }) {
   function toggle(id) {
@@ -8,7 +9,7 @@ export default function MissingItemsStep({ selected, onSelect, onNext, onSkip })
 
   return (
     <div className={styles.step}>
-      <div className={styles.iconBadge}>🧩</div>
+      <div className={styles.iconBadge}><Icon name="layers" size={22} /></div>
       <h1 className={styles.title}>
         What's your<br /><em>closet missing?</em>
       </h1>
@@ -21,7 +22,6 @@ export default function MissingItemsStep({ selected, onSelect, onNext, onSkip })
             className={`${styles.tile} ${selected.includes(cat.id) ? styles.tileActive : ''}`}
             onClick={() => toggle(cat.id)}
           >
-            <span className={styles.tileEmoji}>{cat.emoji}</span>
             <span className={styles.tileLabel}>{cat.label}</span>
           </button>
         ))}
@@ -30,7 +30,7 @@ export default function MissingItemsStep({ selected, onSelect, onNext, onSkip })
       <button
         className={styles.nextBtn}
         onClick={onNext}
-        style={{ marginTop: 20 }}
+        style={{ marginTop: 'var(--space-5)' }}
       >
         {selected.length > 0 ? `Continue (${selected.length} selected)` : 'Continue'}
       </button>

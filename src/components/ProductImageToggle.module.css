@@ -9,14 +9,14 @@
   border: none;
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
-  font-size: 14px;
-  line-height: 1;
+  font-size: var(--text-base);
+  line-height: var(--leading-none);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  transition: background 0.2s ease;
+  transition: background var(--duration-base) ease;
 }
 
 .toggle:hover {

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 import { getAnalytics, isSupported as isAnalyticsSupported, logEvent } from 'firebase/analytics'
@@ -19,7 +19,11 @@ const app = initializeApp(firebaseConfig)
 export { app }
 
 export const auth      = getAuth(app)
-export const db        = getFirestore(app)
+// Liked/wishlist/shop/closet entries copy optional catalog fields (imageMen,
+// image, …) that most products don't have. Without this, setDoc rejects the
+// whole write with "Unsupported field value: undefined" — thrown synchronously,
+// so it escapes the callers' .catch(). Undefined fields are now just omitted.
+export const db        = initializeFirestore(app, { ignoreUndefinedProperties: true })
 export const storage   = getStorage(app)
 export const functions = getFunctions(app)
 

@@ -68,7 +68,7 @@ export default function StepPieces({ selected, onToggle, onNotSure, onNext, gend
       </div>
 
       <button className={styles.notSureBtn} onClick={onNotSure}>
-        ✨ Not sure yet? Show me a starter capsule
+        Not sure yet? Show me a starter capsule
       </button>
 
       <button className={styles.nextBtn} onClick={onNext} disabled={selected.length === 0}>

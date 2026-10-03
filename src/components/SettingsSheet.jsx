@@ -13,6 +13,7 @@ import { downloadAllUserData } from '../services/dataExport'
 import { isIOSStandaloneRequired } from '../services/iosDetect'
 import { loadNotificationPrefs, saveNotificationToken, saveReminderTime } from '../services/notificationPrefs'
 import styles from '../screens/ProfileScreen.module.css'
+import Icon from './Icon'
 
 const callDeleteAccount = httpsCallable(functions, 'deleteAccount')
 
@@ -180,13 +181,13 @@ function ThemeToggle() {
           className={`${styles.themePill} ${theme === 'dark' ? styles.themePillActive : ''}`}
           onClick={() => setTheme('dark')}
         >
-          🌑 Dark
+          <Icon name="moon" size={16} /> Dark
         </button>
         <button
           className={`${styles.themePill} ${theme === 'light' ? styles.themePillActive : ''}`}
           onClick={() => setTheme('light')}
         >
-          ☀️ Light
+          <Icon name="sun" size={16} /> Light
         </button>
       </div>
       <div style={{ height: 12 }} />
@@ -207,7 +208,7 @@ function ThemeToggle() {
         <>
           <div style={{ height: 12 }} />
           <p className={styles.settingsToggleLabel}>Theme flavor</p>
-          <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>
+          <p className={styles.settingsToggleSub} style={{ marginBottom: 'var(--space-2)' }}>
             Auto follows your top aesthetic — or pin one you love
           </p>
           <div className={styles.occasionRow}>
@@ -274,7 +275,7 @@ function DailySettings() {
       </div>
       <div style={{ height: 12 }} />
       <p className={styles.settingsToggleLabel}>Default occasion</p>
-      <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>Pre-selected when generating your daily outfit</p>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 'var(--space-2)' }}>Pre-selected when generating your daily outfit</p>
       <div className={styles.occasionRow}>
         {DAILY_OCCASIONS.map((occ) => (
           <button
@@ -293,7 +294,7 @@ function PreferredSeasonsSettings() {
   return (
     <section>
       <h3 className={styles.sectionTitle}>Preferred seasons</h3>
-      <p className={styles.settingsToggleSub} style={{ marginBottom: 10 }}>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 'var(--space-3)' }}>
         Filters outfit suggestions and content
       </p>
       <div className={styles.seasonRow}>
@@ -308,7 +309,7 @@ function PreferredSeasonsSettings() {
         ))}
       </div>
       {preferredSeasons.length === 0 && (
-        <p className={styles.settingsToggleSub} style={{ marginTop: 8 }}>All seasons (no filter)</p>
+        <p className={styles.settingsToggleSub} style={{ marginTop: 'var(--space-2)' }}>All seasons (no filter)</p>
       )}
     </section>
   )
@@ -343,7 +344,7 @@ function AppBehaviorSettings() {
       </div>
       <div style={{ height: 14 }} />
       <p className={styles.settingsToggleLabel}>Closet sort order</p>
-      <p className={styles.settingsToggleSub} style={{ marginBottom: 8 }}>Default order in My Closet</p>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 'var(--space-2)' }}>Default order in My Closet</p>
       <div className={styles.sortRow}>
         {SORT_OPTIONS.map((opt) => (
           <button
@@ -474,7 +475,7 @@ function ShoppingEmailSettings() {
   return (
     <section>
       <h3 className={styles.sectionTitle}>Shopping digest</h3>
-      <p className={styles.settingsToggleSub} style={{ marginBottom: 10 }}>
+      <p className={styles.settingsToggleSub} style={{ marginBottom: 'var(--space-3)' }}>
         Email for curated shopping picks
       </p>
       {loading ? (

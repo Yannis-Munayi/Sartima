@@ -1,4 +1,4 @@
-﻿.overlay {
+.overlay {
   position: fixed;
   inset: 0;
   z-index: 300;
@@ -12,8 +12,8 @@
   width: 100%;
   max-width: 560px;
   background: var(--bg-elevated);
-  border-radius: 24px 24px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-top: 1px solid var(--border);
   max-height: 90dvh;
   overflow-y: auto;
   padding-bottom: env(safe-area-inset-bottom);
@@ -28,78 +28,78 @@
 .handle {
   width: 36px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-  margin: 12px auto;
+  background: var(--surface-strong);
+  border-radius: var(--radius-full);
+  margin: var(--space-3) auto;
 }
 
 /* ── Mode selector ── */
 .modeSelect {
-  padding: 8px 20px 28px;
+  padding: var(--space-2) var(--space-5) var(--space-7);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .modeTitle {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--text);
-  margin: 0 0 2px;
+  margin: 0 0 var(--space-0-5);
 }
 
 .modeSub {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-faint);
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 
 .modeButtons {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .modeBtn {
   display: grid;
   grid-template-columns: 44px 1fr;
   grid-template-rows: auto auto;
-  column-gap: 12px;
+  column-gap: var(--space-3);
   align-items: center;
-  padding: 14px 16px;
+  padding: var(--space-4) var(--space-4);
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
   text-align: left;
 }
 
 .modeBtn:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 .modeBtnIcon {
   grid-row: 1 / 3;
-  font-size: 26px;
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  background: rgba(184, 149, 106, 0.12);
-  border-radius: 12px;
+  background: var(--accent-dim);
+  border-radius: var(--radius-md);
 }
 
 .modeBtnLabel {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--text);
 }
 
 .modeBtnSub {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
 }
 
@@ -107,56 +107,56 @@
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-family: inherit;
   cursor: pointer;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   align-self: center;
-  margin-top: 4px;
-  transition: color 0.15s;
+  margin-top: var(--space-1);
+  transition: color var(--duration-fast);
 }
 .cancelBtn:hover { color: var(--text-dim); }
 
 /* ── Shared pane ── */
 .pane {
-  padding: 8px 20px 32px;
+  padding: var(--space-2) var(--space-5) var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .paneTitle {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text);
-  margin: 0 0 2px;
+  margin: 0 0 var(--space-0-5);
 }
 
 .paneSub {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-faint);
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--leading-normal);
 }
 
 /* ── Photo zone ── */
 .photoZone {
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 16px;
-  border: 2px dashed rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border-strong);
+  background: var(--surface);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color var(--duration-fast), background var(--duration-fast);
 }
 
 .photoZone:hover {
-  border-color: rgba(184, 149, 106, 0.4);
-  background: rgba(184, 149, 106, 0.04);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 
 .photoPreview {
@@ -166,70 +166,73 @@
 }
 
 .photoPlaceholder {
-  font-size: 14px;
-  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  color: var(--text-muted);
 }
 
 /* ── Name input ── */
 .nameInput {
   width: 100%;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 15px;
+  font-size: var(--text-md);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-fast);
 }
 
 .nameInput::placeholder { color: var(--text-faint); }
-.nameInput:focus { border-color: rgba(184, 149, 106, 0.5); }
+.nameInput:focus { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
 
 /* ── Category grid ── */
 .catGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .catPill {
-  padding: 7px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-family: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--duration-fast);
 }
 
 .catPillActive {
-  background: rgba(184, 149, 106, 0.15);
-  border-color: rgba(184, 149, 106, 0.45);
+  background: var(--accent-dim);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   color: var(--accent);
 }
 
 /* ── Analyze button ── */
 .analyzeBtn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  padding: var(--space-4);
+  background: var(--accent);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   color: #fff;
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: opacity 0.15s;
+  gap: var(--space-2);
+  transition: opacity var(--duration-fast);
 }
 .analyzeBtn:disabled { opacity: 0.6; cursor: default; }
 
@@ -249,7 +252,7 @@
 
 /* ── Detected items ── */
 .detectedLabel {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
@@ -260,18 +263,18 @@
 .detectedList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .detectedItem {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
-  transition: opacity 0.2s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: opacity var(--duration-base);
 }
 
 .detectedItemOff {
@@ -282,33 +285,33 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid rgba(184, 149, 106, 0.5);
-  background: rgba(184, 149, 106, 0.1);
+  border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  background: var(--accent-dim);
   color: var(--accent);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
-.checkBtn:hover { background: rgba(184, 149, 106, 0.2); }
+.checkBtn:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
 
 .detectedBody {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .detectedName {
   background: none;
   border: none;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
   font-family: inherit;
   padding: 0;
@@ -319,7 +322,7 @@
 .detectedName:disabled { color: var(--text-faint); }
 
 .detectedMeta {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   text-transform: capitalize;
 }
@@ -327,29 +330,29 @@
 /* ── Save button ── */
 .saveBtn {
   width: 100%;
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  padding: var(--space-4);
+  background: var(--surface-hover);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--duration-fast);
 }
-.saveBtn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.saveBtn:hover:not(:disabled) { background: var(--surface-strong); }
 .saveBtn:disabled { opacity: 0.5; cursor: default; }
 
 /* ── Error ── */
 .error {
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: #f87171;
   margin: 0;
-  padding: 10px 14px;
+  padding: var(--space-3) var(--space-4);
   background: rgba(248, 113, 113, 0.1);
   border: 1px solid rgba(248, 113, 113, 0.2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 /* ── Care label (upload flow) ── */
@@ -358,47 +361,47 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color var(--duration-fast), color var(--duration-fast);
 }
 
 .careToggle:hover {
-  border-color: rgba(184, 149, 106, 0.45);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   color: var(--text-dim);
 }
 
 .careToggleChevron {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   opacity: 0.6;
 }
 
 .careSection {
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .careSectionHint {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-faint);
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--leading-normal);
 }
 
 .careLabel {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -407,16 +410,16 @@
 
 .careInput {
   width: 100%;
-  padding: 10px 13px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  padding: var(--space-3) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
 }
 
 .careInput::placeholder { color: var(--text-faint); }
-.careInput:focus { border-color: rgba(184, 149, 106, 0.5); }
+.careInput:focus { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }

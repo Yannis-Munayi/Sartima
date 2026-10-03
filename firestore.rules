@@ -7,26 +7,17 @@ service cloud.firestore {
       // Only the authenticated owner can read or write their profile document
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
-      // Flat prefs documents (closet, wishlist, liked, outfitBoards,
-      // savedAesthetics, shopList, outfitLog, ...)
+      // Flat prefs documents (closet, wishlist, liked, outfitBoards, savedAesthetics,
+      // shopList, outfitLog, interests, ...). Owner read/write.
+      //
+      // usage and subscription are owner read-only: they hold usage counters,
+      // try-on credits and Stripe IDs, written only by Cloud Functions (admin SDK).
+      // They must be excluded HERE — Firestore rules are OR'd, so a separate
+      // `allow write: if false` block can never override a wildcard that allows.
       match /prefs/{prefId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-
-      // Interest graph — brand/aesthetic/type affinities written by the client, read by scoring
-      match /prefs/interests {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-
-      // Usage counters and subscription state — written only by admin SDK (Cloud Functions).
-      // More specific paths take precedence over the /prefs/{prefId} wildcard above.
-      match /prefs/usage {
         allow read:  if request.auth != null && request.auth.uid == userId;
-        allow write: if false;
-      }
-      match /prefs/subscription {
-        allow read:  if request.auth != null && request.auth.uid == userId;
-        allow write: if false;
+        allow write: if request.auth != null && request.auth.uid == userId
+                     && !(prefId in ['usage', 'subscription']);
       }
 
       // Outfit calendar plans (OutfitCalendarScreen uses addDoc/deleteDoc here)

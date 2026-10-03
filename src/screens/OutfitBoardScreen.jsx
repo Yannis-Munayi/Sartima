@@ -4,6 +4,7 @@ import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAvatar } from '../hooks/useAvatar'
 import styles from './OutfitBoardScreen.module.css'
+import Icon from '../components/Icon'
 
 const CATEGORIES = [
   { id: 'tops',        label: 'Tops',        emoji: '👕' },
@@ -60,8 +61,8 @@ function AvatarHero({ avatarUrl, selectedItems, onUploadClick, uploading }) {
         <div className={styles.avatarPlaceholder}>
           <div className={styles.avatarSilhouette}>
             <svg viewBox="0 0 100 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="50" cy="32" rx="22" ry="24" fill="rgba(255,255,255,0.1)" />
-              <path d="M14 180 C14 120 86 120 86 180" fill="rgba(255,255,255,0.1)" />
+              <ellipse cx="50" cy="32" rx="22" ry="24" fill="var(--surface-strong)" />
+              <path d="M14 180 C14 120 86 120 86 180" fill="var(--surface-strong)" />
             </svg>
           </div>
           <p className={styles.avatarHint}>Upload your photo to try on outfits</p>
@@ -176,7 +177,7 @@ function BoardCard({ board, onOpen, onDelete }) {
           )
         })}
         {board.items.length > 4 && (
-          <div className={styles.boardThumb} style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className={styles.boardThumb} style={{ background: 'var(--surface-hover)' }}>
             <span className={styles.boardMore}>+{board.items.length - 4}</span>
           </div>
         )}
@@ -282,13 +283,13 @@ export default function OutfitBoardScreen() {
             <div className={styles.avatarPlaceholder}>
               <div className={styles.avatarSilhouette}>
                 <svg viewBox="0 0 100 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="50" cy="32" rx="22" ry="24" fill="rgba(255,255,255,0.08)" />
-                  <path d="M14 180 C14 120 86 120 86 180" fill="rgba(255,255,255,0.08)" />
+                  <ellipse cx="50" cy="32" rx="22" ry="24" fill="var(--surface-strong)" />
+                  <path d="M14 180 C14 120 86 120 86 180" fill="var(--surface-strong)" />
                 </svg>
               </div>
             </div>
             <div className={styles.lockedOverlay}>
-              <span className={styles.lockIcon}>🔒</span>
+              <span className={styles.lockIcon}><Icon name="lock" size={20} /></span>
               <p className={styles.lockLabel}>Sign in to try on outfits</p>
             </div>
           </div>
@@ -298,7 +299,7 @@ export default function OutfitBoardScreen() {
               <div key={b.name} className={`${styles.boardCard} ${styles.boardCardGhost}`}>
                 <div className={styles.boardThumbs}>
                   {b.items.map((item) => (
-                    <div key={item.id} className={styles.boardThumb} style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    <div key={item.id} className={styles.boardThumb} style={{ background: 'var(--surface)' }}>
                       <span>{CATEGORIES.find((c) => c.id === item.category)?.emoji}</span>
                     </div>
                   ))}
@@ -364,7 +365,6 @@ export default function OutfitBoardScreen() {
                     className={`${styles.catTab} ${activeCategory === cat.id ? styles.catTabActive : ''} ${picked ? styles.catTabPicked : ''}`}
                     onClick={() => setActiveCategory(cat.id)}
                   >
-                    <span className={styles.catEmoji}>{cat.emoji}</span>
                     <span className={styles.catLabel}>{cat.label}</span>
                     {picked && <span className={styles.catDot} />}
                   </button>
@@ -418,7 +418,7 @@ export default function OutfitBoardScreen() {
         <div className={styles.boardsView}>
           {outfitBoards.length === 0 ? (
             <div className={styles.emptyBoards}>
-              <p className={styles.emptyBoardsEmoji}>🗂️</p>
+              <p className={styles.emptyBoardsEmoji}><Icon name="folder" size={24} /></p>
               <p className={styles.emptyBoardsTitle}>No saved looks yet</p>
               <p className={styles.emptyBoardsSub}>Build an outfit in Try On and save it here.</p>
               <button className={styles.goStudioBtn} onClick={() => setViewMode('studio')}>

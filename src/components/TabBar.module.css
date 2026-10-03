@@ -1,4 +1,4 @@
-﻿.tabBar {
+.tabBar {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -32,19 +32,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: var(--space-1);
   background: none;
   border: none;
   border-top: 1.5px solid transparent;
   cursor: pointer;
-  color: var(--text-faint);
-  font-size: 8.5px;
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
   font-family: inherit;
-  font-weight: 600;
-  letter-spacing: 0.75px;
-  text-transform: uppercase;
-  transition: color 0.15s, border-color 0.15s;
-  padding: 0 2px;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+  padding: 0 var(--space-0-5);
 }
 
 .tab span {
@@ -55,7 +54,7 @@
 }
 
 .tab:hover {
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 .tab.active {
@@ -70,7 +69,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: var(--space-1);
 }
 
 .discoverBtn {
@@ -85,32 +84,30 @@
   color: #0B0907;
   cursor: pointer;
   opacity: 0.82;
-  transition: opacity 0.15s;
+  transition: opacity var(--duration-fast);
 }
 
 .discoverBtn:hover { opacity: 1; }
 .discoverActive    { opacity: 1; }
 
 .discoverLabel {
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  line-height: 1;
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: var(--leading-none);
 }
 
-.discoverLabelActive { color: var(--accent); }
+.discoverLabelActive { color: var(--text); }
 
 /* ── Aesthetic tabs (pinned from ExploreScreen) ── */
 .tabTemp {
   position: relative;
-  border-left: 1px dashed rgba(255, 255, 255, 0.1);
-  border-right: 1px dashed rgba(255, 255, 255, 0.1);
+  border-left: 1px dashed var(--border);
+  border-right: 1px dashed var(--border);
   color: var(--text-faint);
   flex: 0 0 auto;
   min-width: 64px;
-  padding: 0 10px;
+  padding: 0 var(--space-3);
 }
 
 .tabTemp.active { color: var(--text); }
@@ -123,26 +120,26 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--surface-strong);
 }
 
 .tabSaved {
-  border-left: 1px solid rgba(184, 149, 106, 0.15);
-  color: rgba(184, 149, 106, 0.4);
+  border-left: 1px solid var(--accent-dim);
+  color: color-mix(in srgb, var(--accent) 40%, transparent);
   flex: 0 0 auto;
   min-width: 64px;
-  padding: 0 10px;
+  padding: 0 var(--space-3);
 }
 
 .tabSaved.active { color: var(--accent); }
 
 .aestheticTabIcon {
-  font-size: 16px;
-  line-height: 1;
+  font-size: var(--text-md);
+  line-height: var(--leading-none);
 }
 
 .aestheticTabLabel {
-  font-size: 9.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -157,21 +154,21 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(184, 149, 106, 0.12);
-  border: 1px solid rgba(184, 149, 106, 0.22);
+  background: var(--accent-dim);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: rgba(237, 233, 225, 0.5);
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .avatarActive {
-  background: rgba(184, 149, 106, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   color: var(--accent);
-  border-color: rgba(184, 149, 106, 0.38);
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 /* ── Count badge ── */
@@ -188,16 +185,16 @@
   right: -6px;
   min-width: 14px;
   height: 14px;
-  padding: 0 3px;
+  padding: 0 var(--space-1);
   background: var(--accent);
-  border-radius: 99px;
-  font-size: 9px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
   font-weight: 800;
   color: #0B0907;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  line-height: var(--leading-none);
   letter-spacing: 0;
 }
 

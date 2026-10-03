@@ -92,7 +92,7 @@ function RetailerCard({ retailer, index }) {
       <div className={styles.retailerRank}>#{index + 1}</div>
       <div className={styles.retailerBody}>
         <p className={styles.retailerName}>
-          {retailer.emoji} {retailer.name}
+          {retailer.name}
         </p>
         <p className={styles.retailerTagline}>{retailer.tagline}</p>
         {clicks > 0 && (

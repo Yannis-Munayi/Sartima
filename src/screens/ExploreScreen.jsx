@@ -6,6 +6,7 @@ import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import AestheticScreen from './AestheticScreen'
 import AuthWidget from '../components/AuthWidget'
 import styles from './ExploreScreen.module.css'
+import Icon from '../components/Icon'
 
 const ALL_AESTHETICS = Object.values(STYLES)
 
@@ -174,7 +175,7 @@ function AestheticCard({ style, onOpen, pinned, gender, groupLabel }) {
           {groupLabel && <span className={styles.groupTag}>{groupLabel}</span>}
           <span className={styles.cardName}>{getStyleName(style, gender)}</span>
         </div>
-        {pinned && <span className={styles.pinBadge}>📌</span>}
+        {pinned && <span className={styles.pinBadge} aria-label="Saved"><Icon name="bookmark" size={14} /></span>}
       </div>
     </div>
   )
@@ -267,13 +268,13 @@ export default function ExploreScreen() {
               className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? 'All' : f === 'pinned' ? '📌 Saved' : '🔥 Popular'}
+              {f === 'all' ? 'All' : f === 'pinned' ? 'Saved' : 'Popular'}
             </button>
           ))}
         </div>
         {showPinHint && (
           <div className={styles.pinHint}>
-            <span>💡 Open any aesthetic and tap 📌 to save it to your home screen</span>
+            <span>Open any aesthetic and tap Save to pin it to your home screen.</span>
             <button
               className={styles.pinHintDismiss}
               onClick={() => {
@@ -294,7 +295,7 @@ export default function ExploreScreen() {
             {displayAesthetics.length === 0 ? (
               <p className={styles.noResults}>
                 {filter === 'pinned'
-                  ? 'No saved aesthetics yet — open any aesthetic and tap 📌'
+                  ? 'No saved aesthetics yet. Open any aesthetic and tap Save.'
                   : `No aesthetics match "${search}"`}
               </p>
             ) : (
@@ -319,7 +320,7 @@ export default function ExploreScreen() {
           <>
             {savedAesthetics.length > 0 && (
               <section className={styles.section}>
-                <h2 className={styles.sectionLabel}>📌 Saved</h2>
+                <h2 className={styles.sectionLabel}>Saved</h2>
                 <div className={styles.grid}>
                   {savedAesthetics.map((id) => {
                     const s = STYLES[id]

@@ -13,6 +13,7 @@ import AuthWidget from '../components/AuthWidget'
 import WardrobeUpload from '../components/WardrobeUpload'
 
 import styles from './WishlistScreen.module.css'
+import Icon from '../components/Icon'
 
 const UPLOAD_BUCKET_META = {
   tops:        { label: 'Tops',        emoji: '👕' },
@@ -104,10 +105,10 @@ function PhotoWishCard({ entry, onRemove }) {
 function UploadedWardrobeItem({ item }) {
   return (
     <div className={styles.itemCard}>
-      <div className={styles.itemPhoto} style={{ background: 'rgba(255,255,255,0.05)' }}>
+      <div className={styles.itemPhoto} style={{ background: 'var(--surface)' }}>
         {item.imageUrl
           ? <img src={item.imageUrl} alt={item.name} className={styles.itemImg} style={{ opacity: 1 }} />
-          : <span style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 18 }}>📦</span>
+          : <span style={{ position: 'absolute', bottom: 8, right: 8, fontSize: 'var(--text-lg)' }}>📦</span>
         }
         {item.aiDetected && <span className={styles.aiBadge}>✦ AI</span>}
       </div>
@@ -191,7 +192,7 @@ export default function WishlistScreen() {
 
       {total === 0 && (
         <div className={styles.empty}>
-          <span className={styles.emptyIcon}>👗</span>
+          <span className={styles.emptyIcon}><Icon name="heart" size={24} /></span>
           <p className={styles.emptyTitle}>Your wardrobe is empty</p>
           <p className={styles.emptySub}>
             Save items from Explore, or upload photos of your own clothes.
@@ -213,7 +214,7 @@ export default function WishlistScreen() {
 
         {productEntries.length > 0 && (
           <section className={styles.section}>
-            <h2 className={styles.sectionLabel}>🛍️ Saved Products</h2>
+            <h2 className={styles.sectionLabel}>Saved products</h2>
             <div className={styles.itemGrid}>
               {productEntries.map((entry) => (
                 <ItemWishCard
@@ -229,7 +230,7 @@ export default function WishlistScreen() {
 
         {itemEntries.length > 0 && (
           <section className={styles.section}>
-            <h2 className={styles.sectionLabel}>🧥 Clothing Pieces</h2>
+            <h2 className={styles.sectionLabel}>Clothing pieces</h2>
             <div className={styles.itemGrid}>
               {itemEntries.map((entry) => (
                 <ItemWishCard
@@ -245,7 +246,7 @@ export default function WishlistScreen() {
 
         {photoEntries.length > 0 && (
           <section className={styles.section}>
-            <h2 className={styles.sectionLabel}>📸 Outfit Photos</h2>
+            <h2 className={styles.sectionLabel}>Outfit photos</h2>
             <div className={styles.photoGrid}>
               {photoEntries.map((entry) => (
                 <PhotoWishCard key={entry.id} entry={entry} onRemove={removeFromWishlist} />

@@ -41,14 +41,14 @@ export default function StyleEvolutionChart({ quizzes, gender }) {
           <div key={d.quiz.id} className={styles.evolutionItem}>
             <div
               className={styles.evolutionDot}
-              style={{ background: d.style?.gradient ?? 'rgba(255,255,255,0.1)' }}
+              style={{ background: d.style?.gradient ?? 'var(--surface-hover)' }}
             >
               <span>{d.style?.icon ?? '?'}</span>
             </div>
             {i < sessionData.length - 1 && (
               <div
                 className={styles.evolutionArrow}
-                style={{ color: d.style?.color ?? 'rgba(255,255,255,0.2)' }}
+                style={{ color: d.style?.color ?? 'var(--text-faint)' }}
               >→</div>
             )}
           </div>

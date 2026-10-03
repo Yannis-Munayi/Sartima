@@ -63,7 +63,7 @@ function LookCard({ look, genderFilter }) {
   return (
     <div className={styles.lookCard}>
       <button className={styles.lookHeader} onClick={handleToggle}>
-        <div className={styles.lookThumb} style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div className={styles.lookThumb} style={{ background: 'var(--surface-hover)' }}>
           {photo && (
             <img
               src={photo}
@@ -112,7 +112,7 @@ function LookCard({ look, genderFilter }) {
               )}
               {womenPhotos.length > 0 && (
                 <>
-                  {menPhotos.length > 0 && <p className={styles.piecesLabel} style={{ marginTop: 16 }}>Women's looks</p>}
+                  {menPhotos.length > 0 && <p className={styles.piecesLabel} style={{ marginTop: 'var(--space-4)' }}>Women's looks</p>}
                   <div className={styles.outfitGrid}>
                     {womenPhotos.map((url, i) => (
                       <OutfitPhoto key={`w${i}`} url={url} alt={`${look.name} women outfit ${i + 1}`} />
@@ -128,7 +128,7 @@ function LookCard({ look, genderFilter }) {
           <div className={styles.piecesList}>
             {pieces.map((item) => (
               <span key={item.id} className={styles.pieceChip}>
-                {item.emoji} {item.name}
+                {item.name}
               </span>
             ))}
           </div>
@@ -212,7 +212,7 @@ export default function LooksTab({ aestheticId }) {
                   className={`${styles.filterPill} ${requiredPieces.includes(id) ? styles.filterActive : ''}`}
                   onClick={() => togglePiece(id)}
                 >
-                  {item.emoji} {item.name}
+                  {item.name}
                 </button>
               )
             })}

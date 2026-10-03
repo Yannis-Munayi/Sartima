@@ -113,21 +113,28 @@ Theme: warm charcoal dark palette + warm ivory light palette. **Light is the def
 | `--bg-card` | `rgba(255,255,255,0.03)` | `rgba(0,0,0,0.04)` |
 | `--surface` | `rgba(255,255,255,0.04)` | `rgba(0,0,0,0.05)` |
 | `--surface-hover` | `rgba(255,255,255,0.07)` | `rgba(0,0,0,0.08)` |
+| `--surface-strong` | `rgba(255,255,255,0.14)` | `rgba(0,0,0,0.12)` |
 | `--border` | `rgba(255,255,255,0.07)` | `rgba(0,0,0,0.1)` |
 | `--border-strong` | `rgba(255,255,255,0.14)` | `rgba(0,0,0,0.18)` |
 | `--text` | `#EDE9E1` (warm ivory) | `#1A1611` |
-| `--text-dim` | 72% text | 82% text |
-| `--text-muted` | 42% text | 60% text |
-| `--text-faint` | 24% text | 42% text |
+| `--text-dim` | 78% text | 82% text |
+| `--text-muted` | 60% text (≥4.5:1, body copy) | 68% text |
+| `--text-faint` | 44% text (≥3:1, hints/placeholders/disabled only) | 54% text |
 | `--accent` | `#B8956A` (champagne/caramel gold) | `#8B6840` |
 | `--accent-dim` | `rgba(184,149,106,0.12)` | `rgba(139,104,64,0.1)` |
 | `--accent-border` | `rgba(184,149,106,0.32)` | `rgba(139,104,64,0.3)` |
 | `--accent-secondary` | `#C4A882` | `#94754F` |
 | `--accent-gold` | `#C4A86A` | `#947540` |
+| `--danger` / `-dim` / `-border` | `#E5534B` | `#B42318` |
+| `--success` | `#6FBF8A` | `#2F7A4B` |
+
+Never hardcode `rgba(255,255,255,…)` for surfaces/borders (invisible in light mode) or `rgba(184,149,106,…)` for gold (ignores the light and aesthetic accents) — use the tokens, or `color-mix(in srgb, var(--accent) N%, transparent)` for an in-between alpha. Literal white is only for text/controls sitting on photography.
 
 ### Type Scale
 
-`--text-2xs` / `--text-xs`: 12px · `--text-sm`: 13px · `--text-base`: 14px · `--text-md`: 15px · `--text-lg`: 17px · `--text-xl`: 20px · `--text-2xl`: 24px · `--text-3xl`: 28px · `--text-hero`: 32px
+`--text-2xs`: 10px (uppercase eyebrows, badges, tab labels only) · `--text-xs`: 12px · `--text-sm`: 13px · `--text-base`: 14px · `--text-md`: 16px · `--text-lg`: 18px · `--text-xl`: 20px · `--text-2xl`: 24px · `--text-3xl`: 28px · `--text-4xl`: 32px · `--text-hero`: 40px · `--text-display`: 48px
+
+Line heights: `--leading-none` 1 · `--leading-tight` 1.15 · `--leading-snug` 1.3 · `--leading-normal` 1.5 · `--leading-relaxed` 1.65
 
 Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display. Display headings go through `--font-display` (default `'Playfair Display', serif`).
 
@@ -135,9 +142,21 @@ Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display.
 
 `data-aesthetic="<flavor>"` on `:root` (set by `useAestheticFlavor` from the user's top aesthetic; 51 aesthetics → 11 flavors in `src/data/aestheticThemes.js`) overrides `--font-display`, all `--accent*` vars and, for some flavors, the radius scale — see `src/styles/aestheticThemes.css`. Off switch: `localStorage sartima_adaptive_theme = 'false'`; manual pin: `sartima_aesthetic_pin = '<flavor>'` (overrides the derived flavor); resolved flavor cached in `sartima_aesthetic_flavor` for flash-free boot (inline script in `index.html`).
 
+### Spacing
+
+4px grid: `--space-0-5` 2px (hairlines only) · `--space-1` 4 · `-2` 8 · `-3` 12 · `-4` 16 · `-5` 20 · `-6` 24 · `-7` 28 · `-8` 32 · `-10` 40 · `-12` 48 · `-14` 56 · `-16` 64 · `-20` 80 · `-24` 96. Use tokens for every padding/margin/gap, in CSS modules and inline styles alike.
+
 ### Border Radius
 
-`--radius-sm`: 3px · `--radius-md`: 6px · `--radius-lg`: 10px · `--radius-xl`: 14px · `--radius-full`: 9999px
+`--radius-xs`: 4px (tags, bars) · `--radius-sm`: 8px (small controls, thumbnails) · `--radius-md`: 12px (**the** component radius — buttons, inputs, cards) · `--radius-lg`: 20px (sheets, modals, large media) · `--radius-full`: pills/circles. Aesthetic flavors re-map xs–lg.
+
+### Elevation & Motion
+
+`--shadow-sm` / `-md` / `-lg` (lighter values in light mode) · `--shadow-accent` (primary-button lift) · `--shadow-focus` (focus ring). Durations `--duration-fast` 150ms · `-base` 200ms · `-slow` 300ms; easing `--ease-standard`. Hover transforms cap at `scale(1.04)` (controls) / `scale(1.02)` (cards).
+
+### Icons
+
+UI chrome uses `src/components/Icon.jsx` (`<Icon name="bag" size={18} />`, thin-stroke, `currentColor`) — not emoji. Emoji remain only as stand-ins for missing product photos, weather, care symbols and the laundry colour legend. Empty states use a 56px `--surface` circle with a 24px muted icon.
 
 ---
 

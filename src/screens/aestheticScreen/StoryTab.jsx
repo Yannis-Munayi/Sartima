@@ -4,11 +4,10 @@ import { useNavigation } from '../../context/NavigationContext'
 import { BRAND_NAME_TO_ID } from '../../data/brands'
 import styles from '../AestheticScreen.module.css'
 
-function StorySection({ emoji, title, children }) {
+function StorySection({ title, children }) {
   return (
     <section className={styles.storySection}>
       <div className={styles.storySectionHeader}>
-        <span className={styles.storySectionEmoji}>{emoji}</span>
         <h3 className={styles.storySectionTitle}>{title}</h3>
       </div>
       {children}
@@ -36,11 +35,11 @@ export default function StoryTab({ aestheticId }) {
         <span className={styles.storyPill}>{data.origin}</span>
       </div>
 
-      <StorySection emoji="📖" title="History & Origin">
+      <StorySection title="History & Origin">
         <p className={styles.storyBody}>{data.history}</p>
       </StorySection>
 
-      <StorySection emoji="👕" title="Key Garments">
+      <StorySection title="Key Garments">
         <div className={styles.garmentList}>
           {data.keyGarments.map((g) => (
             <div key={g.name} className={styles.garmentRow}>
@@ -51,7 +50,7 @@ export default function StoryTab({ aestheticId }) {
         </div>
       </StorySection>
 
-      <StorySection emoji="⭐" title="Icons Who Shaped It">
+      <StorySection title="Icons Who Shaped It">
         <div className={styles.personList}>
           {data.icons.map((p) => (
             <div key={p.name} className={styles.personCard}>
@@ -62,7 +61,7 @@ export default function StoryTab({ aestheticId }) {
         </div>
       </StorySection>
 
-      <StorySection emoji="🔥" title="Modern Representatives">
+      <StorySection title="Modern Representatives">
         <div className={styles.personList}>
           {data.modernReps.map((p) => (
             <div key={p.name} className={styles.personCard}>
@@ -73,12 +72,12 @@ export default function StoryTab({ aestheticId }) {
         </div>
       </StorySection>
 
-      <StorySection emoji="🌍" title="Cultural Context">
+      <StorySection title="Cultural Context">
         <p className={styles.storyBody}>{data.culturalContext}</p>
       </StorySection>
 
       {style?.brands?.length > 0 && (
-        <StorySection emoji="🏷️" title="Brands to Know">
+        <StorySection title="Brands to Know">
           <div className={styles.brandChips}>
             {style.brands.map((b) => {
               const hasBrandPage = !!BRAND_NAME_TO_ID[b]

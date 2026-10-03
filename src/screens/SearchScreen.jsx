@@ -7,6 +7,7 @@ import ProductImageToggle from '../components/ProductImageToggle'
 import ItemActionSheet from '../components/ItemActionSheet'
 import AuthWidget from '../components/AuthWidget'
 import styles from './SearchScreen.module.css'
+import Icon from '../components/Icon'
 
 const MAX_RESULTS = 60
 
@@ -138,7 +139,7 @@ export default function SearchScreen({ forcedQuery }) {
       <div className={styles.body}>
         {!query && (
           <div className={styles.empty}>
-            <span className={styles.emptyIcon}>🔍</span>
+            <span className={styles.emptyIcon}><Icon name="search" size={24} /></span>
             <p className={styles.emptyTitle}>Find something specific</p>
             <p className={styles.emptySub}>Search the full catalog by brand, item type, or color.</p>
             <div className={styles.suggestions}>
