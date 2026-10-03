@@ -25,13 +25,18 @@
 ### Home (`HomeScreen.jsx`)
 Section components live in `src/components/home/`. Order:
 1. `WardrobeRecapCard` — monthly Spotify-Wrapped-style wardrobe recap (once per month; see services doc)
-2. `HeroCarousel` — auto-advancing featured aesthetics
-3. `DailyOutfitPreview` — compact weather-aware preview of today's AI outfit, deep-links to Outfits > Today
-4. `GapCard` — "what to buy next" card from `useClosetGaps` + `useGapSignals`, with AI copy from `anthropicGapReasoning`; dismissable per category (14-day snooze); deep-links to `wardrobe-builder:{pieceId}`
-5. `FreshLooksSection` — daily-rotating curated looks
-6. `BrandsForYou` — brand recommendations from the user's top aesthetic
-7. Seasonal picks (hidden once user has pinned aesthetics), trending aesthetics grid, `WardrobeBuilderCTA`
-8. `GuideLauncher` appears at top for new users (no quiz scores yet)
+2. `HeroCarousel` — auto-advancing featured aesthetics. Its top bar holds `NotificationBell` next to `AuthWidget` (see below)
+3. `DailyOutfitPreview` — compact weather-aware preview of today's AI outfit, deep-links to Outfits > Today. Renders nothing until the closet has 3+ items
+4. `FreshLooksSection` — daily-rotating curated looks
+5. `BrandsForYou` — brand recommendations from the user's top aesthetic
+6. Seasonal picks (hidden once user has pinned aesthetics), trending aesthetics grid, `WardrobeBuilderCTA`
+7. `GuideLauncher` appears at top for new users (no quiz scores yet)
+
+**`NotificationBell`** — bell + unread badge in the hero top bar; tapping opens a dropdown panel (closes on outside tap / Escape). The list comes from `useHomeNotifications` (`src/hooks/useHomeNotifications.js`), which returns `{ id, icon, title, body, onOpen, onDismiss? }` items:
+- **Build your digital closet** — while signed out or the closet has < 3 items; opens Outfits > Today
+- **You're light on {category}** — the wardrobe gap from `useClosetGaps` + `useGapSignals`, with AI copy from `anthropicGapReasoning` (fetched only once the panel is opened); dismissable per category (14-day snooze); deep-links to `wardrobe-builder:{pieceId}`
+
+The badge counts items whose `id` isn't in `localStorage sartima_seen_notifications`; opening the panel marks everything shown as seen. To add a new nudge, push another item in `useHomeNotifications`.
 
 ### Aesthetics (`ExploreScreen.jsx`)
 Grid of all 51 aesthetic styles grouped by category, with search and All / Saved / Popular filters. Tap any to open its `AestheticScreen`.
@@ -119,7 +124,7 @@ Slide-up sheet from ProfileScreen containing every user setting:
 | `AuthWidget.jsx` | Guest-user sign-in/up prompt CTA. |
 | `ItemActionSheet.jsx` | Bottom sheet: try-on, add to closet, add to wishlist, share, remove. |
 | `TryOnSheet.jsx` | Virtual try-on UI. Upload person photo + select garments → `generateTryOn` Function → Replicate IDM-VTON result. Pro-gated. |
-| `CatalogSearchSheet.jsx` | Catalog product search. Tries Google CSE first, falls back to Pexels. `disabled` flag auto-flips on quota exceeded. |
+| `CatalogSearchSheet.jsx` | Catalog product search over stock photos (Unsplash, Pexels fallback) via `stockPhotos.js`. |
 | `ClosetItemSheet.jsx` | Detail view + edit sheet for closet items (incl. wear count / last-worn). |
 | `WardrobeUpload.jsx` | Photo upload for closet. Claude Vision analyzes image, detects clothing items. Gated by `visionUploads` limit. |
 | `CareSymbolPicker.jsx` | Garment care symbol selector. |

@@ -2,7 +2,7 @@
 import { STYLES, getStyleName } from '../data/styles'
 import { useExplore } from '../context/ExploreContext'
 import { useApp } from '../context/AppContext'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import AestheticScreen from './AestheticScreen'
 import AuthWidget from '../components/AuthWidget'
 import styles from './ExploreScreen.module.css'

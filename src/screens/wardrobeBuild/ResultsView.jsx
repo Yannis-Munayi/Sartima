@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useInterests } from '../../context/InterestContext'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import { resolveProductImage, getAltProductImage } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
 import { PIECE_BY_ID, PRIORITIES, BUDGET_BY_ID, countOutfits } from '../../services/wardrobeRecommend'

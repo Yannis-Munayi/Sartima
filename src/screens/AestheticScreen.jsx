@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { STYLES, getPinterestUrl, getStyleName } from '../data/styles'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import { useExplore } from '../context/ExploreContext'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'

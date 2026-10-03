@@ -88,7 +88,7 @@ A Brands tab with **190 brand profiles** (`src/data/brands.js`): founding story,
 Full-text client-side search over the ~7,500-product catalog with gender filtering, like/wishlist actions, and a photo↔gradient image toggle.
 
 ### 4.5 Digital Closet
-Add items by **photo upload** (Claude Vision detects every garment with category, colour, and bounding box; user confirms) or **catalog search** (Google CSE → Pexels fallback). Optional **Prettify** removes the background client-side (WASM) and stores a PNG in Firebase Storage. Items carry seasons, occasions, tags, care symbols, favourites, and denormalised **wear data** (`timesWorn`, `lastWorn`). Free tier: 15 items, 3 AI scans/month.
+Add items by **photo upload** (Claude Vision detects every garment with category, colour, and bounding box; user confirms) or **catalog search** (Unsplash → Pexels fallback). Optional **Prettify** removes the background client-side (WASM) and stores a PNG in Firebase Storage. Items carry seasons, occasions, tags, care symbols, favourites, and denormalised **wear data** (`timesWorn`, `lastWorn`). Free tier: 15 items, 3 AI scans/month.
 
 ### 4.6 Outfits Hub (8 sub-tabs)
 My Closet · Liked · **Shop Scout** (default) · Today's Outfit · My Outfits · Calendar (Pro) · Trip (Pro) · Laundry (Pro).
@@ -111,7 +111,7 @@ A guided capsule-wardrobe wizard: pick pieces (or accept the starter capsule) �
 Upload an avatar photo, select up to 3 garments; the server chains Replicate IDM-VTON predictions in layer order (bottoms → dresses → tops → outerwear) and returns a composite. Cached per item-set + avatar; 30/month on Pro plus purchasable 30-piece credit packs.
 
 ### 4.10 Home Feed
-Monthly recap card → hero aesthetic carousel → today's outfit preview → wardrobe gap card → fresh looks → brands-for-you → seasonal picks → trending aesthetics → wardrobe-builder CTA. A context-aware **guide tour** (per-tab chapters or full app walkthrough) is launchable from a floating button on every tab.
+Monthly recap card → hero aesthetic carousel (with a notification bell for closet/wardrobe-gap nudges) → today's outfit preview → fresh looks → brands-for-you → seasonal picks → trending aesthetics → wardrobe-builder CTA. A context-aware **guide tour** (per-tab chapters or full app walkthrough) is launchable from a floating button on every tab.
 
 ### 4.11 Onboarding & Auth
 Email/password (with verification + MX-record email validation) or Google OAuth. Signup captures ToS/Privacy consent and a 16+ age affirmation. A 4-step post-signup wizard collects occupation, preferred brands, referral source, and an optional shopping email.
@@ -163,7 +163,7 @@ Shipped July 2026 (drafts pending attorney review — see the draft notice in `s
 | Try-on | Replicate IDM-VTON via `generateTryOn` Function |
 | Billing | Stripe Checkout + Billing Portal + webhooks |
 | Weather | OpenWeatherMap via `getWeather` Function |
-| Images | Pexels / Google CSE / Unsplash via `searchImages` Function |
+| Images | Unsplash → Pexels fallback via `searchImages` Function |
 | Background removal | `@imgly/background-removal` WASM (client-side, lazy) |
 | Error tracking | Sentry (`@sentry/react`), production only |
 
@@ -260,7 +260,7 @@ Daily outfit push reminders via Firebase Cloud Messaging:
 
 ## 15. The Catalog & Static Data
 
-- **~7,500 products** in `src/data/products/` (9 files by parent type), merged by `products.js` into `PRODUCTS` + lookup maps. Every product carries brand, type/parentType, colour + hex, price range, seasons, gender, `styleWeights`, `outfitCompanions`, retailer `shopUrl` (+ fallback), a Google image query, and a gradient placeholder.
+- **~7,500 products** in `src/data/products/` (9 files by parent type), merged by `products.js` into `PRODUCTS` + lookup maps. Every product carries brand, type/parentType, colour + hex, price range, seasons, gender, `styleWeights`, `outfitCompanions`, retailer `shopUrl` (+ fallback), a `googleQuery` (used only by the offline image-backfill script), and a gradient placeholder.
 - **190 brand profiles** in `brands.js` (stories, lines, collections, key pieces) — brand names must match across `products.js` and `styles.js`.
 - **51 aesthetics** in `styles.js` + deep content in `aestheticDepth.js`; 500+ quiz items in `aestheticItems.js`; curated looks, category trees, care symbols, legal copy, guide steps, capsule baseline.
 - Catalog expansion process: [docs/claude/catalog-brand-expansion.md](docs/claude/catalog-brand-expansion.md) (target: a floor of 40 products per brand).
@@ -268,8 +268,8 @@ Daily outfit push reminders via Firebase Cloud Messaging:
 ## 16. Image & Media Pipeline
 
 - **Closet upload:** photo → Storage (`users/{uid}/wardrobe/{itemId}`) → optional Prettify (WASM background removal, lazy-loaded; CORS-blocked URLs fetched via `proxyImage`) → prettified PNG stored alongside.
-- **Catalog search:** Google CSE first; on quota exhaustion a module flag silently falls back to Pexels for the session.
-- **Product cards:** `resolveProductImage` picks inline image / Google query / gradient placeholder, with a user-facing toggle.
+- **Stock photos:** Unsplash first, Pexels fallback — chained inside `searchImages` (`source: 'stock'`) so a fallback costs one call; an Unsplash 403/429 skips Unsplash server-side for 15 minutes.
+- **Product cards:** `resolveProductImage` picks the curated inline image, else a stock photo, else the gradient placeholder, with a user-facing toggle.
 - **Share cards:** canvas-composed 1080×1350 PNG; every photo draw is isolated so a tainted image degrades to a colour swatch instead of failing the card.
 - All image-service modules use `createBoundedCache(150)` — never a bare `Map`.
 
@@ -285,7 +285,7 @@ Daily outfit push reminders via Firebase Cloud Messaging:
 
 - Installable PWA, standalone/portrait, auto-updating service worker.
 - Precache capped at 8 MB with the heavy data chunks (`data-products`, `data-catalog`, `data-content`) **excluded** from precache — they load over the network and rely on HTTP caching.
-- Runtime caching: Pexels CacheFirst 7d, Firestore NetworkFirst 5min, Google Fonts CacheFirst 1y.
+- Runtime caching: Unsplash + Pexels CacheFirst 7d, Firestore NetworkFirst 5min, Google Fonts CacheFirst 1y.
 - Manual Vite chunks: `react-core`, `firebase`, `data-styles`, `data-content`, `data-products`, `data-catalog`.
 - Lazy loading: FCM SDK, background-removal WASM, share-card module — all dynamic imports; gallery images gated by IntersectionObserver.
 - Session caching: outfit generations, weather (30 min), gap-reasoning copy (per day).
@@ -330,7 +330,8 @@ No test suite or linting configured. Playwright is available as a dev dependency
 |---|---|
 | `ANTHROPIC_API_KEY` | Claude |
 | `OPENWEATHER_KEY` | Weather |
-| `PEXELS_KEY`, `GOOGLE_API_KEY` + `GOOGLE_CX`, `UNSPLASH_KEY` | Image search |
+| `UNSPLASH_KEY`, `PEXELS_KEY` | Image search |
+| `GOOGLE_API_KEY` + `GOOGLE_CX` | Offline catalog image backfill (`scripts/backfill-images.js`) only — not used at runtime |
 | `REPLICATE_API_KEY` | Virtual try-on |
 | `GMAIL_APP_PASSWORD` | Feedback/crash emails (absent = silently skipped) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_ANNUAL`, `STRIPE_PRICE_ID_TRYON_PACK` | Billing (declared as function secrets) |
@@ -346,7 +347,7 @@ No test suite or linting configured. Playwright is available as a dev dependency
 | Legal docs are drafts | Privacy/ToS not yet attorney-reviewed (in-app draft notice) | Must resolve before scale |
 | In-process rate limits | try-on cooldown + search throttle reset on cold start | Low — good enough vs. accidental hammering |
 | Interest-graph writes | read-modify-write (not transactional); rapid multi-tab use could drop increments | Low |
-| Google CSE quota | Daily quota; per-session Pexels fallback handles exhaustion | Low-medium |
+| Stock-photo quotas | App-wide hourly limits (Unsplash demo keys: 50/hr; Pexels: 200/hr); Unsplash exhaustion falls back to Pexels server-side | Medium until Unsplash production access |
 | Catalog size | ~6 MB static data; mitigated by chunk splitting + precache exclusion, still a network cost on first load | Medium |
 
 ## 23. Glossary

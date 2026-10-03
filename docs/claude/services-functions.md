@@ -25,7 +25,7 @@ generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation })
 - `closetItems` may be real ClosetItems or normalised liked items — both shapes handled
 - Session-cached: `stylelab_outfit_{dateStr}_{occasion}_{closetHash}`
 - Returns `null` on API failure, malformed JSON, or pool < 3 items — callers must handle null
-- If the wardrobe can't complete an outfit, the response's `missingCategory` names the blocking category — `TodayTab` persists it via `recordGapSignal` so the Home gap card can react
+- If the wardrobe can't complete an outfit, the response's `missingCategory` names the blocking category — `TodayTab` persists it via `recordGapSignal` so the Home notification bell's gap item can react
 
 **Stale-closure pattern:** the generation callback reads from a `poolRef.current` (kept in sync via `useEffect`) rather than capturing the item pool directly — avoids stale pool values in effects/callbacks.
 
@@ -54,7 +54,7 @@ One coherent "what's missing" surface with two triggers:
 - **`gapDismissals.js`** — per-category snooze (14 days) in `prefs/gapDismissals`.
 - **`gapReasoning.js`** — calls `anthropicGapReasoning` for 1–2 sentences of personalised stylist copy; sessionStorage-cached per day+category+owned-count; returns `''` on failure.
 
-Consumed by `GapCard` on Home, which deep-links to `wardrobe-builder:{pieceId}`.
+Consumed by `useHomeNotifications`, which surfaces the top gap as an item in the Home `NotificationBell` panel and deep-links to `wardrobe-builder:{pieceId}`. The reasoning call only fires once the user opens the panel.
 
 ---
 
@@ -142,21 +142,17 @@ Thin wrappers over the Stripe Functions: `createCheckoutSession(uid, plan)` (mon
 
 ### Image Services
 
-**`pexels.js`** — Pexels API via `searchImages` Function (`source: 'pexels'`). Bounded cache, fallback query chain for aesthetic mood boards. `fetchPhotosWithFallback` is the primary export.
+**`stockPhotos.js`** — Stock photography via `searchImages` Function (`source: 'stock'`): Unsplash first, Pexels fallback. The provider chain runs server-side so a fallback doesn't cost a second rate-limited call. Bounded cache + in-flight dedupe; at most 4 calls in flight (the rest queue); a `resource-exhausted` reply is retried after 2s/5s/10s instead of moving on. `fetchPhotosWithFallback(queries)` tries alternate queries in order and is the primary export.
 
-**`google.js`** — Google Custom Search via `searchImages` Function (`source: 'google'`). Module-level `disabled` flag flips to `true` when function returns `{ quotaExceeded: true }` — fallback to Pexels kicks in silently for the rest of the session.
+**`productImage.js`** — `resolveProductImage` / `getAltProductImage`: picks a product card's image (curated inline `image`/`imageMen` URL, else a stock photo for `pexelsQuery ?? name`, else the card's gradient placeholder). Used with `ProductImageToggle`.
 
-**`unsplash.js`** — Unsplash API via `searchImages` Function (`source: 'unsplash'`). Secondary source for backgrounds and inspiration imagery.
-
-**`productImage.js`** — `resolveProductImage` / `getAltProductImage`: picks a product card's image source (inline `image` URL, Google query, or gradient placeholder). Used with `ProductImageToggle`.
-
-**`CatalogSearchSheet`** tries Google first, falls back to Pexels. If both return empty, shows a generic "no results" error.
+**`CatalogSearchSheet`** searches stock photos (Unsplash → Pexels). If nothing comes back, shows a generic "no results" error.
 
 ---
 
 ### Cache (`src/services/cache.js`)
 
-`createBoundedCache(max = 150)` returns a `{ has, get, set }` Map wrapper that evicts the oldest entry (FIFO, O(1)) once the limit is reached. Used by `google.js`, `pexels.js`, and `unsplash.js`. **When adding a new service that caches responses, use this instead of `new Map()`.**
+`createBoundedCache(max = 150)` returns a `{ has, get, set }` Map wrapper that evicts the oldest entry (FIFO, O(1)) once the limit is reached. Used by `stockPhotos.js`. **When adding a new service that caches responses, use this instead of `new Map()`.**
 
 ---
 
@@ -187,7 +183,7 @@ Initialises Auth, Firestore, Storage, Functions, and **consent-gated Analytics**
 
 All third-party API calls requiring secret keys go through Firebase Gen 2 callable functions deployed to `us-central1`. The browser never holds any API key except the public Firebase config.
 
-**Auth enforcement:** Every function except `validateEmail`, `submitFeedback`, and `submitCrashReport` calls `requireAuth(request)` — unauthenticated calls throw `HttpsError('unauthenticated')`. The Firebase SDK passes the user's ID token automatically on every `httpsCallable` call.
+**Auth enforcement:** Every function except `validateEmail`, `submitFeedback`, `submitCrashReport`, and `searchImages` (guest browsing needs photos; guests are rate-limited by IP) calls `requireAuth(request)` — unauthenticated calls throw `HttpsError('unauthenticated')`. The Firebase SDK passes the user's ID token automatically on every `httpsCallable` call.
 
 **Tier enforcement:** `getUserTier(request.auth.token)` reads the `sartima_role` / `sartima_tier` custom claims straight off the decoded ID token (no Admin SDK round-trip). `checkAndIncrementUsage(uid, field, limit)` runs a Firestore transaction on `users/{uid}/prefs/usage` — monthly counters reset when `periodKey` (YYYY-MM) changes. Server limits (`TIER_LIMITS`): free = 3 vision uploads, 0 trips, 0 try-ons, 20 gap reasonings; pro = 30 / 3 / 30 / 200; admin = unlimited. Free outfit generation is a per-day gate on `lastOutfitDate`. Pro try-ons drain the monthly allowance first, then purchased `tryOnCredits` (never reset).
 
@@ -196,10 +192,10 @@ All third-party API calls requiring secret keys go through Firebase Gen 2 callab
 | `validateEmail` | 10s | DNS MX lookup | Pre-signup email domain validation (no auth) |
 | `anthropicVision` | 90s | Claude Haiku (vision) | Outfit photo analysis — items, categories, colours, bounding boxes. Usage-limited (`visionUploads`). |
 | `anthropicOutfit` | 60s | Claude Haiku | Daily outfit from wardrobe + weather/occasion. Free: 1/day. Returns `missingCategory` when the wardrobe can't complete an outfit. |
-| `anthropicGapReasoning` | 30s | Claude Haiku | 1–2 sentence personalised "why fill this gap" copy for the Home gap card. Usage-limited (`gapReasoning`). |
+| `anthropicGapReasoning` | 30s | Claude Haiku | 1–2 sentence personalised "why fill this gap" copy for the Home notification-bell gap item. Usage-limited (`gapReasoning`). |
 | `anthropicTrip` | 120s | Claude Haiku, max_tokens 1500 | Trip packing list + daily outfit plan. Usage-limited (`tripPlans`). |
 | `getWeather` | 30s | OpenWeatherMap | Geolocation weather (lat/lon → temp, condition, humidity, wind) |
-| `searchImages` | 30s | Pexels / Google CSE / Unsplash | Image search via `source` param. Per-user in-process rate limit (min 2s between calls). |
+| `searchImages` | 30s | Unsplash / Pexels | Image search via `source` param: `'stock'` (default; any unknown/retired source such as `'google'` too) tries Unsplash then Pexels in one call; `'unsplash'` / `'pexels'` hit one provider. Unsplash 403/429 → skipped for 15 min. In-memory result cache (6h TTL, 2,000 entries; cache hits skip the rate limit). In-process token bucket per uid, or per IP for guests (burst 60, refill 1/s). No auth required. |
 | `proxyImage` | 30s | Fetch (CORS bypass) | Server-side image proxy for allowed hosts (pexels, googleusercontent, unsplash, gstatic thumbnails) → base64 data URL |
 | `generateTryOn` | 300s | Replicate IDM-VTON (`cuuupid/idm-vton`, pinned version) | Multi-garment try-on chained server-side (≤3 pieces, layer-ordered). 30s cooldown/user. Pro-only; monthly allowance then credits. |
 | `submitFeedback` | 30s | Firebase Admin + Gmail | Stores feedback in Firestore + emails the owner |

@@ -157,6 +157,7 @@ Body font: Inter. Display/serif headings: Cormorant Garamond / Playfair Display.
 **Workbox / PWA** (`vite-plugin-pwa`):
 - Precache limit raised to 8 MB; `data-products-*`, `data-catalog-*`, `data-content-*` chunks are **excluded from precache** (`globIgnores`) so the service worker doesn't balloon — they load over the network and hit the HTTP cache
 - Pexels images → CacheFirst, 7 days, max 200 entries
+- Unsplash images → CacheFirst, 7 days, max 200 entries
 - Firestore API → NetworkFirst, 5 min, max 50 entries (5s timeout)
 - Google Fonts → CacheFirst, 1 year, max 20 entries
 - Manifest: standalone, portrait, SVG icons (192/512 + maskable)

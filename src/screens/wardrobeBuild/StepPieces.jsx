@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import { PIECE_OPTIONS } from '../../services/wardrobeRecommend'
 import styles from '../WardrobeBuildScreen.module.css'
 

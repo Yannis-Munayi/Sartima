@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getBrandById, BRAND_NAME_TO_ID } from '../data/brands'
 import { PRODUCTS } from '../data/products'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
 import { useExplore } from '../context/ExploreContext'
 import { useAuth } from '../context/AuthContext'

@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import { useWishlist } from '../context/WishlistContext'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import { getItemLabels } from '../data/labels'
 import styles from './ClothingCard.module.css'
 

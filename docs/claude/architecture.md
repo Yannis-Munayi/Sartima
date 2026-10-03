@@ -42,7 +42,7 @@ Tab bar is **hidden** on: `AUTH`, `ONBOARDING`, `SEASONS`, `CATEGORIES`.
 - `aesthetic:{id}` → `AestheticScreen` (dynamic, opened via `openAestheticTab`)
 - `brand:{id}` → `BrandScreen` (opened via `openBrandTab(id, fromTab)` — remembers the tab to return to on back)
 - `wardrobe-builder` → `WardrobeBuildScreen` full-screen (also embedded in Outfits > Shop Scout)
-- `wardrobe-builder:{pieceId}` or `wardrobe-builder:{pieceId}|{specificName}` → deep-link that pre-selects a piece (used by the Home gap card)
+- `wardrobe-builder:{pieceId}` or `wardrobe-builder:{pieceId}|{specificName}` → deep-link that pre-selects a piece (used by the Home notification bell's gap item)
 - `mystyle` / `mystyle:{subTab}` → `MyStyleScreen` (legacy)
 - `closet:{subTab}` → redirects to `daily`
 - `profile:quiz-history` → navigates to ProfileScreen and scrolls to the quiz history section
@@ -81,7 +81,7 @@ All global state lives in `src/context/`.
 | `AppContext` | Quiz flow state machine (`screen`, `styleScores`, `quizMode`, `gender`), screen transitions, item queue. Exports `SCREENS` enum plus settings hooks: `useTheme()`, `useTempUnit()`, `useDefaultOccasion()`, `usePreferredSeasons()`, `useShowQuizTab()`, `useClosetSort()` (all localStorage-backed, `sartima_*` keys). |
 | `AuthContext` | Firebase Auth session, signup/login/logout, Google OAuth (`signInWithGoogle` returns `{ isNewUser }`), email verification, consent capture (`signup` stores `legalVersion` / `legalAcceptedAt` / `ageAffirmed16Plus`; `recordConsent` does the same for new Google users). Logout clears legacy localStorage keys. |
 | `SubscriptionContext` | Tier (`free`/`pro`/`admin`) from Firebase custom claims (`sartima_tier`, `sartima_role`), live usage counters (`onSnapshot` on `prefs/usage`), `isAtLimit(feature)`, `openPaywall(feature)`, `closePaywall`, `isPro`, `refreshSubscription` (force token refresh — triggered by `?upgrade=success` after Stripe checkout). |
-| `InterestContext` | Read-side of the interest graph (`prefs/interests`) — loads once per sign-in; consumed by Shop Scout scoring and the Home gap card. Writes go through `src/services/interestTracker.js`. |
+| `InterestContext` | Read-side of the interest graph (`prefs/interests`) — loads once per sign-in; consumed by Shop Scout scoring and the Home notification bell's gap item. Writes go through `src/services/interestTracker.js`. |
 | `ClosetContext` | `closetItems`, `closetByCategory`, `totalClosetCount`, Firestore sync, add/update/remove. Exposes `closetError` + `retryLoadCloset`. |
 | `ExploreContext` | Pinned aesthetic tabs (`savedAesthetics`, Firestore-synced) **and** open aesthetic/brand page state (`openAesthetic`, `openBrand`, `brandFromTab`, `openAestheticTab`, `openBrandTab`, `closeBrandTab`). |
 | `ShopContext` | Shopping list with retailer filters (Shop Scout "My List") |

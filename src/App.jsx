@@ -59,6 +59,7 @@ import { InterestProvider } from './context/InterestContext'
 import BrandScreen  from './screens/BrandScreen'
 import BrandsScreen from './screens/BrandsScreen'
 import SignupFlow   from './screens/signup/SignupFlow'
+import HubBridge    from './components/HubBridge'
 
 const GUEST_BROWSING_KEY = 'sartima_guest_browsing'
 function isGuestBrowsing() {
@@ -497,6 +498,7 @@ export default function App() {
           <WishlistProvider>
             <ClosetProvider>
               <ExploreProvider>
+                <HubBridge />
                 <AppShell />
               </ExploreProvider>
             </ClosetProvider>

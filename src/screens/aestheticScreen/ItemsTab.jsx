@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { STYLES } from '../../data/styles'
 import { AESTHETIC_ITEMS, TYPE_EMOJI, inferCat, inferSeasons, inferGender } from '../../data/aestheticItems'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import { resolveProductImage, getAltProductImage } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
 import { PRODUCTS } from '../../data/products'

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BRANDS } from '../data/brands'
 import { useNavigation } from '../context/NavigationContext'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import AuthWidget from '../components/AuthWidget'
 import styles from './BrandsScreen.module.css'
 

@@ -3,7 +3,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useApp } from '../context/AppContext'
 import { STYLES, getPinterestUrl } from '../data/styles'
 import { LABEL_WEIGHTS, getItemLabels } from '../data/labels'
-import { fetchPhotosWithFallback } from '../services/pexels'
+import { fetchPhotosWithFallback } from '../services/stockPhotos'
 import styles from './LikedScreen.module.css'
 
 function calculateAesthetics(likedItems) {

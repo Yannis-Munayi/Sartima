@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { STYLES, getStyleName } from '../../data/styles'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import AuthWidget from '../AuthWidget'
+import NotificationBell from './NotificationBell'
 import styles from '../../screens/HomeScreen.module.css'
 
 const HERO_SLIDE_IDS = ['oldmoney', 'darkacademia', 'streetwear', 'gorpcore', 'minimalist']
@@ -104,7 +105,10 @@ export default function HeroCarousel({ navigate, gender }) {
 
       <div className={styles.heroTopBar}>
         <span className={styles.heroWordmark}>Sartima</span>
-        <AuthWidget />
+        <div className={styles.heroTopActions}>
+          <NotificationBell navigate={navigate} />
+          <AuthWidget />
+        </div>
       </div>
 
       <div className={styles.heroContent}>

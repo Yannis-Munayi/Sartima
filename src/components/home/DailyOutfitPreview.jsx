@@ -30,20 +30,9 @@ export default function DailyOutfitPreview({ navigate, gender }) {
       .catch(() => {})
   }, [user, closetItems.length, done, gender, weather])
 
-  if (!user || closetItems.length < 3) {
-    return (
-      <div className={styles.closetCta} onClick={() => navigate('daily')}>
-        <span className={styles.closetCtaIcon}>🪣</span>
-        <div>
-          <p className={styles.closetCtaTitle}>Build your digital closet</p>
-          <p className={styles.closetCtaSub}>Add 3+ items to unlock daily AI outfits</p>
-        </div>
-        <span className={styles.closetCtaArrow}>→</span>
-      </div>
-    )
-  }
-
-  if (!outfit) return null
+  // Too-small closet → the "Build your digital closet" prompt lives in the
+  // Home notification bell (useHomeNotifications), not here.
+  if (!user || closetItems.length < 3 || !outfit) return null
 
   return (
     <div className={styles.dailyPreview}>

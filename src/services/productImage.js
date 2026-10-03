@@ -1,16 +1,12 @@
-import { fetchPhotos as fetchGooglePhotos } from './google'
-import { fetchPhotosWithFallback } from './pexels'
+import { fetchPhotosWithFallback } from './stockPhotos'
 
 // `image` is the default/women's curated photo; `imageMen` is an optional
-// alternate curated photo shown for unisex products when relevant.
+// alternate curated photo shown for unisex products when relevant. Without a
+// curated photo, fall back to stock photography (Unsplash, then Pexels).
 export async function resolveProductImage(item, gender = 'both') {
   const curated = gender === 'men' && item.imageMen ? item.imageMen : item.image
   if (curated) return curated
 
-  if (item.googleQuery) {
-    const results = await fetchGooglePhotos(item.googleQuery, 1)
-    if (results.length > 0) return results[0]
-  }
   const [url] = await fetchPhotosWithFallback([item.pexelsQuery ?? item.name], 1)
   return url ?? null
 }

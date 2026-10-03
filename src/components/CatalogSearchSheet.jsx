@@ -1,6 +1,5 @@
 ﻿import { useRef, useState } from 'react'
-import { fetchPhotos as fetchPexels } from '../services/pexels'
-import { fetchPhotos as fetchGoogle } from '../services/google'
+import { fetchPhotos } from '../services/stockPhotos'
 import styles from './CatalogSearchSheet.module.css'
 
 const CATEGORY_MAP = {
@@ -35,11 +34,7 @@ export default function CatalogSearchSheet({ onAdd, onClose }) {
     setError(null)
     setResults([])
     try {
-      // Try Google Custom Search first (best product shots), fall back to Pexels
-      let urls = await fetchGoogle(`${query} clothing fashion product white background`, 12)
-      if (!urls.length) {
-        urls = await fetchPexels(`${query} fashion clothing outfit`, 12)
-      }
+      const urls = await fetchPhotos(`${query} fashion clothing outfit`, 12)
       if (!urls.length) {
         setError('No results found. Try a different search term.')
         return

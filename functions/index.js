@@ -337,80 +337,117 @@ export const getWeather = onCall({ timeoutSeconds: 30, cors: true, invoker: 'pub
 
 // ─── Image Search Proxy ───────────────────────────────────────────────────────
 
-// In-process rate limit: caps third-party (Pexels/Google CSE/Unsplash) quota burn per user.
-// Resets on cold start — sufficient to stop anonymous/scripted hammering.
-const searchImagesRateLimit = new Map()
-const SEARCH_IMAGES_MIN_INTERVAL_MS = 2_000
+// In-process token bucket per caller (uid, or IP for guests): a screen full
+// of cards can burst up to SEARCH_IMAGES_BURST upstream searches at once, then
+// refills steadily. The old fixed 2s gap rejected every parallel card fetch
+// after the first. Resets on cold start — sufficient to stop scripted hammering.
+const searchImagesBuckets = new Map()
+const SEARCH_IMAGES_BURST = 60
+const SEARCH_IMAGES_REFILL_PER_SEC = 1
 
-export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
-  requireAuth(request)
-  const uid  = request.auth.uid
-  const last = searchImagesRateLimit.get(uid)
-  if (last && Date.now() - last < SEARCH_IMAGES_MIN_INTERVAL_MS) {
-    throw new HttpsError('resource-exhausted', 'Please slow down')
+function takeSearchToken(callerKey) {
+  const now    = Date.now()
+  const bucket = searchImagesBuckets.get(callerKey) ?? { tokens: SEARCH_IMAGES_BURST, at: now }
+  bucket.tokens = Math.min(
+    SEARCH_IMAGES_BURST,
+    bucket.tokens + ((now - bucket.at) / 1000) * SEARCH_IMAGES_REFILL_PER_SEC,
+  )
+  bucket.at = now
+  searchImagesBuckets.set(callerKey, bucket)
+  if (bucket.tokens < 1) return false
+  bucket.tokens -= 1
+  return true
+}
+
+// Queries are deterministic (aesthetic / product names), so users mostly ask
+// for the same ones. Repeats are served from memory without spending the
+// caller's tokens or the app-wide Unsplash/Pexels hourly quota. Only non-empty
+// results are cached so a transient provider failure isn't pinned for hours.
+const searchImagesCache = new Map()
+const SEARCH_IMAGES_CACHE_MAX = 2_000
+const SEARCH_IMAGES_CACHE_TTL_MS = 6 * 60 * 60_000
+
+// Unsplash answers 403/429 once the app's hourly quota is spent; skip it until
+// the window rolls over so `stock` searches go straight to Pexels.
+let unsplashCooldownUntil = 0
+const UNSPLASH_COOLDOWN_MS = 15 * 60_000
+
+async function searchUnsplash(query, count) {
+  const key = process.env.UNSPLASH_KEY
+  if (!key || Date.now() < unsplashCooldownUntil) return []
+  const res = await fetch(
+    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
+    { headers: { Authorization: `Client-ID ${key}` } }
+  )
+  if (res.status === 403 || res.status === 429) {
+    unsplashCooldownUntil = Date.now() + UNSPLASH_COOLDOWN_MS
+    return []
   }
-  searchImagesRateLimit.set(uid, Date.now())
+  if (!res.ok) return []
+  const data = await res.json()
+  // `regular` is fixed at 1080px wide, which blurs once stretched across a
+  // full-width desktop hero/card on a large or high-DPI viewport. Build a
+  // wider derivative from `raw` (must keep its ixid param per Unsplash API
+  // guidelines) instead of falling back to `full`, which is uncompressed
+  // and far heavier than needed.
+  return (data.results ?? []).map((p) => `${p.urls.raw}&w=1600&q=80&fit=max&auto=format`)
+}
 
-  const { query, count = 3, source = 'pexels' } = request.data
+async function searchPexels(query, count) {
+  const key = process.env.PEXELS_KEY
+  if (!key) return []
+  const res = await fetch(
+    `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
+    { headers: { Authorization: key } }
+  )
+  if (!res.ok) return []
+  const data = await res.json()
+  // `large` caps at 940x650 with no dpr multiplier — on a portrait source
+  // that clips to ~430px wide, which upscales (blurs) once it's stretched
+  // across a full-width desktop hero or card. `large2x` renders the same
+  // bounding box at dpr=2 (~1880x1300), giving enough source resolution
+  // for large/high-DPI viewports while still respecting the source aspect
+  // ratio (no forced crop).
+  return (data.photos ?? []).map((p) => p.src.large2x)
+}
+
+// 'stock' — and any retired source (e.g. 'google' from a stale cached PWA
+// build): Unsplash first, Pexels fallback. Chained here rather than on the
+// client so the fallback doesn't cost the caller a second token.
+async function searchBySource(source, query, count) {
+  if (source === 'unsplash') return searchUnsplash(query, count)
+  if (source === 'pexels')   return searchPexels(query, count)
+  const unsplash = await searchUnsplash(query, count)
+  if (unsplash.length > 0) return unsplash
+  return searchPexels(query, count)
+}
+
+// No requireAuth: guest browsing ("Continue as guest") renders the same photo
+// cards, and without a user every card fell back to a gradient. Guests are
+// rate-limited by IP instead of uid.
+export const searchImages = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
+  const { query, count = 3, source = 'stock' } = request.data
   if (!query) throw new HttpsError('invalid-argument', 'query required')
 
-  if (source === 'pexels') {
-    const key = process.env.PEXELS_KEY
-    if (!key) return { urls: [] }
-    const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
-      { headers: { Authorization: key } }
-    )
-    if (!res.ok) return { urls: [] }
-    const data = await res.json()
-    // `large` caps at 940x650 with no dpr multiplier — on a portrait source
-    // that clips to ~430px wide, which upscales (blurs) once it's stretched
-    // across a full-width desktop hero or card. `large2x` renders the same
-    // bounding box at dpr=2 (~1880x1300), giving enough source resolution
-    // for large/high-DPI viewports while still respecting the source aspect
-    // ratio (no forced crop).
-    return { urls: (data.photos ?? []).map((p) => p.src.large2x) }
+  const cacheKey = `${source}:${count}:${query}`
+  const cached   = searchImagesCache.get(cacheKey)
+  if (cached && Date.now() - cached.at < SEARCH_IMAGES_CACHE_TTL_MS) return { urls: cached.urls }
+
+  const callerKey = request.auth?.uid ?? `ip:${request.rawRequest.ip}`
+  if (!takeSearchToken(callerKey)) {
+    throw new HttpsError('resource-exhausted', 'Please slow down')
   }
 
-  if (source === 'google') {
-    const key = process.env.GOOGLE_API_KEY
-    const cx  = process.env.GOOGLE_CX
-    if (!key || !cx) return { urls: [] }
-    const params = new URLSearchParams({
-      key, cx, q: query,
-      searchType: 'image',
-      num:        String(count),
-      imgSize:    'large',
-      imgType:    'photo',
-      safe:       'active',
-    })
-    const res = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`)
-    if (res.status === 403 || res.status === 401 || res.status === 429) {
-      return { urls: [], quotaExceeded: true }
+  const urls = await searchBySource(source, query, count)
+  if (urls.length > 0) {
+    // Delete first so a refreshed entry moves to the back of the FIFO order.
+    searchImagesCache.delete(cacheKey)
+    if (searchImagesCache.size >= SEARCH_IMAGES_CACHE_MAX) {
+      searchImagesCache.delete(searchImagesCache.keys().next().value)
     }
-    if (!res.ok) return { urls: [] }
-    const data = await res.json()
-    return { urls: (data.items ?? []).map((item) => item.link) }
+    searchImagesCache.set(cacheKey, { urls, at: Date.now() })
   }
-
-  if (source === 'unsplash') {
-    const key = process.env.UNSPLASH_KEY
-    if (!key) return { urls: [] }
-    const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
-      { headers: { Authorization: `Client-ID ${key}` } }
-    )
-    if (!res.ok) return { urls: [] }
-    const data = await res.json()
-    // `regular` is fixed at 1080px wide, which blurs once stretched across a
-    // full-width desktop hero/card on a large or high-DPI viewport. Build a
-    // wider derivative from `raw` (must keep its ixid param per Unsplash API
-    // guidelines) instead of falling back to `full`, which is uncompressed
-    // and far heavier than needed.
-    return { urls: (data.results ?? []).map((p) => `${p.urls.raw}&w=1600&q=80&fit=max&auto=format`) }
-  }
-
-  return { urls: [] }
+  return { urls }
 })
 
 // ─── Image Proxy (server-side fetch to bypass CORS) ──────────────────────────

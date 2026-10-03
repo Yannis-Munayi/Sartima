@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { STYLES, getStyleName } from '../../data/styles'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import styles from '../../screens/HomeScreen.module.css'
 
 function AestheticMiniCard({ aestheticId, navigate, gender }) {

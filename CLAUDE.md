@@ -18,9 +18,9 @@ Guidance for Claude Code when working in this repository.
 7. **Digital Closet** — Upload photos or search catalog; Claude Vision extracts items. Optional WASM background removal ("prettify"). Wear tracking (`timesWorn`/`lastWorn`) on logged outfits. Free: 15 items.
 8. **Outfits Tab** — 8 sub-tabs: closet, liked, Shop Scout (**default**), AI outfit generation, outfit boards + log, calendar (Pro), trip packer (Pro), laundry (Pro).
 9. **Shop Scout** — Guided capsule wardrobe wizard: select pieces + budget + priorities → curated catalog recommendations personalised by the interest graph. Deep-linkable with a pre-selected piece (`wardrobe-builder:{pieceId}`).
-10. **Wardrobe Intelligence** — Home gap card (closet diffed against `capsuleBaseline.js` + AI outfit `missingCategory` signals, AI-written copy, 14-day dismissal), monthly Wardrobe Recap card (most-worn, closet ghosts, repeat rate), interest graph (`prefs/interests`).
+10. **Wardrobe Intelligence** — Home notification-bell gap item (closet diffed against `capsuleBaseline.js` + AI outfit `missingCategory` signals, AI-written copy, 14-day dismissal), monthly Wardrobe Recap card (most-worn, closet ghosts, repeat rate), interest graph (`prefs/interests`).
 11. **Virtual Try-On** — Replicate IDM-VTON; multi-piece chaining (bottoms → dresses → tops → outerwear), Pro-only with monthly allowance + purchasable credit packs.
-12. **Home Feed** — Recap card, hero carousel, daily outfit preview, gap card, fresh looks, brands-for-you, seasonal picks, trending aesthetics.
+12. **Home Feed** — Recap card, hero carousel + notification bell (closet prompt, wardrobe gap), daily outfit preview, fresh looks, brands-for-you, seasonal picks, trending aesthetics.
 13. **Profile & Settings** — Top aesthetics, style evolution, quiz history, subscription management. SettingsSheet: gender, theme, units, occasion, seasons, notifications (FCM daily reminder), analytics consent, legal docs, data export (JSON), account deletion.
 14. **Monetization** — Free/Pro/admin tiers via Firebase custom claims; Stripe Checkout (monthly/annual), billing portal, try-on packs, webhook-driven claim updates.
 15. **Notifications** — Daily outfit push reminders: FCM + dedicated-scope service worker + 15-minute Cloud Scheduler function (timezone-aware).
@@ -55,7 +55,7 @@ firebase emulators:start --only functions # Local function emulator
 | AI | Claude Haiku — vision, outfit gen, trip planning, gap reasoning (via Firebase Functions proxy) |
 | Try-On | Replicate IDM-VTON (via `generateTryOn` Firebase Function) |
 | Weather | OpenWeatherMap (via `getWeather` Firebase Function) |
-| Images | Pexels / Google CSE / Unsplash (via `searchImages` Firebase Function) |
+| Images | Unsplash → Pexels fallback (via `searchImages` Firebase Function, `source: 'stock'`) |
 | Background removal | `@imgly/background-removal` WASM (client-side, lazy) |
 | Error tracking | Sentry (`@sentry/react`) — production only, DSN from `VITE_SENTRY_DSN` |
 
@@ -70,12 +70,13 @@ firebase emulators:start --only functions # Local function emulator
 - `VITE_FIREBASE_VAPID_KEY` — web-push key for FCM; if unset, notification enable silently no-ops with a logged warning
 - `VITE_SENTRY_DSN` — if empty, Sentry is skipped entirely (safe for local dev)
 - `VITE_USE_EMULATOR=true` — connects Functions SDK to `localhost:5001`
+- `VITE_HUB_ORIGINS` — optional, comma-separated: extra addresses of the owner's Jarvis hub (e.g. its Tailscale phone address) allowed to call the hub bridge. Localhost is always allowed.
 
 **Server (`functions/.env`) — never sent to the browser:**
 - `ANTHROPIC_API_KEY`
 - `OPENWEATHER_KEY`
 - `PEXELS_KEY`
-- `GOOGLE_API_KEY` + `GOOGLE_CX`
+- `GOOGLE_API_KEY` + `GOOGLE_CX` — only used by `scripts/backfill-images.js` (offline catalog tooling); not used at runtime
 - `UNSPLASH_KEY`
 - `REPLICATE_API_KEY`
 - `GMAIL_APP_PASSWORD` — nodemailer app password; if absent, email notifications are silently skipped
@@ -101,9 +102,11 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 **Navigation** — No React Router. `state.screen` (AppContext) drives the quiz flow; `activeTab` (AppShell local state) drives the main app. `handleTabChange(tabId)` is the single navigation function, exposed everywhere via `NavigationContext`'s `navigate()`. Special tab IDs: `aesthetic:{id}`, `brand:{id}` (remembers the tab to return to), `wardrobe-builder` / `wardrobe-builder:{pieceId}|{specificName}` (deep-link with pre-selected piece), `profile:quiz-history`, `closet:{subTab}` (redirects to `daily`), `mystyle:{subTab}`. Desktop (≥768px) shows a `Sidebar` instead of the bottom `TabBar`; both call the same `handleTabChange`. `useHashRouting` (`src/hooks/useHashRouting.js`) mirrors `activeTab` into `location.hash` (`aesthetic:y2k` ↔ `#/aesthetic/y2k`), so every tab has a shareable deep-link URL and browser back/forward walk the tab history.
 
+**Jarvis hub bridge** — `components/HubBridge.jsx` (mounted in `App`) lets the owner's Jarvis assistant use Sartima when it frames the app: `services/hubBridge.js` is the postMessage protocol, `services/hubActions.js` the actions (profile, closet, outfit log, wishlist, catalog search). Actions go through the context functions, so persistence and plan limits match the UI. It does nothing when Sartima isn't in a frame.
+
 **Context sync** — All persisted contexts use the functional `setState` form in Firestore `.then` callbacks so in-flight additions are never overwritten on load.
 
-**Firebase Function calls** — Always use `httpsCallable(functions, 'functionName')`. Every function requires auth except `validateEmail` / `submitFeedback` / `submitCrashReport`; the SDK passes the ID token automatically. Tier limits are re-enforced server-side — client `isAtLimit` checks are UX, not security.
+**Firebase Function calls** — Always use `httpsCallable(functions, 'functionName')`. Every function requires auth except `validateEmail` / `submitFeedback` / `submitCrashReport` / `searchImages` (guest browsing needs photos); the SDK passes the ID token automatically. Tier limits are re-enforced server-side — client `isAtLimit` checks are UX, not security.
 
 **New persistence** — Prefer a `prefs/{key}` document (already covered by Firestore rules). New subcollections require a new `match` block in `firestore.rules` and a redeploy before any writes.
 

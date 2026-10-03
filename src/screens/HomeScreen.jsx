@@ -11,7 +11,6 @@ import AestheticGrid, { HorizontalScroll } from '../components/home/AestheticGri
 import WardrobeBuilderCTA from '../components/home/WardrobeBuilderCTA'
 import GuideLauncher from '../components/home/GuideLauncher'
 import DailyOutfitPreview from '../components/home/DailyOutfitPreview'
-import GapCard from '../components/home/GapCard'
 import BrandsForYou from '../components/home/BrandsForYou'
 import styles from './HomeScreen.module.css'
 
@@ -70,11 +69,9 @@ export default function HomeScreen({ startGuide }) {
       <HeroCarousel navigate={navigate} gender={gender} />
 
       <div className={styles.body}>
-        {/* Daily AI outfit preview + closet CTA */}
+        {/* Daily AI outfit preview. The closet prompt + wardrobe gap nudges
+            live in the hero's NotificationBell. */}
         <DailyOutfitPreview navigate={navigate} gender={gender} />
-
-        {/* Wardrobe gap card — "what should I buy next", dismissible */}
-        <GapCard navigate={navigate} />
 
         {/* Guide tour — show at top for new users */}
         {startGuide && isNewUser && <GuideLauncher onStart={startGuide} />}

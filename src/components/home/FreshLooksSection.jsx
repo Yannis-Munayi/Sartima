@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CLOTHING_ITEMS } from '../../data/categories'
 import { AESTHETIC_QUIZ_ITEMS } from '../../data/aestheticItems'
-import { fetchPhotosWithFallback } from '../../services/pexels'
+import { fetchPhotosWithFallback } from '../../services/stockPhotos'
 import { useWishlist } from '../../context/WishlistContext'
 import styles from '../../screens/HomeScreen.module.css'
 

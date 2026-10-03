@@ -21,6 +21,19 @@ test.describe('anonymous smoke path', () => {
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible()
   })
 
+  test('notification bell holds the closet prompt and clears its badge once opened', async ({ page }) => {
+    const bell = page.getByRole('button', { name: /^Notifications/ })
+    await expect(bell).toHaveAccessibleName('Notifications (1 new)')
+
+    await bell.click()
+    const panel = page.getByRole('dialog', { name: 'Notifications' })
+    await expect(panel.getByText('Build your digital closet')).toBeVisible()
+    await expect(bell).toHaveAccessibleName('Notifications')
+
+    await page.keyboard.press('Escape')
+    await expect(panel).toBeHidden()
+  })
+
   test('navigating to Aesthetics shows the grid and opens a detail screen', async ({ page }) => {
     await page.getByRole('button', { name: /Aesthetics/i }).first().click()
     await expect(page.getByText(/aesthetics$/i).first()).toBeVisible()

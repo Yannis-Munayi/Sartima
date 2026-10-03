@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PRODUCTS } from '../../data/products'
 import { getGuideForAesthetic } from '../../data/itemGuide'
-import { fetchPhotos } from '../../services/pexels'
+import { fetchPhotos } from '../../services/stockPhotos'
 import { useApp } from '../../context/AppContext'
 import { useInterests } from '../../context/InterestContext'
 import { OutfitPhoto } from './shared'
