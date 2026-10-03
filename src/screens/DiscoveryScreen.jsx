@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { STYLES } from '../data/styles'
 import { useDiscoveryQueue } from '../hooks/useDiscoveryQueue'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { recordSignal } from '../services/interestTracker'
 import ProductCard from '../components/ProductCard'
 import styles from './DiscoveryScreen.module.css'
@@ -31,6 +32,7 @@ export default function DiscoveryScreen() {
   const [activeSeasons,  setActiveSeasons]  = useState([])
   const [likedCount,     setLikedCount]     = useState(0)
   const [swipedCount,    setSwipedCount]    = useState(0)
+  useEscapeKey(() => setShowFilter(false), !quizMode && showFilter)
 
   const dispatchedRef = useRef(false)
 

@@ -1,5 +1,6 @@
 ﻿import { useRef, useState } from 'react'
 import { fetchPhotos } from '../services/stockPhotos'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './CatalogSearchSheet.module.css'
 
 const CATEGORY_MAP = {
@@ -26,6 +27,7 @@ export default function CatalogSearchSheet({ onAdd, onClose }) {
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState(null)
   const [adding,   setAdding]   = useState(false)
+  useEscapeKey(onClose)
 
   async function handleSearch(e) {
     e.preventDefault()

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useWardrobeRecap } from '../hooks/useWardrobeRecap'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { hasSeenRecapThisMonth, markRecapSeen } from '../services/recapSeen'
 import { trackEvent } from '../services/firebase'
 
@@ -29,12 +30,14 @@ export default function WardrobeRecapCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShow])
 
-  if (!shouldShow) return null
-
   function handleClose() {
     markRecapSeen(user.uid)
     setDismissed(true)
   }
+
+  useEscapeKey(handleClose, shouldShow)
+
+  if (!shouldShow) return null
 
   async function handleShare() {
     if (sharing) return

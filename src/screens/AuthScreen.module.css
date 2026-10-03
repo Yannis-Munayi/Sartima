@@ -283,6 +283,19 @@
   line-height: var(--leading-normal);
 }
 
+/* ── Email typo suggestion ("Did you mean …?") ── */
+.emailSuggestion {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: var(--leading-normal);
+  overflow-wrap: anywhere;
+}
+
+.emailSuggestion button {
+  font-weight: 600;
+}
+
 /* ── Primary CTA (white, like onboarding) ── */
 .submitBtn {
   width: 100%;

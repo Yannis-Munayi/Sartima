@@ -1,6 +1,8 @@
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import styles from './SignupFlow.module.css'
 
 export default function GuestWarningModal({ onKeepGoing, onContinueAsGuest }) {
+  useEscapeKey(onKeepGoing)
   return (
     <div className={styles.modalBackdrop} onClick={onKeepGoing}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>

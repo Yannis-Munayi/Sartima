@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useAvatar } from '../hooks/useAvatar'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './OutfitBoardScreen.module.css'
 import Icon from '../components/Icon'
 
@@ -129,6 +130,7 @@ function AvatarHero({ avatarUrl, selectedItems, onUploadClick, uploading }) {
 function SaveSheet({ onSave, onCancel, defaultName }) {
   const [name, setName] = useState(defaultName ?? '')
   const inputRef = useRef(null)
+  useEscapeKey(onCancel)
 
   return (
     <div className={styles.sheetOverlay} onClick={onCancel}>
@@ -141,6 +143,9 @@ function SaveSheet({ onSave, onCancel, defaultName }) {
           placeholder="Outfit name (e.g. Sunday Brunch)"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && name.trim()) onSave(name.trim())
+          }}
           maxLength={60}
           autoFocus
         />

@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../services/firebase'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './FeedbackSheet.module.css'
 
 const CATEGORIES = ['Bug', 'Feature Request', 'Idea', 'Other']
@@ -14,6 +15,7 @@ export default function FeedbackSheet({ user, onClose }) {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState(null)
+  useEscapeKey(onClose)
 
   async function handleSubmit() {
     if (!message.trim()) return

@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GUIDE_LABELS } from '../data/guideSteps'
+import { useEscapeKey } from '../hooks/useEscapeKey'
+import { isTypingTarget } from '../hooks/useKeyboardShortcuts'
 import styles from './GuideTour.module.css'
 
 export default function GuideTour({ step, steps, isFullTour, onNext, onBack, onSkip }) {
@@ -7,6 +9,28 @@ export default function GuideTour({ step, steps, isFullTour, onNext, onBack, onS
   const isFirst = step === 0
   const isLast  = step === steps.length - 1
   const label   = GUIDE_LABELS[s.guideKey] ?? ''
+
+  // ── Keyboard: ← / → step through, Esc skips ──────────────────────────────
+  useEscapeKey(onSkip)
+  const keysRef = useRef(null)
+  keysRef.current = { isFirst, isLast, onNext, onBack, onSkip }
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || isTypingTarget(e.target)) return
+      const { isFirst, isLast, onNext, onBack, onSkip } = keysRef.current
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        if (isLast) onSkip()
+        else onNext()
+      } else if (e.key === 'ArrowLeft' && !isFirst) {
+        e.preventDefault()
+        onBack()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   // ── Draggable card ────────────────────────────────────────────────────────
   const [offset, setOffset] = useState({ x: 0, y: 0 })

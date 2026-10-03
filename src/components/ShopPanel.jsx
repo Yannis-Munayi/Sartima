@@ -5,6 +5,7 @@ import {
 } from '../data/retailers'
 import { useShop } from '../context/ShopContext'
 import { useInterests } from '../context/InterestContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './ShopPanel.module.css'
 
 const COLOUR_HEX = {
@@ -107,6 +108,7 @@ function RetailerCard({ retailer, index }) {
 export default function ShopPanel({ item, onClose }) {
   const { addToShop, isInShop } = useShop()
   const { recordInterest } = useInterests() ?? {}
+  useEscapeKey(onClose)
 
   // Opening the retailer panel = shopping intent for this item
   useEffect(() => {

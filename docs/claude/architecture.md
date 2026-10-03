@@ -125,6 +125,28 @@ PROFILE     = 'profile'
 
 ---
 
+## Keyboard Shortcuts
+
+Desktop shortcuts. The help dialog (`ShortcutsDialog`) opens with `?` or from the **Keyboard shortcuts** button in the desktop `Sidebar`.
+
+| Keys | Action | Where |
+|---|---|---|
+| `/` | Focus the current page's `[data-page-search]` input (Aesthetics, Brands, Search); otherwise open Search | `useKeyboardShortcuts` |
+| Ctrl/⌘ + K | Open catalog Search (focuses its input if already there) | `useKeyboardShortcuts` |
+| `?` | Show the shortcuts dialog | `useKeyboardShortcuts` |
+| `g` then `h`/`a`/`b`/`d`/`s`/`o`/`p` | Home / Aesthetics / Brands / Discover (only when the tab is shown) / Search / Outfits / Profile | `useKeyboardShortcuts` |
+| Esc | Close the topmost sheet or modal; if none is open, leave the focused field | `useEscapeKey` / `useKeyboardShortcuts` |
+| ← / → | Skip / Like the current card | `ProductCard` (Discover swipe deck) |
+| ← / → | Previous / next guided-tour step (Esc skips the tour) | `GuideTour` |
+
+**Rules:**
+- Single-key shortcuts never fire while focus is in a text field (`isTypingTarget`) or while a modifier is held. Ctrl/⌘ + K is the one shortcut that also works from inside a field.
+- **Layer stack.** `useEscapeKey(onClose, enabled)` registers a layer in a module-level stack. Esc runs only the most recently opened layer's handler, so the Terms modal opened over the paywall closes first. `hasOpenLayer()` turns off global shortcuts and the swipe arrows while any dialog is open. Every overlay (paywall, payment-due, legal, settings, feedback/crash sheets, item/closet/try-on sheets, upload, catalog search, shop panel, discovery filter, calendar day plan, outfit save sheet, notification panel, recap card, resume modal, guest warning) registers through this hook.
+- Shortcuts turn on only once the main tabs are reachable: after SignupFlow and ConsentGate, and not on the AUTH, ONBOARDING, SEASONS or CATEGORIES screens.
+- Tested in `e2e/shortcuts.spec.js`.
+
+---
+
 ## Styling System
 
 - **CSS Modules** (`Component.module.css`) for component-scoped styles

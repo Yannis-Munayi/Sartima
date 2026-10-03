@@ -18,6 +18,8 @@ import { useAestheticFlavor } from './hooks/useAestheticFlavor'
 import { useGuideController } from './hooks/useGuideController'
 import { useHashRouting } from './hooks/useHashRouting'
 import { useOutboundClickTracking } from './hooks/useOutboundClickTracking'
+import { useEscapeKey } from './hooks/useEscapeKey'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { AppProvider, useApp, useTheme, useShowQuizTab, SCREENS } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NavigationProvider } from './context/NavigationContext'
@@ -54,6 +56,7 @@ import GuideLauncherButton from './components/GuideLauncherButton'
 import Toast           from './components/Toast'
 import PaywallModal    from './components/PaywallModal'
 import PaymentDueModal from './components/PaymentDueModal'
+import ShortcutsDialog from './components/ShortcutsDialog'
 import { GuideProvider } from './context/GuideContext'
 import { SubscriptionProvider } from './context/SubscriptionContext'
 import { InterestProvider } from './context/InterestContext'
@@ -90,7 +93,8 @@ function QuizRouter() {
   }
 }
 
-function ResumeModal({ progress, total, onContinue, onDiscover }) {
+function ResumeModal({ progress, total, onContinue, onDiscover, onDismiss }) {
+  useEscapeKey(onDismiss)
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -162,6 +166,7 @@ function AppShell() {
   const [legalDoc, setLegalDoc]             = useState(null) // 'terms' | 'privacy' | null
   const [needsConsent, setNeedsConsent]     = useState(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [showShortcuts, setShowShortcuts]   = useState(false)
   // Gates the whole app behind SignupFlow for signed-out visitors. Flipped
   // true either by SignupFlow finishing (after it's applied the collected
   // answers — see its own pendingUid effect) or by its guest escape hatch;
@@ -253,6 +258,15 @@ function AppShell() {
 
   // Attribute outbound retailer/affiliate clicks to the tab they came from
   useOutboundClickTracking(activeTab)
+
+  // Desktop keyboard shortcuts — only once the main tabs are reachable
+  useKeyboardShortcuts({
+    enabled: entryDone && !(user && needsConsent) && showTabs,
+    activeTab,
+    navigate: handleTabChange,
+    showQuizTab,
+    onShowHelp: () => setShowShortcuts(true),
+  })
 
   function handleTabChange(tabId) {
     // Explicit finite-quiz start. Callers must use this instead of pairing
@@ -379,7 +393,11 @@ function AppShell() {
     <div style={outerStyle}>
       {/* Desktop sidebar — only shown once main tabs are visible */}
       {isDesktop && showTabs && (
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        <Sidebar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onShowShortcuts={() => setShowShortcuts(true)}
+        />
       )}
 
       {/* Scrollable content area */}
@@ -464,6 +482,14 @@ function AppShell() {
             total={40}
             onContinue={handleContinue}
             onDiscover={handleDiscover}
+            onDismiss={() => setShowResumeModal(false)}
+          />
+        )}
+
+        {showShortcuts && (
+          <ShortcutsDialog
+            showQuizTab={showQuizTab}
+            onClose={() => setShowShortcuts(false)}
           />
         )}
 

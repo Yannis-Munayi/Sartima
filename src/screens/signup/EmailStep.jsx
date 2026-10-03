@@ -1,31 +1,33 @@
 import { useState } from 'react'
-import { httpsCallable } from 'firebase/functions'
-import { functions } from '../../services/firebase'
+import { validateSignupEmail } from '../../services/emailValidation'
+import { EmailSuggestion } from '../AuthScreen'
 import stepStyles from '../onboarding/OnboardingStep.module.css'
 import styles from '../AuthScreen.module.css'
 import Icon from '../../components/Icon'
 
 export default function EmailStep({ value, onNext }) {
-  const [email, setEmail]       = useState(value)
-  const [error, setError]       = useState('')
-  const [checking, setChecking] = useState(false)
+  const [email, setEmail]           = useState(value)
+  const [error, setError]           = useState('')
+  const [suggestion, setSuggestion] = useState(null) // { for: typed email, address: suggested }
+  const [checking, setChecking]     = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
+    // Continuing again on the address we just offered a fix for means "mine
+    // is right" — a suggestion only holds the user up once.
+    const keepAsTyped = suggestion?.for === email
     setError('')
+    setSuggestion(null)
     setChecking(true)
-    try {
-      const validateFn = httpsCallable(functions, 'validateEmail')
-      const { data } = await validateFn({ email })
-      if (!data.valid) {
-        setError("This email address doesn't appear to exist. Please use a real email.")
-        return
-      }
-    } catch {
-      // If the check fails (network/cold-start), proceed — Firebase email
-      // verification acts as the fallback gate for unreachable addresses.
-    } finally {
-      setChecking(false)
+    const result = await validateSignupEmail(email)
+    setChecking(false)
+    if (result.suggestion && !keepAsTyped) {
+      setSuggestion({ for: email, address: result.suggestion })
+      return
+    }
+    if (result.error) {
+      setError(result.error)
+      return
     }
     onNext(email)
   }
@@ -45,7 +47,7 @@ export default function EmailStep({ value, onNext }) {
             type="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setSuggestion(null) }}
             required
             autoComplete="email"
             autoFocus
@@ -53,6 +55,14 @@ export default function EmailStep({ value, onNext }) {
         </div>
 
         {error && <p className={styles.error}>{error}</p>}
+
+        {suggestion && (
+          <EmailSuggestion
+            address={suggestion.address}
+            submitLabel="Continue"
+            onAccept={() => { setEmail(suggestion.address); setSuggestion(null) }}
+          />
+        )}
 
         <button type="submit" className={styles.submitBtn} disabled={checking}>
           {checking ? 'Checking…' : 'Continue'}

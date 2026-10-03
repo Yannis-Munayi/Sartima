@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSubscription } from '../context/SubscriptionContext'
 import { openBillingPortal } from '../services/subscriptionService'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './PaymentDueModal.module.css'
 
 const DAY_MS        = 24 * 60 * 60 * 1000
@@ -22,6 +23,13 @@ export default function PaymentDueModal() {
   const [dismissed, setDismissed] = useState(() => readDismissed() === today())
   const [opening, setOpening]     = useState(false)
 
+  function dismiss() {
+    try { localStorage.setItem(DISMISSED_KEY, today()) } catch { /* private mode */ }
+    setDismissed(true)
+  }
+
+  useEscapeKey(dismiss, !!paymentDue && !dismissed)
+
   if (!paymentDue || dismissed) return null
 
   const msLeft   = (billing?.graceEndsAt ?? 0) - Date.now()
@@ -30,11 +38,6 @@ export default function PaymentDueModal() {
   const endDate  = inGrace
     ? new Date(billing.graceEndsAt).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
     : null
-
-  function dismiss() {
-    try { localStorage.setItem(DISMISSED_KEY, today()) } catch { /* private mode */ }
-    setDismissed(true)
-  }
 
   async function handleUpdate() {
     setOpening(true)

@@ -5,6 +5,7 @@ import { db, functions, getAnalyticsConsent, setAnalyticsConsent, trackEvent } f
 import { useAuth } from '../context/AuthContext'
 import { useApp, useTheme, useTempUnit, useDefaultOccasion, usePreferredSeasons, useShowQuizTab, useClosetSort, useAdaptiveTheme } from '../context/AppContext'
 import { useInterests } from '../context/InterestContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { AESTHETIC_FLAVORS, resolveAestheticFlavor } from '../data/aestheticThemes'
 import { STYLES } from '../data/styles'
 import LegalModal from './LegalModal'
@@ -596,6 +597,7 @@ function DataPrivacySettings({ user, onLogout }) {
 }
 
 export default function SettingsSheet({ user, onClose, onLogout }) {
+  useEscapeKey(onClose)
   return (
     <>
       <div className={styles.settingsBackdrop} onClick={onClose} />

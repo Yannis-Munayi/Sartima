@@ -1,7 +1,10 @@
 import { LEGAL_DRAFT_NOTICE, LEGAL_UPDATED_AT } from '../data/legalContent'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './LegalModal.module.css'
 
 export default function LegalModal({ doc, onClose }) {
+  useEscapeKey(onClose, !!doc)
+
   if (!doc) return null
 
   return (

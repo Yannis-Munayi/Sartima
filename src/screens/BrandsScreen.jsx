@@ -134,6 +134,7 @@ export default function BrandsScreen() {
             placeholder="Search brands…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            data-page-search
           />
           {search && (
             <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>

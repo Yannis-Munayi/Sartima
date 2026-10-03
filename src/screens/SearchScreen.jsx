@@ -129,6 +129,7 @@ export default function SearchScreen({ forcedQuery }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoFocus
+            data-page-search
           />
           {search && (
             <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>

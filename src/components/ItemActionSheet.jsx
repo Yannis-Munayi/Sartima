@@ -2,6 +2,7 @@
 import { useApp } from '../context/AppContext'
 import { useInterests } from '../context/InterestContext'
 import { getPinterestUrl } from '../data/styles'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './ItemActionSheet.module.css'
 import Icon from './Icon'
 
@@ -10,6 +11,7 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
   const { recordInterest } = useInterests() ?? {}
   const isProduct    = item.type === 'product'
   const pinterestUrl = getPinterestUrl(null, state.gender, item.name)
+  useEscapeKey(onClose)
 
   // Opening the sheet = the user clicked this product for a closer look
   useEffect(() => {

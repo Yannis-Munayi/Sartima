@@ -3,7 +3,7 @@ import { useCloset } from '../context/ClosetContext'
 import { useShowQuizTab } from '../context/AppContext'
 import styles from './Sidebar.module.css'
 
-export default function Sidebar({ activeTab, onTabChange }) {
+export default function Sidebar({ activeTab, onTabChange, onShowShortcuts }) {
   const { user }             = useAuth()
   const { totalClosetCount } = useCloset()
   const { showQuizTab }      = useShowQuizTab()
@@ -53,6 +53,10 @@ export default function Sidebar({ activeTab, onTabChange }) {
       </nav>
 
       <div className={styles.sidebarBottom}>
+        <button className={styles.shortcutsBtn} onClick={onShowShortcuts}>
+          <span>Keyboard shortcuts</span>
+          <kbd className={styles.shortcutsKbd}>?</kbd>
+        </button>
         <button
           className={`${styles.userChip} ${activeTab === 'profile' ? styles.userChipActive : ''}`}
           onClick={() => onTabChange('profile')}

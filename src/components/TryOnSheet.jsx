@@ -2,6 +2,7 @@
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { useAvatar } from '../hooks/useAvatar'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useWishlist } from '../context/WishlistContext'
 import { useSubscription } from '../context/SubscriptionContext'
 import { generateTryOnResult, TRYON_CATEGORIES } from '../services/tryOn'
@@ -61,6 +62,7 @@ function LoadingView({ items, avatarUrl }) {
 
 function ClosetPicker({ selectedIds, onSelect, onClose }) {
   const { closetItems } = useCloset()
+  useEscapeKey(onClose)
   const available = closetItems.filter(
     (i) =>
       TRYON_CATEGORIES.includes(i.category) &&
@@ -108,6 +110,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
   const [buyingCredits, setBuyingCredits] = useState(false)
   const [uploadError, setUploadError]     = useState(null)
   const [saved, setSaved]                 = useState(false)
+  useEscapeKey(onClose)
 
   const fileInputRef = useRef(null)
   const canTryOn     = selectedItems.length > 0 && !!avatarUrl

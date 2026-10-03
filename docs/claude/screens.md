@@ -4,7 +4,7 @@
 
 | Screen | File | Description |
 |--------|------|-------------|
-| Auth | `AuthScreen.jsx` | Email/password + Google OAuth sign-in/up. Password strength indicator, email validation via `validateEmail` Firebase Function (DNS MX check). Signup requires ToS/Privacy + age-16+ consent checkboxes (stored on the user doc); new Google users get the same consent step via `recordConsent`. |
+| Auth | `AuthScreen.jsx` | Email/password + Google OAuth sign-in/up. Password strength indicator, email validation via `validateSignupEmail` → `validateEmail` Firebase Function (syntax, throwaway domains, mail server, "Did you mean …?" typo fix — shared with SignupFlow's email step). Signup requires ToS/Privacy + age-16+ consent checkboxes (stored on the user doc); new Google users get the same consent step via `recordConsent`. |
 | Welcome | `WelcomeScreen.jsx` | Landing page for unauthenticated users with CTA. |
 | Onboarding | `onboarding/OnboardingFlow.jsx` | 4-step wizard: occupation → brands → referral → shopping email. Saves `onboardingComplete: true` to `users/{uid}`. |
 | Seasons | `SeasonScreen.jsx` | Multi-select season picker (Spring / Summer / Fall / Winter) to seed item pool. |

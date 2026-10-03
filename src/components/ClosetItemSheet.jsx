@@ -4,6 +4,7 @@ import { storage } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { prettifyImage } from '../services/prettify'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import CareSymbolPicker from './CareSymbolPicker'
 import {
   CARE_SYMBOLS,
@@ -79,6 +80,13 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
   const [prettifyProgress, setProgress] = useState(0)
   const [error, setError]           = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Esc steps back one level, like the sheet's own Cancel buttons
+  useEscapeKey(() => {
+    if (confirmDelete) setConfirmDelete(false)
+    else if (mode === 'edit') setMode('view')
+    else onClose()
+  })
 
   // Re-default wash + storage when category changes (only if user hasn't saved their own preference)
   const hasOwnFreq    = useRef(!!item.washFrequency)

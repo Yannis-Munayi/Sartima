@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSubscription } from '../context/SubscriptionContext'
 import { createCheckoutSession, openBillingPortal } from '../services/subscriptionService'
 import { useAuth } from '../context/AuthContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import LegalModal from './LegalModal'
 import { TERMS_OF_SERVICE } from '../data/legalContent'
 
@@ -67,6 +68,7 @@ export default function PaywallModal() {
   const { paywallFeature, closePaywall } = useSubscription()
   const { user } = useAuth()
   const [showTerms, setShowTerms] = useState(false)
+  useEscapeKey(closePaywall, !!paywallFeature)
 
   if (!paywallFeature) return null
 

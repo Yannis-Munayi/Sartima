@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext'
 import { useInterests } from '../context/InterestContext'
 import { BRAND_NAME_TO_ID } from '../data/brands'
 import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { hasOpenLayer } from '../hooks/useEscapeKey'
+import { isTypingTarget } from '../hooks/useKeyboardShortcuts'
 import ProductImageToggle from './ProductImageToggle'
 import styles from './ProductCard.module.css'
 import Icon from './Icon'
@@ -73,6 +75,37 @@ export default function ProductCard({ product, onLike, onSkip }) {
     if (wishlisted) removeFromLiked(product.id)
     else            addProductToLiked()
   }
+
+  // Like/Skip buttons and ←/→ keys — one decision per card
+  function swipe(dir) {
+    if (flyDir) return
+    setFlyDir(dir)
+    if (dir === 'right') {
+      addProductToLiked()
+      setTimeout(() => onLike(product), 300)
+    } else {
+      setTimeout(() => onSkip(product), 300)
+    }
+  }
+
+  const swipeRef = useRef(swipe)
+  swipeRef.current = swipe
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.repeat || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
+      if (hasOpenLayer() || isTypingTarget(e.target)) return
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        swipeRef.current('right')
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        swipeRef.current('left')
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   // ── Drag handlers (identical mechanics to ClothingCard) ───────────────────
 
@@ -219,11 +252,9 @@ export default function ProductCard({ product, onLike, onSkip }) {
       <div className={styles.actionRow}>
         <button
           className={`${styles.actionBtn} ${styles.skipBtn}`}
-          onClick={() => {
-            setFlyDir('left')
-            setTimeout(() => onSkip(product), 300)
-          }}
+          onClick={() => swipe('left')}
           aria-label="Skip"
+          title="Skip (←)"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M18 6L6 18M6 6l12 12" />
@@ -232,12 +263,9 @@ export default function ProductCard({ product, onLike, onSkip }) {
 
         <button
           className={`${styles.actionBtn} ${styles.likeBtn}`}
-          onClick={() => {
-            setFlyDir('right')
-            addProductToLiked()
-            setTimeout(() => onLike(product), 300)
-          }}
+          onClick={() => swipe('right')}
           aria-label="Like"
+          title="Like (→)"
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />

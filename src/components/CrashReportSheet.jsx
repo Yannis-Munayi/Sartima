@@ -2,6 +2,7 @@
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../services/firebase'
 import { collectDiagnostics, getLogBuffer } from '../services/crashReporter'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import styles from './CrashReportSheet.module.css'
 
 const callSubmitCrashReport = httpsCallable(functions, 'submitCrashReport')
@@ -13,6 +14,7 @@ export default function CrashReportSheet({ user, appState, onClose }) {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState(null)
+  useEscapeKey(onClose)
 
   const logs = getLogBuffer()
   const errorCount = logs.filter(

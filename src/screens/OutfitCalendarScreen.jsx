@@ -7,6 +7,7 @@ import {
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import LockedOverlay from '../components/LockedOverlay'
 import styles from './OutfitCalendarScreen.module.css'
 
@@ -40,6 +41,7 @@ function DayPlanSheet({ dateKey, plans, closetItems, logEntries, onSave, onDelet
   const [selected, setSelected] = useState(plans.map((p) => p.itemIds).flat())
   const [tab,      setTab]      = useState('closet') // 'closet' | 'log'
   const [saving,   setSaving]   = useState(false)
+  useEscapeKey(onClose)
 
   const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
 

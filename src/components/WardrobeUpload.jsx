@@ -3,6 +3,7 @@ import { useSubscription } from '../context/SubscriptionContext'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../services/firebase'
 import { analyzeOutfit } from '../services/claudeVision'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import CareSymbolPicker from './CareSymbolPicker'
 import {
   WASH_FREQUENCY_DEFAULTS,
@@ -377,6 +378,7 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
 // ── Root component ───────────────────────────────────────────────────────────
 export default function WardrobeUpload({ uid, onSave, onClose }) {
   const [mode, setMode] = useState(null) // null | 'piece' | 'outfit'
+  useEscapeKey(onClose)
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useHomeNotifications } from '../../hooks/useHomeNotifications'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import { trackEvent } from '../../services/firebase'
 import Icon from '../Icon'
 import styles from './NotificationBell.module.css'
@@ -55,20 +56,15 @@ export default function NotificationBell({ navigate }) {
     })
   }, [open, itemIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEscapeKey(() => setOpen(false), open)
+
   useEffect(() => {
     if (!open) return
     function onPointerDown(e) {
       if (!rootRef.current?.contains(e.target)) setOpen(false)
     }
-    function onKeyDown(e) {
-      if (e.key === 'Escape') setOpen(false)
-    }
     document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
+    return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [open])
 
   function handleToggle() {

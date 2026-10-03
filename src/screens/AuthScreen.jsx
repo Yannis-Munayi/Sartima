@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react'
 import { sendPasswordResetEmail } from 'firebase/auth'
-import { httpsCallable } from 'firebase/functions'
-import { auth, functions } from '../services/firebase'
+import { auth } from '../services/firebase'
+import { validateSignupEmail } from '../services/emailValidation'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import LegalModal from '../components/LegalModal'
@@ -130,6 +130,18 @@ export function ConsentCheckboxes({ agreedToTerms, setAgreedToTerms, ageAffirmed
   )
 }
 
+// ── Email typo suggestion (shared by signup form + SignupFlow email step) ────
+
+export function EmailSuggestion({ address, submitLabel, onAccept }) {
+  return (
+    <p className={styles.emailSuggestion} role="status">
+      Did you mean{' '}
+      <button type="button" className={styles.legalLink} onClick={onAccept}>{address}</button>?
+      {' '}If yours is right, press {submitLabel} again.
+    </p>
+  )
+}
+
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function AuthScreen() {
@@ -151,10 +163,12 @@ export default function AuthScreen() {
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [ageAffirmed, setAgeAffirmed]     = useState(false)
   const [legalDoc, setLegalDoc]           = useState(null) // 'terms' | 'privacy' | null
+  const [emailSuggestion, setEmailSuggestion] = useState(null) // { for: typed email, address: suggested }
 
   function switchMode(next) {
     setMode(next)
     setError('')
+    setEmailSuggestion(null)
     setConfirm('')
     setResetSent(false)
     setShowPassword(false)
@@ -208,20 +222,18 @@ export default function AuthScreen() {
       if (!ageAffirmed) return setError('Please confirm you are at least 16 years old.')
 
       setLoading(true)
-      let emailValid = true
-      try {
-        const validateFn = httpsCallable(functions, 'validateEmail')
-        const { data } = await validateFn({ email })
-        if (!data.valid) {
-          setError("This email address doesn't appear to exist. Please use a real email.")
-          emailValid = false
-        }
-      } catch {
-        // If the check fails (network/cold-start), proceed — Firebase email
-        // verification acts as the fallback gate for unreachable addresses.
+      // Submitting again on the address we just offered a fix for means
+      // "mine is right" — a suggestion only holds the user up once.
+      const keepAsTyped = emailSuggestion?.for === email
+      setEmailSuggestion(null)
+      const emailCheck = await validateSignupEmail(email)
+      if (emailCheck.suggestion && !keepAsTyped) {
+        setEmailSuggestion({ for: email, address: emailCheck.suggestion })
+        setLoading(false)
+        return
       }
-
-      if (!emailValid) {
+      if (emailCheck.error) {
+        setError(emailCheck.error)
         setLoading(false)
         return
       }
@@ -317,7 +329,7 @@ export default function AuthScreen() {
             type="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setEmailSuggestion(null) }}
             required
             autoComplete="email"
           />
@@ -395,6 +407,14 @@ export default function AuthScreen() {
         )}
 
         {error && <p className={styles.error}>{error}</p>}
+
+        {emailSuggestion && (
+          <EmailSuggestion
+            address={emailSuggestion.address}
+            submitLabel="Create account"
+            onAccept={() => { setEmail(emailSuggestion.address); setEmailSuggestion(null) }}
+          />
+        )}
 
         {resetSent && (
           <p className={styles.successMsg}>

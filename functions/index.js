@@ -1,10 +1,10 @@
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
 import Anthropic from '@anthropic-ai/sdk'
-import dns from 'dns/promises'
 import admin from 'firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 import nodemailer from 'nodemailer'
+import { checkEmail } from './emailValidation.js'
 
 admin.initializeApp()
 
@@ -77,16 +77,18 @@ async function checkAndIncrementUsage(uid, field, limit) {
 
 // ─── Email Validation (no auth — called pre-signup) ──────────────────────────
 
+// Syntax, throwaway domains, a real mail server, and typo suggestions — see
+// emailValidation.js. A DNS outage surfaces as 'unavailable' rather than
+// "this email doesn't exist", so clients fail open instead of blocking a
+// real address.
 export const validateEmail = onCall({ timeoutSeconds: 10, cors: true, invoker: 'public' }, async (request) => {
   const { email } = request.data
   if (!email || typeof email !== 'string') throw new HttpsError('invalid-argument', 'email required')
-  const domain = email.split('@')[1]?.toLowerCase()
-  if (!domain) return { valid: false }
   try {
-    const records = await dns.resolveMx(domain)
-    return { valid: Array.isArray(records) && records.length > 0 }
-  } catch {
-    return { valid: false }
+    return await checkEmail(email)
+  } catch (err) {
+    console.warn('validateEmail: DNS lookup failed', err.code ?? err.message)
+    throw new HttpsError('unavailable', 'Could not verify email right now')
   }
 })
 

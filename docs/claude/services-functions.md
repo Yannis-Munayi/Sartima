@@ -102,6 +102,15 @@ generateTrip({ destination, nights, closetItems, gender })
 
 ---
 
+### Signup Email Check (`src/services/emailValidation.js`, `functions/emailValidation.js`)
+
+- `validateSignupEmail(email)` → `{ error, suggestion }`, used by both signup surfaces (SignupFlow's `EmailStep` and `AuthScreen` signup mode) before the user can move on
+- Server (`validateEmail`, public): rejects bad syntax, `noreply@`-style addresses, throwaway domains (`disposable-email-domains-js` list, subdomains included), reserved names (`example.com`, `.test`…), and domains with no mail server (NXDOMAIN, no MX, or RFC 7505 null MX). Popular providers skip DNS
+- Typos of popular providers (`gamil.com`, `outlok.com`) return `suggestion` — even when the typo domain has a real mail server, since several are typosquatted. The UI shows "Did you mean …?"; tapping fills the field, submitting the same address again keeps it
+- Fails open: a DNS outage throws `unavailable` and the client lets signup proceed (logged via `logWarn`) — the post-signup verification email stays the backstop. It can't prove a specific mailbox exists (any name passes at gmail.com)
+
+---
+
 ### Notifications (`src/services/notifications.js`, `notificationPrefs.js`, `iosDetect.js`)
 
 Daily outfit push reminders via Firebase Cloud Messaging:
@@ -189,7 +198,7 @@ All third-party API calls requiring secret keys go through Firebase Gen 2 callab
 
 | Function | Timeout | Proxies / Model | Purpose |
 |----------|---------|-----------------|---------|
-| `validateEmail` | 10s | DNS MX lookup | Pre-signup email domain validation (no auth) |
+| `validateEmail` | 10s | DNS MX lookup | Pre-signup email check (no auth): syntax, throwaway domains, mail server, typo suggestion — `functions/emailValidation.js` |
 | `anthropicVision` | 90s | Claude Haiku (vision) | Outfit photo analysis — items, categories, colours, bounding boxes. Usage-limited (`visionUploads`). |
 | `anthropicOutfit` | 60s | Claude Haiku | Daily outfit from wardrobe + weather/occasion. Free: 1/day. Returns `missingCategory` when the wardrobe can't complete an outfit. |
 | `anthropicGapReasoning` | 30s | Claude Haiku | 1–2 sentence personalised "why fill this gap" copy for the Home notification-bell gap item. Usage-limited (`gapReasoning`). |
@@ -204,7 +213,8 @@ All third-party API calls requiring secret keys go through Firebase Gen 2 callab
 | `createStripeCheckout` | 30s | Stripe | Subscription checkout session (monthly/annual price IDs); creates/reuses the Stripe customer; redirects back with `?upgrade=success` |
 | `createStripeBillingPortal` | 30s | Stripe | Billing portal session for existing subscribers |
 | `purchaseTryOnPack` | 30s | Stripe | One-time checkout for 30 try-on credits (Pro only) |
-| `stripeWebhook` | 60s | Stripe (onRequest) | Signature-verified webhook. `checkout.session.completed` → sets `sartima_tier: 'pro'` claim + writes `prefs/subscription` (or credits `tryOnCredits` +30 for packs). `customer.subscription.updated` → syncs status. `customer.subscription.deleted` → reverts claim to `free`. |
+| `stripeWebhook` | 60s | Stripe (onRequest) | Signature-verified, idempotent (returns 500 on failure so Stripe retries). `checkout.session.completed` / `async_payment_succeeded` (only once `payment_status` is paid) → merges `sartima_tier: 'pro'` into claims + writes `prefs/subscription`, or credits `tryOnCredits` +30 for packs (deduped via `fulfilledCheckouts/{sessionId}`). `customer.subscription.updated` → active restores Pro; `past_due`/`unpaid` starts a **7-day grace period** (`graceEndsAt`, client shows `PaymentDueModal`). `customer.subscription.deleted` → user cancellations keep Pro until the paid period ends; non-payment ends at grace end. Delayed downgrades go in `billingDowngrades/{uid}`. |
+| `enforceBillingDowngrades` | scheduled | Admin SDK | Runs **every 60 minutes**. Applies `billingDowngrades/{uid}` entries whose `downgradeAt` has passed → claim `free`. |
 | `deleteAccount` | 120s | Stripe + Admin SDK | Full account deletion in retry-safe order: cancel Stripe subscription → delete Storage (`wardrobe/`, `avatar/`) → `recursiveDelete` the Firestore user tree → delete the Auth user last. |
 
 **Model constant:** All Anthropic functions read from the `CLAUDE_HAIKU` constant in `functions/index.js` (`claude-haiku-4-5-20251001`). Change it there to upgrade every Claude call at once.

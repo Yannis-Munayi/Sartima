@@ -108,6 +108,45 @@
   border-top: 1px solid var(--border);
 }
 
+.shortcutsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2) var(--space-7);
+  margin-bottom: var(--space-2);
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--duration-fast);
+  text-align: left;
+}
+
+.shortcutsBtn:hover {
+  color: var(--text-muted);
+}
+
+.shortcutsKbd {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: inherit;
+  font-size: var(--text-2xs);
+  letter-spacing: 0;
+  line-height: var(--leading-none);
+}
+
 .userChip {
   display: flex;
   align-items: center;

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import LockedOverlay from '../components/LockedOverlay'
 import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import WardrobeUpload from '../components/WardrobeUpload'
 import CatalogSearchSheet from '../components/CatalogSearchSheet'
 import ClosetItemSheet from '../components/ClosetItemSheet'
@@ -228,6 +229,7 @@ function MyClosetTab() {
   const [showUpload, setShowUpload]       = useState(false)
   const [showSearch, setShowSearch]       = useState(false)
   const [showAddSheet, setShowAddSheet]   = useState(false)
+  useEscapeKey(() => setShowAddSheet(false), showAddSheet)
   const [selectedItem, setSelectedItem]   = useState(null)
   const [tryOnItem, setTryOnItem]         = useState(null)
   const [editMode, setEditMode]           = useState(false)

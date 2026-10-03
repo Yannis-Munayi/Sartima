@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test'
 
 // UI-only coverage of the signup gate (no accounts are created, and the
-// email step's live validateEmail call is never triggered): the default
-// signed-out landing flow (SignupFlow), its login escape hatch, and the
-// guest hand-off back into the app.
+// email step's validateEmail call is stubbed, never live): the default
+// signed-out landing flow (SignupFlow), its email check, its login escape
+// hatch, and the guest hand-off back into the app.
 test.describe('signup gate (anonymous)', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -45,5 +45,81 @@ test.describe('signup gate (anonymous)', () => {
 
     await page.getByRole('button', { name: 'Continue as guest anyway', exact: true }).click()
     await expect(page.getByText('SARTIMA').first()).toBeVisible()
+  })
+})
+
+// Answers the validateEmail callable the way the deployed function would:
+// `respond(email)` returns its result object, or a number to fail with that
+// HTTP status. Handles the CORS preflight since the function is cross-origin.
+async function stubValidateEmail(page, respond) {
+  await page.route('**/validateEmail', async (route) => {
+    const headers = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    }
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
+    const result = respond(route.request().postDataJSON().data.email)
+    const body = typeof result === 'number'
+      ? { error: { status: 'UNAVAILABLE', message: 'stubbed failure' } }
+      : { result }
+    await route.fulfill({
+      status: typeof result === 'number' ? result : 200,
+      headers,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    })
+  })
+}
+
+test.describe('signup email check', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubValidateEmail(page, (email) => {
+      if (email === 'jane@gamil.com')      return { valid: true, suggestion: 'jane@gmail.com' }
+      if (email === 'jane@mailinator.com') return { valid: false, reason: 'disposable' }
+      if (email === 'jane@down.example')   return 503
+      return { valid: true }
+    })
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Skip all →', exact: true }).click()
+  })
+
+  const emailInput    = (page) => page.getByPlaceholder('you@example.com')
+  const continueBtn   = (page) => page.getByRole('button', { name: 'Continue', exact: true })
+  const passwordInput = (page) => page.getByPlaceholder('At least 8 characters')
+
+  test('offers a typo fix, and accepting it fills the field', async ({ page }) => {
+    await emailInput(page).fill('jane@gamil.com')
+    await continueBtn(page).click()
+    await expect(page.getByText('Did you mean')).toBeVisible()
+    await expect(passwordInput(page)).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'jane@gmail.com' }).click()
+    await expect(emailInput(page)).toHaveValue('jane@gmail.com')
+    await continueBtn(page).click()
+    await expect(passwordInput(page)).toBeVisible()
+  })
+
+  test('continuing again keeps the address as typed', async ({ page }) => {
+    await emailInput(page).fill('jane@gamil.com')
+    await continueBtn(page).click()
+    await expect(page.getByText('Did you mean')).toBeVisible()
+    await continueBtn(page).click()
+    await expect(passwordInput(page)).toBeVisible()
+  })
+
+  test('blocks throwaway inboxes', async ({ page }) => {
+    await emailInput(page).fill('jane@mailinator.com')
+    await continueBtn(page).click()
+    await expect(page.getByText("Temporary or throwaway inboxes can't be used")).toBeVisible()
+    await continueBtn(page).click()
+    await expect(page.getByText("Temporary or throwaway inboxes can't be used")).toBeVisible()
+    await expect(passwordInput(page)).toHaveCount(0)
+  })
+
+  test('lets the user through when the check itself is down', async ({ page }) => {
+    await emailInput(page).fill('jane@down.example')
+    await continueBtn(page).click()
+    await expect(passwordInput(page)).toBeVisible()
   })
 })

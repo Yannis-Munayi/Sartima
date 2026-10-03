@@ -256,6 +256,7 @@ export default function ExploreScreen() {
             placeholder="Search aesthetics…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            data-page-search
           />
           {search && (
             <button className={styles.searchClear} onClick={() => setSearch('')}>×</button>
