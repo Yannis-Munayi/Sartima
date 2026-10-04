@@ -1,10 +1,10 @@
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
-import Anthropic from '@anthropic-ai/sdk'
 import admin from 'firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 import nodemailer from 'nodemailer'
 import { checkEmail } from './emailValidation.js'
+import { generateJson } from './ai.js'
 
 admin.initializeApp()
 
@@ -28,14 +28,6 @@ async function sendEmail(subject, text) {
     subject,
     text,
   })
-}
-
-const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001'
-
-let _anthropic = null
-function getAnthropic() {
-  if (!_anthropic) _anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  return _anthropic
 }
 
 function requireAuth(request) {
@@ -75,6 +67,13 @@ async function checkAndIncrementUsage(uid, field, limit) {
   })
 }
 
+// Give back a counter slot when the work it paid for failed upstream.
+async function refundUsage(uid, field) {
+  await admin.firestore().doc(`users/${uid}/prefs/usage`)
+    .set({ [field]: FieldValue.increment(-1) }, { merge: true })
+    .catch((err) => console.warn('refundUsage failed', field, err.message))
+}
+
 // ─── Email Validation (no auth — called pre-signup) ──────────────────────────
 
 // Syntax, throwaway domains, a real mail server, and typo suggestions — see
@@ -94,25 +93,62 @@ export const validateEmail = onCall({ timeoutSeconds: 10, cors: true, invoker: '
 
 // ─── Vision Analysis ──────────────────────────────────────────────────────────
 
+const VISION_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses', 'footwear', 'accessories']
+
+const VISION_SCHEMA = {
+  type: 'object',
+  properties: {
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name:        { type: 'string' },
+          category:    { type: 'string', enum: VISION_CATEGORIES },
+          color:       { type: 'string' },
+          description: { type: 'string' },
+          box_2d:      { type: 'array', items: { type: 'integer' } },
+        },
+        required: ['name', 'category', 'color', 'description', 'box_2d'],
+      },
+    },
+  },
+  required: ['items'],
+}
+
+// Models return [ymin, xmin, ymax, xmax] on a 0–1000 scale (Gemini's native
+// box format); the client crops with { x, y, w, h } percentages. A box that
+// makes no sense becomes null, and the client falls back to the full photo.
+function boxToBbox(box) {
+  if (!Array.isArray(box) || box.length !== 4 || box.some((n) => typeof n !== 'number')) return null
+  const [y0, x0, y1, x1] = box.map((n) => Math.min(1000, Math.max(0, n)))
+  const bbox = {
+    x: Math.round(x0 / 10),
+    y: Math.round(y0 / 10),
+    w: Math.round((x1 - x0) / 10),
+    h: Math.round((y1 - y0) / 10),
+  }
+  return bbox.w > 0 && bbox.h > 0 ? bbox : null
+}
+
 export const anthropicVision = onCall({ timeoutSeconds: 90, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
   const uid  = request.auth.uid
   const tier = getUserTier(request.auth.token)
-  await checkAndIncrementUsage(uid, 'visionUploads', TIER_LIMITS[tier].visionUploads)
 
   const { imageBase64, mimeType = 'image/jpeg' } = request.data
   if (!imageBase64) throw new HttpsError('invalid-argument', 'imageBase64 required')
 
-  const response = await getAnthropic().messages.create({
-    model:      CLAUDE_HAIKU,
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
-        {
-          type: 'text',
-          text: `Analyze this outfit photo and identify every visible clothing item and accessory being worn.
+  await checkAndIncrementUsage(uid, 'visionUploads', TIER_LIMITS[tier].visionUploads)
+
+  let parsed
+  try {
+    parsed = await generateJson({
+      image:     { base64: imageBase64, mimeType },
+      maxTokens: 1024,
+      schema:    VISION_SCHEMA,
+      budgetMs:  80_000,
+      prompt: `Analyze this outfit photo and identify every visible clothing item and accessory being worn.
 
 Return a JSON object with this exact shape — no markdown, no explanation, just raw JSON:
 {
@@ -122,32 +158,30 @@ Return a JSON object with this exact shape — no markdown, no explanation, just
       "category": "one of: tops | bottoms | outerwear | dresses | footwear | accessories",
       "color": "primary color (one word)",
       "description": "one sentence describing the piece",
-      "bbox": { "x": 10, "y": 20, "w": 30, "h": 40 }
+      "box_2d": [ymin, xmin, ymax, xmax]
     }
   ]
 }
 
-bbox is the bounding box of that specific item within the image, as integer percentages (0–100) of the image dimensions:
-- x, y = top-left corner (x is from left edge, y is from top edge)
-- w, h = width and height of the box
+box_2d is the bounding box of that specific item within the image, as integers [ymin, xmin, ymax, xmax] normalized to 0–1000 of the image height/width.
 
 Rules:
 - Include every visible item (shirt, pants, shoes, bag, hat, jewellery, etc.)
 - Use lowercase for category
 - If the full outfit is a dress or jumpsuit, list it as a single "dresses" item
+- A pair of shoes is one item
 - Maximum 10 items
-- Every item MUST include a bbox — estimate as accurately as possible`,
-        },
-      ],
-    }],
-  })
+- Every item MUST include a box_2d — estimate as accurately as possible`,
+    })
+  } catch (err) {
+    await refundUsage(uid, 'visionUploads')
+    throw err
+  }
 
-  const text = response.content[0]?.text ?? ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new HttpsError('internal', 'Malformed AI response')
-
-  const parsed = JSON.parse(jsonMatch[0])
-  return { items: parsed.items ?? [] }
+  const items = (Array.isArray(parsed.items) ? parsed.items : [])
+    .slice(0, 10)
+    .map(({ box_2d: box, ...item }) => ({ ...item, bbox: boxToBbox(box) }))
+  return { items }
 })
 
 // ─── Outfit Generation ────────────────────────────────────────────────────────
@@ -198,17 +232,17 @@ Return ONLY valid JSON, no markdown:
   "missingCategory": "category name or null"
 }`
 
-  const response = await getAnthropic().messages.create({
-    model:      CLAUDE_HAIKU,
-    max_tokens: 512,
-    messages:   [{ role: 'user', content: prompt }],
-  })
-
-  const text = response.content[0]?.text ?? ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new HttpsError('internal', 'Malformed AI response')
-
-  return JSON.parse(jsonMatch[0])
+  try {
+    return await generateJson({ prompt, maxTokens: 512, budgetMs: 50_000 })
+  } catch (err) {
+    // Free tier gets one generation a day — a failed one shouldn't use it up
+    if (tier === 'free') {
+      await admin.firestore().doc(`users/${uid}/prefs/usage`)
+        .set({ lastOutfitDate: FieldValue.delete() }, { merge: true })
+        .catch(() => {})
+    }
+    throw err
+  }
 })
 
 // ─── Gap Reasoning ────────────────────────────────────────────────────────────
@@ -243,17 +277,13 @@ Return ONLY valid JSON, no markdown:
   "reasoning": "1-2 sentences"
 }`
 
-  const response = await getAnthropic().messages.create({
-    model:      CLAUDE_HAIKU,
-    max_tokens: 200,
-    messages:   [{ role: 'user', content: prompt }],
-  })
-
-  const text = response.content[0]?.text ?? ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new HttpsError('internal', 'Malformed AI response')
-
-  const parsed = JSON.parse(jsonMatch[0])
+  let parsed
+  try {
+    parsed = await generateJson({ prompt, maxTokens: 200, budgetMs: 25_000 })
+  } catch (err) {
+    await refundUsage(uid, 'gapReasoning')
+    throw err
+  }
   return { reasoning: parsed.reasoning ?? '' }
 })
 
@@ -295,17 +325,12 @@ Return ONLY valid JSON:
   "gapItems": ["description of items to consider buying if any"]
 }`
 
-  const response = await getAnthropic().messages.create({
-    model:      CLAUDE_HAIKU,
-    max_tokens: 1500,
-    messages:   [{ role: 'user', content: prompt }],
-  })
-
-  const text = response.content[0]?.text ?? ''
-  const jsonMatch = text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) throw new HttpsError('internal', 'Malformed AI response')
-
-  return JSON.parse(jsonMatch[0])
+  try {
+    return await generateJson({ prompt, maxTokens: 1500, budgetMs: 110_000 })
+  } catch (err) {
+    await refundUsage(uid, 'tripPlans')
+    throw err
+  }
 })
 
 // ─── Weather Proxy ────────────────────────────────────────────────────────────
