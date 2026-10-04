@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { useShop } from '../context/ShopContext'
 import { useInterests } from '../context/InterestContext'
 import { useStyleAffinity } from '../hooks/useStyleAffinity'
+import { useGapPieces } from '../hooks/useGapPieces'
 import { getPieceOption, drawnPieceOptions, STARTER_CAPSULE, BUDGET_BY_ID, recommendProducts, findComplements } from '../services/wardrobeRecommend'
 import StepPieces from './wardrobeBuild/StepPieces'
 import StepBudget from './wardrobeBuild/StepBudget'
@@ -19,7 +20,9 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
   const styleAffinities = interests?.styleAffinities ?? {}
   const { affinity } = useStyleAffinity()
 
-  // Garment types the user is drawn to, offered above the basics
+  // Offered above the basics: pieces for the closet's gaps, then garment
+  // types the user is drawn to
+  const gapPieces   = useGapPieces({ affinity, interests, gender })
   const drawnPieces = useMemo(
     () => drawnPieceOptions(affinity, interests, gender),
     [affinity, interests, gender],
@@ -198,7 +201,7 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
         {activeView === 'scout' && (
           <>
             {step === 1 && (
-              <StepPieces selected={pieces} onToggle={togglePiece} drawnPieces={drawnPieces}
+              <StepPieces selected={pieces} onToggle={togglePiece} gapPieces={gapPieces} drawnPieces={drawnPieces}
                 onNotSure={useStarterCapsule} onNext={() => setStep(2)} gender={gender}
               />
             )}

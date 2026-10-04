@@ -49,7 +49,7 @@ function ItemCard({ item, selected, onClick }) {
   )
 }
 
-function AvatarHero({ avatarUrl, selectedItems, onUploadClick, uploading }) {
+function AvatarHero({ avatarUrl, selectedItems, onUploadClick, uploading, uploadError }) {
   const hasItems = selectedItems.length > 0
   const prettified = selectedItems.filter((i) => i.prettifiedUrl)
   const nonPrettified = selectedItems.filter((i) => !i.prettifiedUrl)
@@ -70,6 +70,7 @@ function AvatarHero({ avatarUrl, selectedItems, onUploadClick, uploading }) {
           <button className={styles.uploadAvatarBtn} onClick={onUploadClick} disabled={uploading}>
             {uploading ? 'Uploading...' : '+ Add Your Photo'}
           </button>
+          {uploadError && <p className={styles.avatarError}>{uploadError}</p>}
         </div>
       )}
 
@@ -211,7 +212,7 @@ export default function OutfitBoardScreen() {
   const { user }    = useAuth()
   const { closetItems } = useCloset()
   const { outfitBoards, saveOutfitBoard, deleteOutfitBoard, liked, wishlist } = useWishlist()
-  const { avatarUrl, uploadAvatar, uploading } = useAvatar()
+  const { avatarUrl, uploadAvatar, uploading, uploadError } = useAvatar()
 
   const [activeCategory, setActiveCategory] = useState('tops')
   const [selectedItems, setSelectedItems] = useState({}) // { [category]: item }
@@ -356,6 +357,7 @@ export default function OutfitBoardScreen() {
             selectedItems={selectedList}
             onUploadClick={() => fileInputRef.current?.click()}
             uploading={uploading}
+            uploadError={uploadError}
           />
 
           {/* Category tabs */}

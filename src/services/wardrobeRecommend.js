@@ -40,9 +40,11 @@ export const PIECE_BY_ID = Object.fromEntries(PIECE_OPTIONS.map((p) => [p.id, p]
 
 const TYPE_PIECE_PREFIX = 'type:'
 
-// Catalog type → the basic piece that already covers it
+// Catalog type → the basic piece it's the headline type of. Only the first
+// productType counts: "Baggy Jeans" also searches wide-leg trousers, but a
+// user drawn to wide-leg trousers should see them by name, not as jeans.
 const BASIC_PIECE_FOR_TYPE = Object.fromEntries(
-  PIECE_OPTIONS.flatMap((piece) => piece.productTypes.map((type) => [type, piece.id])),
+  PIECE_OPTIONS.map((piece) => [piece.productTypes[0], piece.id]),
 )
 
 const ROLE_FOR_PARENT = { tops: 'tops', knitwear: 'tops', bottoms: 'bottoms', footwear: 'shoes', outerwear: 'outerwear' }
@@ -114,6 +116,53 @@ export function drawnPieceOptions(affinity, interests, gender, limit = 6) {
     if (picked.length === limit) break
   }
   return picked
+}
+
+// ── Gap pieces ───────────────────────────────────────────────────────────────
+// Closet gaps (useClosetGaps) are per closet category; Shop Scout turns each
+// into one concrete piece to shop for.
+
+// Fallback basic piece per gap category — also the Home bell's deep link.
+// 'accessories' has no Shop Scout piece.
+export const GAP_PIECE_FOR_CATEGORY = {
+  tops:        'plain-tee',
+  bottoms:     'slim-jeans',
+  outerwear:   'bomber',
+  footwear:    'clean-sneakers',
+  accessories: null,
+}
+
+const PARENTS_FOR_GAP_CATEGORY = {
+  tops:      ['tops', 'knitwear'],
+  bottoms:   ['bottoms'],
+  outerwear: ['outerwear'],
+  footwear:  ['footwear'],
+}
+
+function ownsPiece(option, ownedNames) {
+  return option.productTypes.some((type) => {
+    const words = type.replace(/-/g, ' ')
+    return ownedNames.some((name) => name.includes(words))
+  })
+}
+
+/**
+ * The piece to shop for a closet gap: the best style fit within the gap's
+ * category that the closet doesn't already hold (matched on item names),
+ * else that category's basic piece. `ownedNames` are the lower-cased names
+ * of closet items in the category. Null for categories Scout doesn't cover.
+ */
+export function gapPieceOption(category, affinity, interests, gender, ownedNames = []) {
+  const parents = PARENTS_FOR_GAP_CATEGORY[category]
+  if (!parents) return null
+
+  const products  = PRODUCTS.filter((p) => matchesScoutGender(p, gender) && parents.includes(p.parentType))
+  const topValues = makeFacetRanker(products, affinity, interests)
+  for (const type of topValues ? topValues('type', 10) : []) {
+    const option = getPieceOption(BASIC_PIECE_FOR_TYPE[type] ?? `${TYPE_PIECE_PREFIX}${type}`)
+    if (option && !ownsPiece(option, ownedNames)) return option
+  }
+  return getPieceOption(GAP_PIECE_FOR_CATEGORY[category])
 }
 
 export const STARTER_CAPSULE = ['plain-tee', 'slim-jeans', 'hoodie', 'clean-sneakers', 'bomber']

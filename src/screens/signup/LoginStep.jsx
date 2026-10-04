@@ -33,8 +33,8 @@ export default function LoginStep({ onDone, onBack }) {
       await signInWithGoogle()
       onDone()
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Google sign-in failed. Please try again.')
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(friendlyError(err.code))
       }
     } finally {
       setGoogleLoading(false)

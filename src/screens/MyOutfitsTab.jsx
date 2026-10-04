@@ -57,7 +57,7 @@ export default function MyOutfitsTab() {
   const { logEntries }  = useOutfitLog(user)
   const { closetItems } = useCloset()
   const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
-  const { avatarUrl, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying } = useAvatar()
+  const { avatarUrl, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, uploadError } = useAvatar()
   const avatarFileRef = useRef(null)
 
   async function handleAvatarFile(e) {
@@ -122,6 +122,7 @@ export default function MyOutfitsTab() {
               ? 'Used for virtual try-on. Tap "Try On" on any item in My Closet or Liked.'
               : 'Upload a full-body photo to try on clothes virtually.'}
           </p>
+          {uploadError && <p className={styles.avatarCardError}>{uploadError}</p>}
           <div className={styles.avatarCardBtns}>
             <button
               className={styles.avatarCardUpload}

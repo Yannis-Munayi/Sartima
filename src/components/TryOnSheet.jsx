@@ -97,7 +97,7 @@ function ClosetPicker({ selectedIds, onSelect, onClose }) {
 
 export default function TryOnSheet({ item, onClose, onSaved }) {
   const { user }   = useAuth()
-  const { avatarUrl, avatarUpdatedAt, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, prettifyFailed } = useAvatar()
+  const { avatarUrl, avatarUpdatedAt, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, prettifyFailed, uploadError } = useAvatar()
   const { saveOutfitBoard } = useWishlist()
   const { isPro }  = useSubscription()
 
@@ -108,7 +108,6 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
   const [errorMessage, setErrorMessage]   = useState(null)
   const [outOfCredits, setOutOfCredits]   = useState(false)
   const [buyingCredits, setBuyingCredits] = useState(false)
-  const [uploadError, setUploadError]     = useState(null)
   const [saved, setSaved]                 = useState(false)
   useEscapeKey(onClose)
 
@@ -121,17 +120,10 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
     if (canTryOn && phase === 'idle') handleGenerate()
   }, [canTryOn])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
-
   async function handleAvatarFile(e) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    if (file.size > MAX_FILE_BYTES) {
-      setUploadError('Photo must be under 10 MB.')
-      return
-    }
-    setUploadError(null)
     await uploadAvatar(file)
   }
 
@@ -276,6 +268,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
               {prettifyFailed && (
                 <p className={styles.prettifyWarning}>Background removal failed — generation may be less accurate.</p>
               )}
+              {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
               <div className={styles.avatarControlBtns}>
                 <p className={styles.avatarControlLabel}>Your photo</p>
                 <div className={styles.avatarControlRow}>

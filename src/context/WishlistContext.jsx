@@ -59,9 +59,10 @@ export function WishlistProvider({ children }) {
   }, [setWishlist, wishlist, user])
 
   const removeFromWishlist = useCallback((id) => {
+    if (wishlist.some((e) => e.id === id)) recordSignal(user, 'unsave', { product: { id } })
     setWishlist((prev) => prev.filter((e) => e.id !== id))
     showToast('Removed from wishlist')
-  }, [setWishlist])
+  }, [setWishlist, wishlist, user])
 
   const isWishlisted = useCallback((id) => wishlist.some((e) => e.id === id), [wishlist])
 
@@ -78,9 +79,10 @@ export function WishlistProvider({ children }) {
   }, [setLiked, isPro, liked, limits, openPaywall, user])
 
   const removeFromLiked = useCallback((id) => {
+    if (liked.some((e) => e.id === id)) recordSignal(user, 'unlike', { product: { id } })
     setLiked((prev) => prev.filter((e) => e.id !== id))
     showToast('Removed')
-  }, [setLiked])
+  }, [setLiked, liked, user])
 
   const isLiked = useCallback((id) => liked.some((e) => e.id === id), [liked])
 

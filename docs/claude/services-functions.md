@@ -4,9 +4,9 @@
 
 ### Discovery Queue (`src/hooks/useDiscoveryQueue.js`)
 
-Core recommendation engine. Items scored by affinity weights derived from quiz responses + the persisted interest graph. Diversity injector (≤3 per brand, ≤4 per type per batch, back-filled if short) prevents repetitive results. Cold start (no likes and no aesthetic tally) is a Fisher–Yates shuffle (`src/services/shuffle.js`); subsequent batches are personalised. Queue is buffered 30 items ahead and refills when ≤8 remain.
+The discovery feed and the 40-item quiz deck. Ranking is the taste model (below); the hook keeps a local copy of the stored taste profile, applies each swipe to it immediately, and asks `rankFeed` for the next batch. Queue is buffered 30 items ahead and refills when ≤8 remain. Excluded from every batch: items queued or swiped this visit, items in the profile's recent `touches` (acted on in earlier visits), and the other gender's catalog. Cold start (no evidence, no quiz, no aesthetic tally) is a Fisher–Yates shuffle (`src/services/shuffle.js`). Closet context: catalog-backed closet items plus `useClosetGaps` deficits (only once the closet has items), plus categories the user said they lack at onboarding.
 
-Each affinity map is normalised to 0..1 against its own max before weighting (`WEIGHTS` in the hook): `aesthetic × 30` (× product styleWeight / 5), `topAesthetic × 12` extra for the user's #1 aesthetic, `type × 15`, `parentType × 6`, `brand × 8`, `color × 4`, companion bonus `+5` per recent like whose `outfitCompanions` lists the product's type (`+7.5` for its exact id), plus `0–0.5` random jitter.
+The quiz result (`styleScores`) is unchanged and separate from the model: liked items' `styleWeights` summed on top of the persisted `styleAffinities` and the onboarding warm start. `slotOf(productId)` returns the feed slot an item was served in (`exploit` / `adjacent` / `wildcard` / `cold`); `DiscoveryScreen` passes it on its `like` / `skip` signals, and `feed_swipe` analytics carries it.
 
 Exposes `seeded` (boolean — flips `true` after first seed effect) so `DiscoveryScreen` can distinguish the brief pre-seed loading frame from a genuinely empty queue. When `seeded && !currentProduct`, the screen shows an error state with a `reset()` retry button.
 
@@ -60,13 +60,29 @@ Consumed by `useHomeNotifications`, which surfaces the top gap as an item in the
 
 ### Wardrobe Recommend (`src/services/wardrobeRecommend.js`)
 
-Shop Scout's engine and data: `PIECE_OPTIONS` (wizard piece list mapping to catalog `productTypes`), `STARTER_CAPSULE`, `BUDGET_TIERS`, `PRIORITIES`, plus `recommendProducts()` (scores catalog products against selected pieces, budget tier, priorities, style scores, and the interest graph) and `findComplements()` (suggests pieces that pair with the current selection).
+Shop Scout's engine and data: `PIECE_OPTIONS` (wizard piece list mapping to catalog `productTypes`), `STARTER_CAPSULE`, `BUDGET_TIERS`, `PRIORITIES`, plus `recommendProducts()` (scores catalog products against selected pieces, budget tier, priorities, style scores, and the interest graph) and `findComplements()` (suggests pieces that pair with the current selection). Step 1 opens with "You're short on": `useGapPieces` takes the same closet gaps as the Home bell (`useClosetGaps` + `useGapSignals`, honouring bell dismissals; signed in with 3+ closet items only). `gapPieceOption()` turns each gap into the best-fitting piece in that category that isn't already in the closet (matched on item names), falling back to `GAP_PIECE_FOR_CATEGORY`. Next comes "Picked for your style": `drawnPieceOptions()` ranks catalog garment types by style fit (via `makeFacetRanker` in `styleRanking.js`). A type that is a basic piece's headline type (its first `productTypes` entry) shows as that basic piece; any other type becomes a personal piece with id `type:{catalogType}`. Always resolve piece ids with `getPieceOption(id)`, never `PIECE_BY_ID` directly, so personal pieces work in every step. `matchesScoutGender()` is the shared gender filter: catalog tags are `men`/`women`/`unisex`, and "Both" sees everything.
+
+---
+
+### Taste Model (`src/services/tasteModel.js` + `src/services/tasteProfile.js`)
+
+The discovery feed's ranking algorithm. `tasteModel.js` is pure (no React, Firestore or catalog imports); every tunable number lives in its `DEFAULTS`.
+
+- **Learning** — signed, decaying tallies stored as `{v, t}` and decayed when read (half-lives: aesthetics 60d, brand/type 90d, colour 45d, searches 3d, session layer 20min). Event strengths: like 3, save 5, closet add 6, pin 8, hide −6; a skip only gently penalises aesthetics the product is tagged 4+ on. Brand/type/colour learn a smoothed liked-per-shown rate. One counted event per type per item per day, with diminishing returns on repeats; `unlike` / `unsave` reverse a like / save.
+- **Scoring** (`scoreAll`) — cosine match of the product's style vector against the learned affinity, plus type/brand/colour rates, price fit, closet fit (gaps + `outfitCompanions`), search boost, an exploration bonus for little-seen aesthetics, near-duplicate penalty, and a 0–0.02 random tie-break. A prior (quiz result + popularity) dominates for new profiles and fades as evidence grows.
+- **Feed** (`rankFeed`) — the main items go through MMR re-ranking for variety; ~15% of each batch is reserved for adjacent-aesthetic and wildcard slots. Each entry carries a `parts` breakdown.
+
+`tasteProfile.js` is the Sartima adapter: the shared model instance (`getTasteModel()`, built on first use, ~100 ms on desktop), catalog normalisation (`priceRange` tier → representative price; flat `outfitCompanions` split into types and product ids), `applySignals()` (interestTracker signals → model events), `loadTasteProfile(interests)` (copies the stored profile, or seeds accounts that predate it from their legacy `styleAffinities`), and `tasteCloset()`. It imports the whole catalog — load it with `import()` from eager modules.
+
+Not wired yet (the model supports them): `search` events, `hide`, `worn`, view dwell time (`view` signals without `dwellMs` are ignored), and `createBatchLog()`.
 
 ---
 
 ### Interest Tracker (`src/services/interestTracker.js` + `InterestContext`)
 
-Long-term interest graph in `prefs/interests`: brand/type/style/color affinities, brand & aesthetic visit counts, recent likes (capped at 20). `recordSignal`-style writes are debounced and batched per user; reads happen once per sign-in via `InterestContext`. Used to personalise Shop Scout results, gap reasoning context, and the browse-tab ranking below.
+Long-term interest graph in `prefs/interests`: brand/type/style/color affinities, brand & aesthetic visit counts, recent likes (capped at 20), and the taste model's profile under `taste`. `recordSignal`-style writes are debounced (2s) and batched per user; reads happen once per sign-in via `InterestContext`. The legacy tallies personalise Shop Scout results, gap reasoning context, and the browse-tab ranking below; `taste` drives the discovery feed.
+
+The tallies merge as deltas. `taste` can't (it decays and compacts itself), so each flush replays the queued signals onto the stored profile inside the same transaction. A taste-model failure keeps the stored profile and still writes the tallies. `skip`, `unlike` and `unsave` feed only the taste model; `closetAdd` counts as a save in the tallies.
 
 ---
 
@@ -208,10 +224,10 @@ All third-party API calls requiring secret keys go through Firebase Gen 2 callab
 | Function | Timeout | Proxies / Model | Purpose |
 |----------|---------|-----------------|---------|
 | `validateEmail` | 10s | DNS MX lookup | Pre-signup email check (no auth): syntax, throwaway domains, mail server, typo suggestion — `functions/emailValidation.js` |
-| `anthropicVision` | 90s | Claude Haiku (vision) | Outfit photo analysis — items, categories, colours, bounding boxes. Usage-limited (`visionUploads`). |
-| `anthropicOutfit` | 60s | Claude Haiku | Daily outfit from wardrobe + weather/occasion. Free: 1/day. Returns `missingCategory` when the wardrobe can't complete an outfit. |
-| `anthropicGapReasoning` | 30s | Claude Haiku | 1–2 sentence personalised "why fill this gap" copy for the Home notification-bell gap item. Usage-limited (`gapReasoning`). |
-| `anthropicTrip` | 120s | Claude Haiku, max_tokens 1500 | Trip packing list + daily outfit plan. Usage-limited (`tripPlans`). |
+| `anthropicVision` | 90s | `generateJson` (vision) | Outfit photo analysis — items, categories, colours, bounding boxes. The model returns `box_2d` `[ymin, xmin, ymax, xmax]` on a 0–1000 scale (Gemini schema-enforced); `boxToBbox` converts to `{x,y,w,h}` percentages, or `null` if invalid. Usage-limited (`visionUploads`, refunded on AI failure). |
+| `anthropicOutfit` | 60s | `generateJson` | Daily outfit from wardrobe + weather/occasion. Free: 1/day (`lastOutfitDate` cleared again if the AI call fails). Returns `missingCategory` when the wardrobe can't complete an outfit. |
+| `anthropicGapReasoning` | 30s | `generateJson` | 1–2 sentence personalised "why fill this gap" copy for the Home notification-bell gap item. Usage-limited (`gapReasoning`, refunded on failure). |
+| `anthropicTrip` | 120s | `generateJson`, 1500-token answer | Trip packing list + daily outfit plan. Usage-limited (`tripPlans`, refunded on failure). |
 | `getWeather` | 30s | OpenWeatherMap | Geolocation weather (lat/lon → temp, condition, humidity, wind) |
 | `searchImages` | 30s | Unsplash / Pexels | Image search via `source` param: `'stock'` (default; any unknown/retired source such as `'google'` too) tries Unsplash then Pexels in one call; `'unsplash'` / `'pexels'` hit one provider. Unsplash 403/429 → skipped for 15 min. In-memory result cache (6h TTL, 2,000 entries; cache hits skip the rate limit). In-process token bucket per uid, or per IP for guests (burst 60, refill 1/s). No auth required. |
 | `proxyImage` | 30s | Fetch (CORS bypass) | Server-side image proxy for allowed hosts (pexels, googleusercontent, unsplash, gstatic thumbnails) → base64 data URL |
@@ -226,7 +242,10 @@ All third-party API calls requiring secret keys go through Firebase Gen 2 callab
 | `enforceBillingDowngrades` | scheduled | Admin SDK | Runs **every 60 minutes**. Applies `billingDowngrades/{uid}` entries whose `downgradeAt` has passed → claim `free`. |
 | `deleteAccount` | 120s | Stripe + Admin SDK | Full account deletion in retry-safe order: cancel Stripe subscription → delete Storage (`wardrobe/`, `avatar/`) → `recursiveDelete` the Firestore user tree → delete the Auth user last. |
 
-**Model constant:** All Anthropic functions read from the `CLAUDE_HAIKU` constant in `functions/index.js` (`claude-haiku-4-5-20251001`). Change it there to upgrade every Claude call at once.
+**AI provider (`functions/ai.js`):** All four AI callables (still named `anthropic*` so the client never changes) call `generateJson({ prompt, image?, maxTokens, schema?, budgetMs })`, which returns parsed JSON. Provider failures throw `HttpsError('unavailable')`, and unparseable replies throw `'internal'`. The provider is Gemini when `GEMINI_API_KEY` is set, otherwise Claude; `AI_PROVIDER=gemini|anthropic` forces one.
+- **Gemini** goes over plain REST with no SDK. It tries `GEMINI_MODELS` in order (`gemini-3.8-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash`), moving to the next on 429/5xx/timeouts within `budgetMs`, because the free tier frequently returns 503 "high demand". Thinking is kept low, since thinking tokens count against `maxOutputTokens`. `responseMimeType: application/json`, plus `responseJsonSchema` when a schema is given.
+- **Claude** uses the `CLAUDE_HAIKU` constant (`claude-haiku-4-5-20251001`).
+- **Free-tier caveat:** Google may use free-tier Gemini content to improve its products. The privacy policy (`legalContent.js`) discloses this; revisit it if you move to a paid tier.
 
 **Email helper:** `sendEmail(subject, text)` uses nodemailer + `GMAIL_APP_PASSWORD`; silently skipped when the env var is absent.
 

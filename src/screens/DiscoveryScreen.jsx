@@ -22,7 +22,7 @@ export default function DiscoveryScreen() {
   const quizMode  = state.quizMode ?? false
 
   const {
-    currentProduct, remaining, onLike, onSkip, onPrev,
+    currentProduct, remaining, onLike, onSkip, onPrev, slotOf,
     styleScores, isQuizFinished, quizProgress, quizQueue, quizLikedItems,
     seeded, reset,
   } = useDiscoveryQueue(gender, quizMode, state.quizWarmStart)
@@ -62,13 +62,14 @@ export default function DiscoveryScreen() {
       return
     }
     onLike(product)
-    recordSignal(user, 'like', { product })
+    recordSignal(user, 'like', { product, slot: slotOf(product.id) })
     setLikedCount((c) => c + 1)
     setSwipedCount((c) => c + 1)
   }
 
   function handleSkip(product) {
     onSkip(product)
+    recordSignal(user, 'skip', { product, slot: slotOf(product.id) })
     setSwipedCount((c) => c + 1)
   }
 

@@ -238,6 +238,18 @@
   text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
 
+/* Sits on the photo's dark overlay, like .pieceName */
+.pieceNote {
+  display: block;
+  margin-top: var(--space-0-5);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: #fff;
+  opacity: 0.8;
+  line-height: var(--leading-snug);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
 .pieceCheck {
   position: absolute;
   top: 9px;

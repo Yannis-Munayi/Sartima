@@ -41,7 +41,7 @@
 | `users/{uid}/prefs/savedAesthetics` | `{ ids: string[] }` | client |
 | `users/{uid}/prefs/shopList` | `{ items: ShopItem[] }` | client |
 | `users/{uid}/prefs/outfitLog` | `{ entries: OutfitLogEntry[] }` (`{ date, occasion, itemIds, ... }`) | client |
-| `users/{uid}/prefs/interests` | Interest graph: `brandAffinities`, `typeAffinities`, `styleAffinities`, `colorAffinities`, `brandVisits`, `aestheticVisits`, `recentLikes[≤20]` | client (debounced) |
+| `users/{uid}/prefs/interests` | Interest graph: `brandAffinities`, `typeAffinities`, `styleAffinities`, `colorAffinities`, `brandVisits`, `aestheticVisits`, `recentLikes[≤20]`, `taste` (taste-model profile, ~45 KB max — see `tasteModel.js` `createProfile`) | client (debounced) |
 | `users/{uid}/prefs/notifications` | `{ fcmTokens[], reminderTime 'HH:MM', timezone, enabled }` — read by the scheduler Function via collection-group query | client (+ Function prunes stale tokens) |
 | `users/{uid}/prefs/gapSignals` | `{ [category]: { count, lastSeenAt } }` — missingCategory hits from outfit generation | client |
 | `users/{uid}/prefs/gapDismissals` | `{ [category]: dismissedAtMs }` — 14-day snooze | client |

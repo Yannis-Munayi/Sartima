@@ -126,7 +126,7 @@ Slide-up sheet from ProfileScreen containing every user setting:
 | `TryOnSheet.jsx` | Virtual try-on UI. Upload person photo + select garments → `generateTryOn` Function → Replicate IDM-VTON result. Pro-gated. |
 | `CatalogSearchSheet.jsx` | Catalog product search over stock photos (Unsplash, Pexels fallback) via `stockPhotos.js`. |
 | `ClosetItemSheet.jsx` | Detail view + edit sheet for closet items (incl. wear count / last-worn). |
-| `WardrobeUpload.jsx` | Photo upload for closet. Claude Vision analyzes image, detects clothing items. Gated by `visionUploads` limit. |
+| `WardrobeUpload.jsx` | Photo upload for closet. Photos are normalized on pick (`imageNormalize.js`), then AI vision (`anthropicVision`) analyzes the image and detects clothing items. Gated by `visionUploads` limit. |
 | `CareSymbolPicker.jsx` | Garment care symbol selector. |
 | `WeatherWidget.jsx` | Current weather (temp + condition) via geolocation. |
 | `Toast.jsx` | Context-driven dismissable toast notification system. |

@@ -92,6 +92,15 @@
   height: auto;
 }
 
+.avatarError {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  margin: 0;
+  text-align: center;
+  padding: 0 var(--space-8);
+  line-height: var(--leading-normal);
+}
+
 .avatarHint {
   font-size: var(--text-sm);
   color: var(--text-faint);

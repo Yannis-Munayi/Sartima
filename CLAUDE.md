@@ -4,18 +4,18 @@ Guidance for Claude Code when working in this repository.
 
 ## Project Overview
 
-**Sartima** is a fashion discovery and personal styling PWA (mobile-first, `sartima.ca`; formerly StyleLab). It gives users a vocabulary for their own style through an aesthetic quiz (swipe-based, 51 aesthetics), then delivers a personalised discovery feed, AI outfit generation, a digital closet with wardrobe intelligence, brand discovery, and trip packing — powered by Claude Haiku, a ~7,500-product catalog, and a Stripe-billed Pro tier.
+**Sartima** is a fashion discovery and personal styling PWA (mobile-first, `sartima.ca`; formerly StyleLab). It gives users a vocabulary for their own style through an aesthetic quiz (swipe-based, 51 aesthetics), then delivers a personalised discovery feed, AI outfit generation, a digital closet with wardrobe intelligence, brand discovery, and trip packing — powered by Gemini Flash (free tier; Claude Haiku as a switchable alternative), a ~7,500-product catalog, and a Stripe-billed Pro tier.
 
 **Target audience:** Gen Z / younger Millennials (16–30) engaged with aesthetics culture on TikTok/Pinterest. Gender filter throughout. Age floor 16+ (affirmed at signup).
 
 **Core features:**
 1. **Style Quiz** — Swipe like/skip on clothing items; computes affinity scores across 51 aesthetics. Finite 40-item quiz or infinite free discovery mode. The Discover tab is hideable from Settings.
 2. **Onboarding** — 4-step post-signup wizard (occupation → brands → referral → email). `onboardingComplete: true` saved to Firestore. Signup captures ToS/Privacy consent + 16+ age affirmation.
-3. **Discovery Feed** — Infinite product feed scored by normalised affinities (`aesthetic × 30` + `top aesthetic × 12`, `type × 15`, `parentType × 6`, `brand × 8`, `color × 4`). Diversity-enforced, 30-item buffer.
+3. **Discovery Feed** — Infinite product feed ranked by the taste model (`src/services/tasteModel.js`): decaying signed affinities, cosine style match, MMR variety, ~15% exploration slots. Profile stored in `prefs/interests.taste`; 30-item buffer.
 4. **Aesthetics** — 51 aesthetic profiles (minimalist, preppy, Y2K, gorpcore, dark academia…), each with Story/Items/Looks/Guide sub-tabs. Pinnable (free: 3).
 5. **Brands** — Brands tab with 190 brand profiles (`src/data/brands.js`): story, lines, collections, shoppable catalog products. Visits feed the interest graph.
 6. **Search** — Client-side text search over the full catalog with gender filter and photo↔gradient toggle.
-7. **Digital Closet** — Upload photos or search catalog; Claude Vision extracts items. Optional WASM background removal ("prettify"). Wear tracking (`timesWorn`/`lastWorn`) on logged outfits. Free: 15 items.
+7. **Digital Closet** — Upload photos or search catalog; AI vision extracts items. Photos are downscaled/re-encoded client-side first (`src/services/imageNormalize.js`). Optional WASM background removal ("prettify"). Wear tracking (`timesWorn`/`lastWorn`) on logged outfits. Free: 15 items.
 8. **Outfits Tab** — 8 sub-tabs: closet, liked, Shop Scout (**default**), AI outfit generation, outfit boards + log, calendar (Pro), trip packer (Pro), laundry (Pro).
 9. **Shop Scout** — Guided capsule wardrobe wizard: select pieces + budget + priorities → curated catalog recommendations personalised by the interest graph. Deep-linkable with a pre-selected piece (`wardrobe-builder:{pieceId}`).
 10. **Wardrobe Intelligence** — Home notification-bell gap item (closet diffed against `capsuleBaseline.js` + AI outfit `missingCategory` signals, AI-written copy, 14-day dismissal), monthly Wardrobe Recap card (most-worn, closet ghosts, repeat rate), interest graph (`prefs/interests`).
@@ -52,14 +52,14 @@ firebase emulators:start --only functions # Local function emulator
 | Frontend | React 18 + Vite 8, CSS Modules, PWA (`vite-plugin-pwa` 1 / Workbox); responsive (mobile bottom TabBar / desktop Sidebar) |
 | Auth & DB | Firebase Auth (email/password + Google), Firestore, Storage, Analytics (consent-gated), Cloud Messaging |
 | Billing | Stripe — Checkout, Billing Portal, webhook → custom claims (via Firebase Functions) |
-| AI | Claude Haiku — vision, outfit gen, trip planning, gap reasoning (via Firebase Functions proxy) |
+| AI | Gemini Flash (free tier, with model fallback) or Claude Haiku — vision, outfit gen, trip planning, gap reasoning (via Firebase Functions proxy, `functions/ai.js`) |
 | Try-On | Replicate IDM-VTON (via `generateTryOn` Firebase Function) |
 | Weather | OpenWeatherMap (via `getWeather` Firebase Function) |
 | Images | Unsplash → Pexels fallback (via `searchImages` Firebase Function, `source: 'stock'`) |
 | Background removal | `@imgly/background-removal` WASM (client-side, lazy) |
 | Error tracking | Sentry (`@sentry/react`) — production only, DSN from `VITE_SENTRY_DSN` |
 
-**No Anthropic or Stripe SDK on the client.** All Claude calls go through Firebase Functions. The model is controlled by the `CLAUDE_HAIKU` constant in `functions/index.js` — change it there to upgrade all four Claude functions at once.
+**No AI or Stripe SDK on the client.** All AI calls go through Firebase Functions, and every one goes through `generateJson()` in `functions/ai.js`. It uses Gemini when `GEMINI_API_KEY` is set (override with `AI_PROVIDER=gemini|anthropic`). Gemini models are tried in order from `GEMINI_MODELS`, falling through on 429/5xx, since the free tier often reports "high demand"; Claude uses the `CLAUDE_HAIKU` constant. The callables keep their `anthropic*` names so the client is provider-agnostic.
 
 ---
 
@@ -73,7 +73,9 @@ firebase emulators:start --only functions # Local function emulator
 - `VITE_HUB_ORIGINS` — optional, comma-separated: extra addresses of the owner's Jarvis hub (e.g. its Tailscale phone address) allowed to call the hub bridge. Localhost is always allowed.
 
 **Server (`functions/.env`) — never sent to the browser:**
-- `ANTHROPIC_API_KEY`
+- `GEMINI_API_KEY` — Google AI Studio key (free tier); when set, Gemini powers all AI functions
+- `ANTHROPIC_API_KEY` — used when `GEMINI_API_KEY` is absent or `AI_PROVIDER=anthropic`
+- `AI_PROVIDER` — optional, `gemini` or `anthropic`, to force a provider
 - `OPENWEATHER_KEY`
 - `PEXELS_KEY`
 - `GOOGLE_API_KEY` + `GOOGLE_CX` — only used by `scripts/backfill-images.js` (offline catalog tooling); not used at runtime

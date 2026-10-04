@@ -97,7 +97,10 @@ export function friendlyError(code) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
     case 'auth/invalid-credential':    return 'Incorrect email or password.'
-    default:                           return 'Something went wrong. Please try again.'
+    case 'auth/popup-blocked':         return 'Your browser blocked the sign-in popup. Allow popups for this site and try again.'
+    case 'auth/unauthorized-domain':   return 'Google sign-in isn’t enabled for this web address yet.'
+    case 'auth/operation-not-allowed': return 'Google sign-in is currently unavailable.'
+    default:                           return `Something went wrong. Please try again. (${code ?? 'unknown'})`
   }
 }
 
@@ -190,8 +193,8 @@ export default function AuthScreen() {
       // which records ToS/age consent before the app becomes usable.
       dispatch({ type: 'AUTH_FLOW_DONE' })
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError('Google sign-in failed. Please try again.')
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(friendlyError(err.code))
       }
     } finally {
       setGoogleLoading(false)

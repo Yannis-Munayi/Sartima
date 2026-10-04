@@ -86,8 +86,11 @@ export function ClosetProvider({ children }) {
     // carry styleWeights; for photo uploads the aesthetics are inferred from
     // the item's name/description. Closet `type` is the source flag
     // ('uploaded'), not a garment type, so pass only garment fields through.
-    const recordSave = (styleWeights) => recordSignal(user, 'save', {
+    // The id lets the taste model recognise catalog pieces (uploads have
+    // generated ids it ignores).
+    const recordSave = (styleWeights) => recordSignal(user, 'closetAdd', {
       product: {
+        id:         newItem.id,
         styleWeights,
         brand:      newItem.brand,
         itemType:   newItem.itemType,

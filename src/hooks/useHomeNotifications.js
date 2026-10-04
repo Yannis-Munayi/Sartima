@@ -7,17 +7,7 @@ import { useGapSignals } from './useGapSignals'
 import { getGapReasoning } from '../services/gapReasoning'
 import { dismissGap, loadDismissedCategories } from '../services/gapDismissals'
 import { trackEvent } from '../services/firebase'
-
-// Representative Shop Scout piece per gap category — deep-links the CTA into
-// a pre-filled wizard step instead of a blank browse. 'accessories' has no
-// Shop Scout piece today, so it falls back to the unfiltered wizard entry.
-const GAP_CATEGORY_TO_PIECE = {
-  tops:        'plain-tee',
-  bottoms:     'slim-jeans',
-  outerwear:   'bomber',
-  footwear:    'clean-sneakers',
-  accessories: null,
-}
+import { GAP_PIECE_FOR_CATEGORY } from '../services/wardrobeRecommend'
 
 const MIN_CLOSET_FOR_OUTFITS = 3
 
@@ -89,7 +79,9 @@ export function useHomeNotifications({ navigate, panelOpen }) {
       body:  reasoning || `${topGap.owned} of ${topGap.target} — round out your closet`,
       onOpen: () => {
         trackEvent('gap_card_shop_clicked', { category: topGap.category })
-        const pieceId = GAP_CATEGORY_TO_PIECE[topGap.category]
+        // Representative Shop Scout piece deep-links into a pre-filled wizard
+        // step; categories without one open the unfiltered wizard
+        const pieceId = GAP_PIECE_FOR_CATEGORY[topGap.category]
         navigate(pieceId ? `wardrobe-builder:${pieceId}` : 'wardrobe-builder')
       },
       onDismiss: () => {

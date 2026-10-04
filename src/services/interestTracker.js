@@ -35,18 +35,42 @@ function mergeAffinities(base = {}, delta = {}) {
   return result
 }
 
+// A taste-model failure must not cost the legacy tallies the rest of the app
+// reads, so on error the stored profile is kept and the signals dropped.
+// Rebuilt from the stored copy on every call, so a transaction retry never
+// applies the same signals twice.
+function nextTaste(taste, current, signals, uid) {
+  if (!taste) return current.taste
+  try {
+    return taste.applySignals(taste.loadTasteProfile(current), signals)
+  } catch (err) {
+    logError(SERVICE, 'Failed to apply taste signals', { error: err, uid })
+    return current.taste
+  }
+}
+
 // Core write — reads current doc, applies delta, writes back. Runs in a
 // transaction so concurrent flushes (second tab, another device) compose
-// instead of last-writer-wins clobbering the whole document.
+// instead of last-writer-wins clobbering the whole document. The taste
+// profile is rebuilt by replaying the queued signals onto the stored one —
+// it can't be merged as a delta because it decays and compacts itself.
 async function flushDelta(uid, delta) {
   try {
     const ref = getInterestsRef(uid)
+    // Dynamic import keeps the catalog-heavy taste model out of eager bundles
+    const taste = delta.signals.length > 0
+      ? await import('./tasteProfile').catch((error) => {
+        logError(SERVICE, 'Failed to load taste model', { error, uid })
+        return null
+      })
+      : null
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(ref)
       const current = snap.exists() ? snap.data() : {}
 
       tx.set(ref, {
-        brandAffinities:      mergeAffinities(current.brandAffinities,      delta.brandAffinities),
+        taste:                nextTaste(taste, current, delta.signals, uid),
+        brandAffinities:     mergeAffinities(current.brandAffinities,      delta.brandAffinities),
         typeAffinities:       mergeAffinities(current.typeAffinities,       delta.typeAffinities),
         parentTypeAffinities: mergeAffinities(current.parentTypeAffinities, delta.parentTypeAffinities),
         styleAffinities:      mergeAffinities(current.styleAffinities,      delta.styleAffinities),
@@ -78,6 +102,8 @@ function initDelta() {
     brandVisits:          {},
     aestheticVisits:      {},
     recentLikes:          [],
+    // Raw signals for the taste model (see tasteProfile.js), replayed in order
+    signals:              [],
   }
 }
 
@@ -100,6 +126,7 @@ function queueDelta(uid, patch) {
   if (patch.brandVisits)          d.brandVisits          = mergeAffinities(d.brandVisits,          patch.brandVisits)
   if (patch.aestheticVisits)      d.aestheticVisits      = mergeAffinities(d.aestheticVisits,      patch.aestheticVisits)
   if (patch.recentLikes)          d.recentLikes          = [...patch.recentLikes, ...d.recentLikes].slice(0, 20)
+  if (patch.signal)               d.signals.push(patch.signal)
 
   // Debounce: reset 2-second window on every new signal
   clearTimeout(pendingFlush[uid])
@@ -115,11 +142,31 @@ const ENTRY_KIND_FLAGS = new Set(['product', 'item', 'photo', 'uploaded'])
 // try-on) award full aesthetic points; a passing product view awards a
 // fraction so browsing can't outweigh deliberate actions.
 const PRODUCT_SIGNALS = {
-  like:  { style: 1,    meta: 1,    recentLike: true },
-  save:  { style: 1,    meta: 0.5 },
-  shop:  { style: 1,    meta: 0.5 },
-  tryOn: { style: 1,    meta: 0.5 },
-  view:  { style: 0.25, meta: 0.25 },
+  like:      { style: 1,    meta: 1,    recentLike: true },
+  save:      { style: 1,    meta: 0.5 },
+  closetAdd: { style: 1,    meta: 0.5 },
+  shop:      { style: 1,    meta: 0.5 },
+  tryOn:     { style: 1,    meta: 0.5 },
+  view:      { style: 0.25, meta: 0.25 },
+}
+
+// Product signals only the taste model learns from — the legacy tallies
+// never counted skips or removals, and their readers expect that
+const TASTE_ONLY_SIGNALS = new Set(['skip', 'unlike', 'unsave'])
+
+// The taste-model copy of a signal: product signals keep only the catalog
+// id (plus feed slot / view dwell when present); the rest pass through.
+function tasteSignal(signalType, ts, payload, productId) {
+  return {
+    type:        signalType,
+    ts,
+    productId,
+    slot:        payload.slot,
+    dwellMs:     payload.dwellMs,
+    aestheticId: payload.aestheticId,
+    brandName:   payload.brandName,
+    styleScores: payload.styleScores,
+  }
 }
 
 // Some surfaces persist stripped product entries without styleWeights (e.g.
@@ -159,7 +206,10 @@ function productDelta(product, strength) {
  *
  * signalType:
  *   'like'          — user liked a product (discovery swipe or heart anywhere)
- *   'save'          — user saved a product (wishlist add, closet/wardrobe add)
+ *   'save'          — user saved a product to the wishlist
+ *   'closetAdd'     — user added a piece to their closet / wardrobe
+ *   'skip'          — user skipped a product in the discovery feed (taste model only)
+ *   'unlike' / 'unsave' — user removed a product from liked / wishlist (taste model only)
  *   'shop'          — user clicked out to shop for a product
  *   'tryOn'         — user virtually tried a product on
  *   'view'          — user opened a product's detail sheet
@@ -171,7 +221,8 @@ function productDelta(product, strength) {
  *                     distinct from 'brandVisit', which only tallies brand-page visits)
  *   'quizComplete'  — quiz finished; bulk style affinity write
  *
- * payload for product signals:  { product: { brand, type|itemType, color, parentType, styleWeights } }
+ * payload for product signals:  { product: { id, brand, type|itemType, color, parentType, styleWeights },
+ *                                  slot? (discovery feed slot), dwellMs? (view) }
  * payload for 'brandVisit':     { brandId }
  * payload for 'brandFavorite':  { brandName }
  * payload for 'aestheticVisit' / 'aestheticPin': { aestheticId }
@@ -181,6 +232,14 @@ export function recordSignal(user, signalType, payload) {
   if (!user?.uid) return
 
   const uid = user.uid
+  // Stamped now, not at flush, so the taste model replays signals in order
+  const ts  = Date.now()
+
+  if (TASTE_ONLY_SIGNALS.has(signalType)) {
+    const id = payload.product?.id
+    if (id) queueDelta(uid, { signal: tasteSignal(signalType, ts, payload, id) })
+    return
+  }
 
   const strength = PRODUCT_SIGNALS[signalType]
   if (strength) {
@@ -188,8 +247,9 @@ export function recordSignal(user, signalType, payload) {
     if (!product) return
     resolveProduct(product).then((resolved) => {
       const patch = productDelta(resolved, strength)
-      if (Object.keys(patch).length === 0) return
       if (strength.recentLike && resolved.id) patch.recentLikes = [resolved.id]
+      if (resolved.id) patch.signal = tasteSignal(signalType, ts, payload, resolved.id)
+      if (Object.keys(patch).length === 0) return
       queueDelta(uid, patch)
     })
     return
@@ -214,19 +274,28 @@ export function recordSignal(user, signalType, payload) {
     case 'aestheticPin': {
       const { aestheticId } = payload
       if (!aestheticId) return
-      queueDelta(uid, { styleAffinities: { [aestheticId]: 5 } })
+      queueDelta(uid, {
+        styleAffinities: { [aestheticId]: 5 },
+        signal:          tasteSignal(signalType, ts, payload),
+      })
       break
     }
     case 'brandFavorite': {
       const { brandName } = payload
       if (!brandName) return
-      queueDelta(uid, { brandAffinities: { [brandName]: 5 } })
+      queueDelta(uid, {
+        brandAffinities: { [brandName]: 5 },
+        signal:          tasteSignal(signalType, ts, payload),
+      })
       break
     }
     case 'quizComplete': {
       const { styleScores } = payload
       if (!styleScores) return
-      queueDelta(uid, { styleAffinities: styleScores })
+      queueDelta(uid, {
+        styleAffinities: styleScores,
+        signal:          tasteSignal(signalType, ts, payload),
+      })
       break
     }
     default:

@@ -51,4 +51,9 @@ test('completing the style quiz from the home CTA reaches the results screen', a
   await page.getByRole('button', { name: /^Search/ }).first().click()
   await expect(page.getByText('Picked from your style profile', { exact: false })).toBeVisible()
   await expect(page.getByText('Pieces', { exact: true })).toBeVisible()
+
+  // Shop Scout leads with garment types picked for the profile, then basics
+  await page.getByRole('button', { name: /^Outfits/ }).first().click()
+  await expect(page.getByRole('heading', { name: 'Picked for your style' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Wardrobe basics' })).toBeVisible()
 })

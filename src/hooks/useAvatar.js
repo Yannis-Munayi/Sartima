@@ -4,6 +4,8 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { db, storage } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { prettifyImage } from '../services/prettify'
+import { normalizeForUpload, UnsupportedImageError } from '../services/imageNormalize'
+import { logError } from '../services/logger'
 
 export function useAvatar() {
   const { user } = useAuth()
@@ -13,6 +15,7 @@ export function useAvatar() {
   const [uploading, setUploading]   = useState(false)
   const [prettifying, setPrettifying] = useState(false)
   const [prettifyFailed, setPrettifyFailed] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
 
   useEffect(() => {
     if (!user) {
@@ -32,12 +35,15 @@ export function useAvatar() {
       .catch(() => {})
   }, [user?.uid])
 
-  async function uploadAvatar(file) {
-    if (!user || !file) return null
+  // Never throws — failures land in `uploadError` for the caller to display.
+  async function uploadAvatar(picked) {
+    if (!user || !picked) return null
     setUploading(true)
     setPrettifyFailed(false)
+    setUploadError(null)
     try {
-      // 1. Upload original
+      // 1. Upload original (downscaled + re-encoded so Storage rules and the try-on model accept it)
+      const file = await normalizeForUpload(picked)
       const origRef = ref(storage, `users/${user.uid}/avatar/photo.jpg`)
       await uploadBytes(origRef, file)
       const url = await getDownloadURL(origRef)
@@ -71,8 +77,17 @@ export function useAvatar() {
       }
 
       return url
+    } catch (err) {
+      if (err instanceof UnsupportedImageError) {
+        setUploadError(err.message)
+      } else {
+        logError('useAvatar', 'avatar upload failed', { error: err, code: err?.code })
+        setUploadError('Photo upload failed. Check your connection and try again.')
+      }
+      return null
     } finally {
       setUploading(false)
+      setPrettifying(false)
     }
   }
 
@@ -101,5 +116,5 @@ export function useAvatar() {
   // Display the background-removed version when available
   const displayUrl = avatarPrettifiedUrl ?? avatarUrl
 
-  return { avatarUrl, avatarPrettifiedUrl, avatarUpdatedAt, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, prettifyFailed }
+  return { avatarUrl, avatarPrettifiedUrl, avatarUpdatedAt, displayUrl, uploadAvatar, deleteAvatar, uploading, prettifying, prettifyFailed, uploadError }
 }

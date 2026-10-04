@@ -1,8 +1,8 @@
 // Bump LEGAL_VERSION whenever PRIVACY_POLICY or TERMS_OF_SERVICE copy changes
 // materially — App.jsx compares a signed-in user's stored `legalVersion`
 // against this value to decide whether to show the re-consent banner.
-export const LEGAL_VERSION    = '2026-07-12'
-export const LEGAL_UPDATED_AT = 'July 12, 2026'
+export const LEGAL_VERSION    = '2026-10-03'
+export const LEGAL_UPDATED_AT = 'October 3, 2026'
 export const MINIMUM_AGE      = 16
 
 export const LEGAL_DRAFT_NOTICE =
@@ -54,7 +54,8 @@ export const PRIVACY_POLICY = {
       heading: 'Who we share it with',
       paragraphs: [
         'We do not sell your personal information. We share it only with the service providers below, each of which processes it solely to provide the specific feature described:',
-        'Anthropic (Claude) — receives closet/outfit photos and your closet inventory data to power AI vision scanning, outfit generation, and trip planning.',
+        'Google (Gemini API) — receives closet/outfit photos and your closet inventory data to power AI vision scanning, outfit generation, wardrobe suggestions, and trip planning. Sartima currently uses Google\'s free tier of the Gemini API, under which Google may use the content it receives to improve its products, and human reviewers may read it. Do not upload photos you would not want processed this way.',
+        'Anthropic (Claude) — may be used instead of Google to provide the same AI features, receiving the same data.',
         'Replicate — receives your avatar photo and garment images to generate Virtual Try-On renders.',
         'Stripe — receives your email address and billing details to process payments and subscriptions.',
         'Firebase / Google Cloud — provides the hosting, authentication, database, and file-storage infrastructure that all of the data above runs on, and (if you accept analytics) collects app-usage analytics.',

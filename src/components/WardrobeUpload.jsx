@@ -3,6 +3,13 @@ import { useSubscription } from '../context/SubscriptionContext'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '../services/firebase'
 import { analyzeOutfit } from '../services/claudeVision'
+import {
+  normalizeForUpload,
+  normalizeForVision,
+  extensionFor,
+  UnsupportedImageError,
+} from '../services/imageNormalize'
+import { logError } from '../services/logger'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import CareSymbolPicker from './CareSymbolPicker'
 import {
@@ -22,18 +29,8 @@ const CATEGORIES = [
   { id: 'accessories', label: 'Accessories',emoji: '👜' },
 ]
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result.split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 async function uploadImage(file, uid, folder) {
-  const ext      = file.name.split('.').pop() || 'jpg'
-  const path     = `users/${uid}/wardrobe/${folder}/${Date.now()}.${ext}`
+  const path     = `users/${uid}/wardrobe/${folder}/${Date.now()}.${extensionFor(file)}`
   const storageRef = ref(storage, path)
   await uploadBytes(storageRef, file)
   return getDownloadURL(storageRef)
@@ -44,6 +41,18 @@ async function uploadBlob(blob, uid, filename) {
   const storageRef = ref(storage, path)
   await uploadBytes(storageRef, blob)
   return getDownloadURL(storageRef)
+}
+
+// Decode + downscale a picked photo so Storage rules and the vision model accept it.
+// Returns null (with a user-facing message) when the format can't be read.
+async function prepareFile(f, setError) {
+  try {
+    return await normalizeForUpload(f)
+  } catch (err) {
+    if (!(err instanceof UnsupportedImageError)) logError('WardrobeUpload', 'normalize failed', { error: err })
+    setError(err instanceof UnsupportedImageError ? err.message : "Couldn't read that photo. Try a different one.")
+    return null
+  }
 }
 
 // Crop a bounding-box region from an image File, with padding around the box.
@@ -93,19 +102,26 @@ function AddPiecePane({ uid, onSave, onClose }) {
   const [material,     setMaterial]     = useState('')
   const [careSymbols,  setCareSymbols]  = useState([])
   const [saving,       setSaving]       = useState(false)
+  const [preparing,    setPreparing]    = useState(false)
   const [error,        setError]        = useState(null)
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const f = e.target.files?.[0]
+    e.target.value = ''
     if (!f) return
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
     setError(null)
+    setPreparing(true)
+    const prepared = await prepareFile(f, setError)
+    setPreparing(false)
+    if (!prepared) return
+    setFile(prepared)
+    setPreview(URL.createObjectURL(prepared))
   }
 
   async function handleSave() {
     if (!name.trim()) { setError('Give this piece a name.'); return }
     setSaving(true)
+    setError(null)
     try {
       const imageUrl = file ? await uploadImage(file, uid, 'pieces') : null
       await onSave({
@@ -124,6 +140,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
       })
       onClose()
     } catch (err) {
+      logError('WardrobeUpload', 'piece upload failed', { error: err, code: err?.code })
       setError('Upload failed. Check your connection and try again.')
     } finally {
       setSaving(false)
@@ -135,10 +152,12 @@ function AddPiecePane({ uid, onSave, onClose }) {
       <h3 className={styles.paneTitle}>Add a Piece</h3>
 
       {/* Photo picker */}
-      <button className={styles.photoZone} onClick={() => fileRef.current?.click()}>
+      <button className={styles.photoZone} onClick={() => fileRef.current?.click()} disabled={preparing}>
         {preview
           ? <img src={preview} alt="preview" className={styles.photoPreview} />
-          : <span className={styles.photoPlaceholder}><Icon name="camera" size={20} /> Tap to choose photo</span>
+          : <span className={styles.photoPlaceholder}>
+              <Icon name="camera" size={20} /> {preparing ? 'Preparing photo…' : 'Tap to choose photo'}
+            </span>
         }
       </button>
       <input
@@ -201,7 +220,7 @@ function AddPiecePane({ uid, onSave, onClose }) {
 
       {error && <p className={styles.error}>{error}</p>}
 
-      <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
+      <button className={styles.saveBtn} onClick={handleSave} disabled={saving || preparing}>
         {saving ? 'Saving…' : 'Save to Wardrobe'}
       </button>
     </div>
@@ -218,15 +237,21 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
   const [cooldown,  setCooldown]  = useState(false)
   const [items,     setItems]     = useState(null) // detected items
   const [saving,    setSaving]    = useState(false)
+  const [preparing, setPreparing] = useState(false)
   const [error,     setError]     = useState(null)
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const f = e.target.files?.[0]
+    e.target.value = ''
     if (!f) return
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
     setItems(null)
     setError(null)
+    setPreparing(true)
+    const prepared = await prepareFile(f, setError)
+    setPreparing(false)
+    if (!prepared) return
+    setFile(prepared)
+    setPreview(URL.createObjectURL(prepared))
   }
 
   async function handleAnalyze() {
@@ -236,15 +261,19 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
     setCooldown(true)
     setError(null)
     try {
-      const base64   = await fileToBase64(file)
-      const detected = await analyzeOutfit(base64, file.type)
+      const { base64, mimeType } = await normalizeForVision(file)
+      const detected = await analyzeOutfit(base64, mimeType)
       setItems(detected.map((item) => ({ ...item, include: true })))
     } catch (err) {
-      setError(
-        err.message?.includes('API key') || err.message?.includes('auth')
-          ? 'AI analysis unavailable — check your VITE_ANTHROPIC_API_KEY.'
-          : 'Analysis failed. Please try again.'
-      )
+      const code = err?.code ?? ''
+      if (code === 'functions/resource-exhausted') {
+        openPaywall('visionUploads')
+      } else if (code === 'functions/unavailable') {
+        setError('AI analysis is temporarily unavailable. Please try again later.')
+      } else {
+        logError('WardrobeUpload', 'outfit analysis failed', { error: err, code })
+        setError('Analysis failed. Please try again.')
+      }
     } finally {
       setAnalyzing(false)
       setTimeout(() => setCooldown(false), 15_000)
@@ -285,7 +314,8 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
         })
       }
       onClose()
-    } catch {
+    } catch (err) {
+      logError('WardrobeUpload', 'outfit save failed', { error: err, code: err?.code })
       setError('Save failed. Check your connection and try again.')
     } finally {
       setSaving(false)
@@ -303,12 +333,14 @@ function AnalyzeOutfitPane({ uid, onSave, onClose }) {
   return (
     <div className={styles.pane}>
       <h3 className={styles.paneTitle}>Analyze an Outfit</h3>
-      <p className={styles.paneSub}>Upload a photo and Claude AI will identify every item you're wearing.</p>
+      <p className={styles.paneSub}>Upload a photo and AI will identify every item you're wearing.</p>
 
-      <button className={styles.photoZone} onClick={() => fileRef.current?.click()}>
+      <button className={styles.photoZone} onClick={() => fileRef.current?.click()} disabled={preparing}>
         {preview
           ? <img src={preview} alt="outfit preview" className={styles.photoPreview} />
-          : <span className={styles.photoPlaceholder}><Icon name="camera" size={20} /> Tap to choose outfit photo</span>
+          : <span className={styles.photoPlaceholder}>
+              <Icon name="camera" size={20} /> {preparing ? 'Preparing photo…' : 'Tap to choose outfit photo'}
+            </span>
         }
       </button>
       <input
