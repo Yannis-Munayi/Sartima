@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useCloset } from '../context/ClosetContext'
-import { CAPSULE_BASELINE } from '../data/capsuleBaseline'
+import { computeClosetGaps } from '../services/closetGaps'
 
 // Cheap, instant "what's missing" signal — no AI call needed. Diffs the
 // closet's per-category counts against CAPSULE_BASELINE and ranks the
@@ -10,18 +10,9 @@ import { CAPSULE_BASELINE } from '../data/capsuleBaseline'
 export function useClosetGaps(extraSeverity = {}) {
   const { closetByCategory } = useCloset()
 
-  return useMemo(() => {
-    const gaps = Object.entries(CAPSULE_BASELINE)
-      .map(([category, target]) => {
-        const owned  = closetByCategory[category]?.length ?? 0
-        const bump   = extraSeverity[category] ?? 0
-        const deficit = Math.max(0, target - owned) + bump
-        return { category, owned, target, deficit }
-      })
-      .filter((g) => g.deficit > 0)
-      .sort((a, b) => b.deficit - a.deficit)
-
-    return gaps
+  return useMemo(
+    () => computeClosetGaps(closetByCategory, extraSeverity),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closetByCategory, JSON.stringify(extraSeverity)])
+    [closetByCategory, JSON.stringify(extraSeverity)],
+  )
 }

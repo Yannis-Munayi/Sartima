@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react'
 import { initCrashReporter } from './services/crashReporter'
+import './services/appInstall' // attaches the beforeinstallprompt listener before first render
 import './index.css'
 import './styles/aestheticThemes.css'
 import App from './App.jsx'

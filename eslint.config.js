@@ -17,6 +17,7 @@ export default [
       'playwright-report',
       'test-results',
       'public/firebase-messaging-sw.js',
+      'qa/results',
     ],
   },
   {
@@ -45,11 +46,21 @@ export default [
     },
   },
   {
-    files: ['functions/**/*.js', 'scripts/**/*.js', 'e2e/**/*.{js,ts}', '*.config.{js,ts}'],
+    files: ['functions/**/*.js', 'scripts/**/*.js', 'e2e/**/*.{js,ts}', 'tests/**/*.js', '*.config.{js,ts}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
       globals: globals.node,
+    },
+    rules: commonRules,
+  },
+  {
+    // QA suite + dashboard server: Node, plus browser code inside page.evaluate()
+    files: ['qa/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: { ...globals.node, ...globals.browser },
     },
     rules: commonRules,
   },

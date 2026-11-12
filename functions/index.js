@@ -190,6 +190,11 @@ export const anthropicOutfit = onCall({ timeoutSeconds: 60, cors: true, invoker:
   requireAuth(request)
   const uid  = request.auth.uid
   const tier = getUserTier(request.auth.token)
+
+  // Validate before the daily gate, so a malformed request can't use it up
+  const { items, weather, occasion, dateStr, occupation } = request.data
+  if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
+
   if (tier === 'free') {
     const todayStr = new Date().toISOString().slice(0, 10)
     const ref      = admin.firestore().doc(`users/${uid}/prefs/usage`)
@@ -203,10 +208,7 @@ export const anthropicOutfit = onCall({ timeoutSeconds: 60, cors: true, invoker:
     })
   }
 
-  const { items, weather, occasion, dateStr, occupation } = request.data
-  if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
-
-  const weatherLine    = weather ? `Weather: ${weather.description}, ${weather.temp}°C, condition: ${weather.condition}.` : ''
+  const weatherLine   = weather ? `Weather: ${weather.description}, ${weather.temp}°C, condition: ${weather.condition}.` : ''
   const occupationLine = occupation ? `User occupation: ${occupation}.` : ''
 
   const prompt = `You are a personal stylist. Select 2–4 items from this wardrobe JSON to form a complete, cohesive outfit.
@@ -254,10 +256,11 @@ export const anthropicGapReasoning = onCall({ timeoutSeconds: 30, cors: true, in
   requireAuth(request)
   const uid  = request.auth.uid
   const tier = getUserTier(request.auth.token)
-  await checkAndIncrementUsage(uid, 'gapReasoning', TIER_LIMITS[tier].gapReasoning)
 
   const { category, owned, target, closetSummary, topStyles } = request.data
   if (!category) throw new HttpsError('invalid-argument', 'category is required')
+
+  await checkAndIncrementUsage(uid, 'gapReasoning', TIER_LIMITS[tier].gapReasoning)
 
   const styleLine = Array.isArray(topStyles) && topStyles.length
     ? `Their strongest aesthetics are: ${topStyles.join(', ')}.`
@@ -293,11 +296,12 @@ export const anthropicTrip = onCall({ timeoutSeconds: 120, cors: true, invoker: 
   requireAuth(request)
   const uid  = request.auth.uid
   const tier = getUserTier(request.auth.token)
-  await checkAndIncrementUsage(uid, 'tripPlans', TIER_LIMITS[tier].tripPlans)
 
   const { destination, nights, items, gender } = request.data
   if (!destination) throw new HttpsError('invalid-argument', 'destination required')
   if (!items || items.length < 3) throw new HttpsError('invalid-argument', 'Need at least 3 items')
+
+  await checkAndIncrementUsage(uid, 'tripPlans', TIER_LIMITS[tier].tripPlans)
 
   const prompt = `You are a personal travel stylist. Create a packing list and daily outfit plan for a ${nights}-night trip to ${destination}.
 
@@ -597,30 +601,10 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
 
   const tier = getUserTier(request.auth.token)
   if (tier === 'free') throw new HttpsError('permission-denied', 'limit_tryOns')
-  if (tier !== 'admin') {
-    // Pro: drain monthly allowance first, then purchased credits
-    const ref    = admin.firestore().doc(`users/${uid}/prefs/usage`)
-    const period = new Date().toISOString().slice(0, 7)
-    await admin.firestore().runTransaction(async (tx) => {
-      const snap         = await tx.get(ref)
-      const data         = snap.exists ? snap.data() : {}
-      const isNew        = data.periodKey !== period
-      const monthlyUsed  = isNew ? 0 : (data.tryOns ?? 0)
-      const credits      = data.tryOnCredits ?? 0
-      if (monthlyUsed < TIER_LIMITS.pro.tryOns) {
-        tx.set(ref,
-          isNew ? { periodKey: period, tryOns: 1 } : { tryOns: FieldValue.increment(1) },
-          { merge: true })
-      } else if (credits > 0) {
-        tx.set(ref, { tryOnCredits: FieldValue.increment(-1) }, { merge: true })
-      } else {
-        throw new HttpsError('resource-exhausted', 'limit_tryOns')
-      }
-    })
-  }
 
   const { personImageUrl, garments } = request.data
 
+  // Validate everything before charging, so a bad request costs nothing
   if (typeof personImageUrl !== 'string' || !personImageUrl.startsWith('https://')) {
     throw new HttpsError('invalid-argument', 'personImageUrl must be a valid https URL')
   }
@@ -630,8 +614,6 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
   if (garments.length > 3) {
     throw new HttpsError('invalid-argument', 'Maximum 3 pieces per try-on')
   }
-
-  // Validate all garments upfront — fail fast before spending any Replicate quota
   for (const g of garments) {
     if (typeof g.garmentImageUrl !== 'string' || !g.garmentImageUrl.startsWith('https://')) {
       throw new HttpsError('invalid-argument', 'Each garment must have a valid https garmentImageUrl')
@@ -644,6 +626,32 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
   const apiKey = process.env.REPLICATE_API_KEY
   if (!apiKey) throw new HttpsError('internal', 'Try-On service not configured — add REPLICATE_API_KEY')
 
+  // Pro: drain monthly allowance first, then purchased credits. Remember which
+  // one paid, so a failed generation can give it back.
+  const ref = admin.firestore().doc(`users/${uid}/prefs/usage`)
+  let charged = null // 'monthly' | 'credit' | null (admin)
+  if (tier !== 'admin') {
+    const period = new Date().toISOString().slice(0, 7)
+    charged = await admin.firestore().runTransaction(async (tx) => {
+      const snap         = await tx.get(ref)
+      const data         = snap.exists ? snap.data() : {}
+      const isNew        = data.periodKey !== period
+      const monthlyUsed  = isNew ? 0 : (data.tryOns ?? 0)
+      const credits      = data.tryOnCredits ?? 0
+      if (monthlyUsed < TIER_LIMITS.pro.tryOns) {
+        tx.set(ref,
+          isNew ? { periodKey: period, tryOns: 1 } : { tryOns: FieldValue.increment(1) },
+          { merge: true })
+        return 'monthly'
+      }
+      if (credits > 0) {
+        tx.set(ref, { tryOnCredits: FieldValue.increment(-1) }, { merge: true })
+        return 'credit'
+      }
+      throw new HttpsError('resource-exhausted', 'limit_tryOns')
+    })
+  }
+
   // Sort by layer order, then chain: each output becomes the next person image
   const sorted = [...garments].sort((a, b) => {
     const ai = VTON_LAYER_ORDER.indexOf(a.category)
@@ -651,12 +659,20 @@ export const generateTryOn = onCall({ timeoutSeconds: 300, cors: true, invoker: 
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
 
-  let currentPersonUrl = personImageUrl
-  for (const garment of sorted) {
-    currentPersonUrl = await runOnePrediction(apiKey, currentPersonUrl, garment)
+  try {
+    let currentPersonUrl = personImageUrl
+    for (const garment of sorted) {
+      currentPersonUrl = await runOnePrediction(apiKey, currentPersonUrl, garment)
+    }
+    return { outputUrl: currentPersonUrl }
+  } catch (err) {
+    if (charged === 'monthly') await refundUsage(uid, 'tryOns')
+    if (charged === 'credit') {
+      await ref.set({ tryOnCredits: FieldValue.increment(1) }, { merge: true })
+        .catch((e) => console.warn('try-on credit refund failed', e.message))
+    }
+    throw err
   }
-
-  return { outputUrl: currentPersonUrl }
 })
 
 // ─── User Feedback ────────────────────────────────────────────────────────────

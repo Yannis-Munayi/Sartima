@@ -12,6 +12,7 @@ import WardrobeBuilderCTA from '../components/home/WardrobeBuilderCTA'
 import GuideLauncher from '../components/home/GuideLauncher'
 import DailyOutfitPreview from '../components/home/DailyOutfitPreview'
 import BrandsForYou from '../components/home/BrandsForYou'
+import GetTheApp from '../components/GetTheApp'
 import styles from './HomeScreen.module.css'
 
 const SEASON_PICKS = {
@@ -138,6 +139,9 @@ export default function HomeScreen({ startGuide }) {
         <button className={styles.exploreAllBtn} onClick={() => navigate('explore')}>
           Browse all {Object.keys(STYLES).length} aesthetics →
         </button>
+
+        {/* Native app downloads — hidden when already running as the app */}
+        <GetTheApp />
       </div>
     </div>
   )

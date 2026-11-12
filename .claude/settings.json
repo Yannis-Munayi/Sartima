@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/jtmsb/OneDrive/Desktop/Coding/Personal fun codes/Jarvis/Sartima/src/data/**)",
+      "Bash(bc)",
+      "Bash(\"/c/Program Files/Android/Android Studio/jbr/bin/java\" -version)",
+      "Bash(mkdir -p \"C:/Users/jtmsb/AppData/Local/Temp/claude/056e4dd3a460f503/ec950238-180d-409f-951e-9764a1137816/scratchpad/bw\")",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(curl -sI https://sartima.ca/manifest.webmanifest)",
+      "Bash(curl -s https://sartima.ca/manifest.webmanifest)",
+      "Bash(curl -sI https://sartima.ca/.well-known/assetlinks.json)",
+      "Bash(curl -sI https://www.sartima.ca/manifest.webmanifest)",
+      "Bash(curl -s https://www.sartima.ca/manifest.webmanifest)",
+      "Bash(curl -sI https://www.sartima.ca/.well-known/assetlinks.json)",
+      "Bash(curl -sI https://www.sartima.ca/icon-512.png)",
+      "Bash(sed -i \"s/twa.themeColorDark.constructor\\('#0C0A08'\\)/require\\('color'\\)\\('#0C0A08'\\)/\" gen.cjs)",
+      "Bash(rm -rf \"c:/Users/jtmsb/OneDrive/Desktop/Coding/Personal fun codes/Jarvis/Sartima/android\")",
+      "Bash(node gen.cjs \"c:/Users/jtmsb/OneDrive/Desktop/Coding/Personal fun codes/Jarvis/Sartima/android\")",
+      "Bash(export JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\")",
+      "Bash(./gradlew assembleRelease --no-daemon)",
+      "Bash(npm run *)",
+      "Bash(grep -vE \"^\\\\s*$\")",
+      "PowerShell(git status --short; Get-ChildItem src -Recurse -File | Where-Object { $_.LastWriteTime -gt \\(Get-Date\\).AddMinutes\\(-40\\) } | Select-Object FullName, LastWriteTime | Format-Table -AutoSize | Out-String -Width 200)",
+      "PowerShell(Get-Date -Format T; npx playwright test e2e/auth.spec.js e2e/paywall.spec.js --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|flaky|\\\\d+\\\\\\) \\\\[|Error:\" | Select-Object -Last 20; \"===== QA =====\"; $env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/07-brands.spec.js qa/tests/08-search.spec.js qa/tests/11-shop-scout.spec.js qa/tests/12-pro.spec.js qa/tests/16-backend.spec.js --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|flaky|\\\\d+\\\\\\) \\\\[|Error:\" | Select-Object -Last 30)",
+      "PowerShell($r = Get-Content qa/results/local/report.json -Raw | ConvertFrom-Json; $out=@\\(\\); function walk\\($s\\){ foreach\\($sp in $s.specs\\){ foreach\\($t in $sp.tests\\){ $st=$t.results[-1].status; if\\($st -in 'failed','timedOut'\\){ $script:out += \"$\\($sp.file\\)|$\\($sp.title\\)\" } } }; foreach\\($c in $s.suites\\){ walk $c } }; foreach\\($s in $r.suites\\){ walk $s }; $out | Sort-Object -Unique)",
+      "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/01-signup.spec.js qa/tests/02-onboarding.spec.js qa/tests/03-quiz.spec.js qa/tests/04-discover.spec.js qa/tests/05-home.spec.js qa/tests/06-aesthetics.spec.js qa/tests/09-closet.spec.js qa/tests/10-outfits.spec.js qa/tests/13-billing.spec.js qa/tests/14-settings.spec.js qa/tests/15-platform.spec.js --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|flaky|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 40)",
+      "Bash(npx vite *)",
+      "PowerShell(Get-ChildItem qa/results/local/artifacts -Directory | Where-Object { $_.Name -match '05-home-5-Home-guest-The-hero|04-discover|01-signup-1-Sign-up-login--8a383' } | ForEach-Object { \"#### $\\($_.Name\\)\"; Get-Content \\(Join-Path $_.FullName 'error-context.md'\\) -TotalCount 60 })",
+      "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/05-home.spec.js qa/tests/04-discover.spec.js qa/tests/01-signup.spec.js -g \"carousel|Build your digital|Fresh Looks|Hide the Swipe|consent step\" --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|flaky|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 20)",
+      "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/01-signup.spec.js -g \"consent step\" --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 10)"
+    ]
+  }
+}

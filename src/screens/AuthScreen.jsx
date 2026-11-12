@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import LegalModal from '../components/LegalModal'
+import GetTheApp from '../components/GetTheApp'
 import { PRIVACY_POLICY, TERMS_OF_SERVICE, LEGAL_VERSION } from '../data/legalContent'
 import styles from './AuthScreen.module.css'
 import Icon from '../components/Icon'
@@ -497,6 +498,8 @@ export default function AuthScreen() {
         <span aria-hidden="true"> · </span>
         <button type="button" className={styles.legalLink} onClick={() => setLegalDoc('privacy')}>Privacy</button>
       </div>
+
+      <GetTheApp variant="inline" />
 
       <LegalModal
         doc={legalDoc === 'terms' ? TERMS_OF_SERVICE : legalDoc === 'privacy' ? PRIVACY_POLICY : null}

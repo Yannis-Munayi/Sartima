@@ -11,7 +11,14 @@
     "lint:catalog": "node scripts/lint-catalog.js",
     "expand-brand": "node scripts/expand-brand.js",
     "backfill-images": "node scripts/backfill-images.js",
-    "test:e2e": "playwright test"
+    "test": "vitest run --project unit --project functions",
+    "test:watch": "vitest --project unit --project functions",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-sartima \"vitest run --project rules\"",
+    "test:e2e": "playwright test",
+    "qa": "node qa/server.js",
+    "qa:local": "node qa/run.js local",
+    "qa:live": "node qa/run.js live",
+    "android:build": "node scripts/build-android.js"
   },
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",
@@ -23,6 +30,7 @@
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@playwright/test": "^1.61.1",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^10.7.0",
@@ -31,6 +39,7 @@
     "globals": "^17.7.0",
     "playwright": "^1.60.0",
     "vite": "^8.0.16",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.12"
   }
 }

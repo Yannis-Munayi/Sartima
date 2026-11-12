@@ -54,16 +54,30 @@ export function useHashRouting(activeTab, navigate) {
   }, [])
 
   // Reflect tab changes into the hash so every screen has a shareable URL
-  // and back/forward walk the tab history
+  // and back/forward walk the tab history.
+  //
+  // A deep link present on load owns the hash until navigation has moved off
+  // the initial tab (or the link pointed at the initial tab). Tracking that
+  // explicitly, instead of a "first run" flag, keeps it correct when
+  // StrictMode runs this effect twice before the deep link is applied.
+  const initialTabRef = useRef(activeTab)
+  const pendingRef    = useRef(undefined)
+  if (pendingRef.current === undefined) pendingRef.current = hashToTab(window.location.hash)
   const syncedOnce = useRef(false)
   useEffect(() => {
+    if (pendingRef.current) {
+      if (activeTab !== pendingRef.current && activeTab === initialTabRef.current) return
+      pendingRef.current = null
+    }
     const next = tabToHash(activeTab)
-    if (window.location.hash === next) return
-    if (!syncedOnce.current) {
+    if (window.location.hash === next) {
       syncedOnce.current = true
-      // First render: a pending deep link owns the hash; otherwise normalise
-      // without adding a history entry
-      if (hashToTab(window.location.hash)) return
+      return
+    }
+    if (!syncedOnce.current) {
+      // First write: normalise (or swap a deep link for the tab it resolved
+      // to) without adding a history entry
+      syncedOnce.current = true
       window.history.replaceState(null, '', next)
       return
     }

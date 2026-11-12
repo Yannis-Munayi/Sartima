@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ca.sartima.app",
+      "sha256_cert_fingerprints": [
+        "1E:58:58:28:BB:49:1F:09:51:D5:0A:47:71:84:D3:E8:06:CA:EA:AE:8D:8F:80:72:F7:B3:83:F9:23:2A:4C:07"
+      ]
+    }
+  }
+]

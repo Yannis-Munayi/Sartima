@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sartima QA</title>
+<link rel="icon" id="favicon" href="data:,">
+<style>
+  :root {
+    --bg: #F7F4EE; --surface: #FFFFFF; --surface-2: #F1ECE3; --border: #E4DDD1; --border-strong: #CFC5B5;
+    --text: #1F1B16; --text-muted: #6B6257; --text-faint: #9A9085;
+    --accent: #8B6840; --accent-soft: #EFE5D6;
+    --pass: #2F7D4F; --pass-soft: #E3F1E8; --fail: #B93A2A; --fail-soft: #F8E3DF;
+    --flaky: #A86B12; --flaky-soft: #F6EAD3; --setup: #6B6F76; --setup-soft: #ECECEA;
+    --manual: #2F6297; --manual-soft: #E2EBF5; --none: #B9B2A8;
+    --shadow: 0 1px 2px rgba(31,27,22,.06), 0 4px 16px rgba(31,27,22,.05);
+    --radius: 10px; --radius-sm: 6px;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12100D; --surface: #1B1814; --surface-2: #231F1A; --border: #2E2924; --border-strong: #3D3730;
+      --text: #EFE9E0; --text-muted: #A89E92; --text-faint: #786F64;
+      --accent: #B8956A; --accent-soft: #2C251C;
+      --pass: #5CB884; --pass-soft: #19291F; --fail: #E2705E; --fail-soft: #331B17;
+      --flaky: #D9A24B; --flaky-soft: #30261A; --setup: #9B9FA6; --setup-soft: #24242A;
+      --manual: #7DA9DB; --manual-soft: #1A2533; --none: #4A443D;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12100D; --surface: #1B1814; --surface-2: #231F1A; --border: #2E2924; --border-strong: #3D3730;
+    --text: #EFE9E0; --text-muted: #A89E92; --text-faint: #786F64;
+    --accent: #B8956A; --accent-soft: #2C251C;
+    --pass: #5CB884; --pass-soft: #19291F; --fail: #E2705E; --fail-soft: #331B17;
+    --flaky: #D9A24B; --flaky-soft: #30261A; --setup: #9B9FA6; --setup-soft: #24242A;
+    --manual: #7DA9DB; --manual-soft: #1A2533; --none: #4A443D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.25);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* Header */
+  header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .head { max-width: 1120px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 8px; margin-right: auto; }
+  .brand b { font-size: 15px; letter-spacing: .14em; text-transform: uppercase; }
+  .brand span { color: var(--text-muted); font-size: 13px; }
+  .tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 999px; border: 1px solid var(--border); }
+  .tab { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-muted); white-space: nowrap; }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  .tab small { font-size: 12px; color: var(--text-faint); }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; height: 32px; padding: 0 12px; cursor: pointer; color: var(--text-muted); }
+  .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* Dots & pills */
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; background: var(--none); }
+  .s-passed { --c: var(--pass); --cs: var(--pass-soft); }
+  .s-failed { --c: var(--fail); --cs: var(--fail-soft); }
+  .s-flaky { --c: var(--flaky); --cs: var(--flaky-soft); }
+  .s-setup, .s-skipped, .s-interrupted { --c: var(--setup); --cs: var(--setup-soft); }
+  .s-manual { --c: var(--manual); --cs: var(--manual-soft); }
+  .s-none { --c: var(--none); --cs: var(--surface-2); }
+  .dot[class*="s-"] { background: var(--c); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--cs); color: var(--c); white-space: nowrap; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; color: var(--text-muted); border: 1px solid var(--border); white-space: nowrap; }
+  .tag.warn { color: var(--flaky); border-color: color-mix(in srgb, var(--flaky) 40%, transparent); }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .overview { margin-top: 20px; padding: 20px; display: grid; gap: 16px; grid-template-columns: 1fr auto; }
+  .headline { display: flex; align-items: center; gap: 12px; }
+  .headline .big { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+  .headline .dot { width: 12px; height: 12px; }
+  .meta { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+  .counts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+  .count { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; min-width: 104px; background: var(--surface); cursor: pointer; text-align: left; }
+  .count:hover { border-color: var(--border-strong); }
+  .count b { display: block; font-size: 20px; line-height: 1.2; color: var(--c, var(--text)); }
+  .count span { font-size: 12px; color: var(--text-muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-end; }
+  .btn { border: 1px solid var(--border-strong); background: var(--surface); border-radius: var(--radius-sm); padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 13px; }
+  .btn:hover:not(:disabled) { border-color: var(--text-muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #FFF; }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+  .btn.danger { color: var(--fail); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .controls { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; color: var(--text-muted); font-size: 13px; }
+  .controls label { display: flex; align-items: center; gap: 8px; }
+  select, input[type="search"], input[type="text"] { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 6px 8px; }
+  .trend { display: flex; align-items: flex-end; gap: 3px; height: 34px; margin-left: auto; }
+  .trend i { width: 7px; border-radius: 2px; background: var(--c); opacity: .9; display: block; }
+  .trend-label { font-size: 12px; color: var(--text-faint); }
+
+  /* Running */
+  .running { margin-top: 12px; padding: 14px 16px; }
+  .bar { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 10px 0 8px; }
+  .bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+  .log { font: 12px/1.5 var(--mono); background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 12px; max-height: 240px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: var(--text-muted); margin: 0; }
+
+  /* Sections */
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-muted); margin: 28px 0 10px; font-weight: 700; }
+  .attention .row { border-left: 3px solid var(--fail); }
+  .row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--border); cursor: pointer; background: transparent; border-right: 0; border-bottom: 0; border-left-color: transparent; width: 100%; text-align: left; }
+  .row:first-child { border-top: 0; }
+  .row:hover { background: var(--surface-2); }
+  .row .title { font-weight: 500; }
+  .row .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 760px; }
+  .row .right { display: flex; gap: 6px; align-items: center; color: var(--text-faint); font-size: 12px; }
+  .row.selected { background: var(--accent-soft); }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 28px 0 12px; }
+  .chip { border: 1px solid var(--border); background: var(--surface); padding: 5px 12px; border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--text-muted); }
+  .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+  .filters input { margin-left: auto; min-width: 220px; }
+  details.section { margin-bottom: 10px; overflow: hidden; }
+  details.section > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  details.section > summary::-webkit-details-marker { display: none; }
+  details.section > summary .chev { transition: transform .15s; color: var(--text-faint); }
+  details.section[open] > summary .chev { transform: rotate(90deg); }
+  details.section > summary .mini { margin-left: auto; display: flex; gap: 6px; }
+  .group-label { padding: 8px 14px 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); border-top: 1px solid var(--border); }
+  .empty { padding: 28px; text-align: center; color: var(--text-muted); }
+
+  /* Drawer */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.28); z-index: 40; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--surface); border-left: 1px solid var(--border); z-index: 41; overflow: auto; box-shadow: -8px 0 32px rgba(0,0,0,.12); }
+  .drawer-head { position: sticky; top: 0; background: var(--surface); padding: 16px 20px 12px; border-bottom: 1px solid var(--border); z-index: 1; }
+  .drawer-head h3 { margin: 8px 0 4px; font-size: 17px; line-height: 1.35; }
+  .drawer-body { padding: 16px 20px 40px; display: grid; gap: 18px; }
+  .close { position: absolute; top: 12px; right: 12px; }
+  .callout { border-radius: var(--radius-sm); padding: 10px 12px; background: var(--cs); color: var(--text); border-left: 3px solid var(--c); font-size: 13px; }
+  .callout b { color: var(--c); }
+  pre.code { font: 12px/1.55 var(--mono); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin: 0; max-height: 360px; }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-faint); margin-bottom: 6px; font-weight: 700; }
+  .shot { width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
+  .trail { display: flex; gap: 3px; flex-wrap: wrap; }
+  .trail i { width: 14px; height: 14px; border-radius: 3px; background: var(--c); display: block; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  details.more > summary { cursor: pointer; color: var(--text-muted); font-size: 13px; }
+
+  /* Setup dialog */
+  .modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 50; padding: 16px; }
+  .modal .card { width: min(560px, 100%); padding: 20px; max-height: 90vh; overflow: auto; }
+  .modal h3 { margin: 0 0 4px; }
+  .check { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); align-items: start; }
+  .check:first-of-type { border-top: 0; }
+  .check small { color: var(--text-muted); display: block; }
+  code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  @media (max-width: 720px) {
+    .overview { grid-template-columns: 1fr; }
+    .actions { justify-content: flex-start; }
+    .trend { margin-left: 0; }
+    .filters input { margin-left: 0; width: 100%; min-width: 0; }
+    .row { grid-template-columns: auto minmax(0, 1fr); }
+    .row .right { grid-column: 2; flex-wrap: wrap; }
+    .row .sub { max-width: none; white-space: normal; }
+    .head { gap: 10px; }
+    .tabs { max-width: 100%; overflow-x: auto; }
+    details.section > summary { flex-wrap: wrap; }
+    details.section > summary .mini { margin-left: 22px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="brand"><b>Sartima</b><span>QA monitor</span></div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <button class="icon-btn" id="setupBtn" title="What's configured">Setup</button>
+    <button class="icon-btn" id="themeBtn" title="Switch theme">Theme</button>
+  </div>
+</header>
+<main class="wrap" id="app"><div class="empty">Loading…</div></main>
+<div id="drawerRoot"></div>
+<div id="modalRoot"></div>
+
+<script>
+const STATUS = {
+  passed: 'Passing', failed: 'Failing', flaky: 'Flaky', setup: 'Needs setup',
+  manual: 'Manual check', skipped: 'Skipped', interrupted: 'Interrupted', none: 'Not run',
+}
+const FILTERS = [
+  ['all', 'All'], ['failed', 'Failing'], ['passed', 'Passing'], ['flaky', 'Flaky'],
+  ['setup', 'Needs setup'], ['manual', 'Manual'],
+]
+const SCHEDULES = [[0, 'Off'], [60, 'Every hour'], [360, 'Every 6 hours'], [1440, 'Daily']]
+
+let state = null
+let logLines = []
+const store = {
+  get(k, d) { try { return localStorage.getItem('qa_' + k) ?? d } catch { return d } },
+  set(k, v) { try { localStorage.setItem('qa_' + k, v) } catch { /* private mode */ } },
+}
+const ui = {
+  tab: store.get('tab', 'local'),
+  filter: 'all',
+  query: '',
+  selected: null,
+  openSections: new Set(),
+  logOpen: false,
+}
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const $ = (sel, root = document) => root.querySelector(sel)
+
+function ago(iso) {
+  if (!iso) return 'never'
+  const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000)
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`
+  return `${Math.floor(s / 86400)} d ago`
+}
+function dur(ms) {
+  if (!ms && ms !== 0) return ''
+  if (ms < 1000) return `${ms} ms`
+  const s = Math.round(ms / 1000)
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`
+}
+const statusKey = (s) => s ?? 'none'
+
+async function api(path, body) {
+  const res = await fetch(path, body ? {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-QA-Dashboard': '1' }, body: JSON.stringify(body),
+  } : undefined)
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(json.error || res.statusText)
+  return json
+}
+
+async function refresh() {
+  try {
+    state = await api('/api/state')
+    render()
+  } catch (err) {
+    $('#app').innerHTML = `<div class="card empty" style="margin-top:24px">Can't reach the QA server (${esc(err.message)}). Is <code>npm run qa</code> still running?</div>`
+  }
+}
+
+// ── Rendering ────────────────────────────────────────────────────────────────
+
+function renderTabs() {
+  $('#tabs').innerHTML = ['local', 'live'].map((t) => {
+    const ts = state.targets[t]
+    const failing = ts.counts.failed
+    const isRunning = state.running?.target === t
+    const cls = isRunning ? 's-manual' : failing ? 's-failed' : ts.lastRun ? 's-passed' : 's-none'
+    const name = t === 'local' ? 'Local' : 'Live'
+    const where = t === 'local' ? (state.settings.localMode === 'preview' ? 'localhost:4173' : 'localhost:5173') : (ts.url || '').replace(/^https?:\/\//, '')
+    return `<button class="tab" role="tab" aria-selected="${ui.tab === t}" data-tab="${t}">
+      <span class="dot ${cls}"></span>${name} <small>${esc(where)}</small>${failing ? `<span class="pill s-failed">${failing}</span>` : ''}
+    </button>`
+  }).join('')
+}
+
+function headline(ts, run) {
+  if (run) return { cls: 's-manual', text: 'Running…' }
+  if (!ts.lastRun) return { cls: 's-none', text: 'Not run yet' }
+  const c = ts.counts
+  if (c.failed) return { cls: 's-failed', text: `${c.failed} failing` }
+  if (c.flaky) return { cls: 's-flaky', text: `All passing, ${c.flaky} flaky` }
+  return { cls: 's-passed', text: `All ${c.passed} automated checks passing` }
+}
+
+function render() {
+  if (!state) return
+  renderTabs()
+  const ts = state.targets[ui.tab]
+  const run = state.running?.target === ui.tab ? state.running : null
+  const otherRun = state.running && !run ? state.running : null
+  const h = headline(ts, run)
+  const c = ts.counts
+  const lr = ts.lastRun
+
+  const trendBars = ts.history.slice(-24).map((r) => {
+    const auto = r.counts.passed + r.counts.failed + r.counts.flaky
+    const rate = auto ? (r.counts.passed + r.counts.flaky) / auto : 0
+    const cls = r.counts.failed ? 's-failed' : r.counts.flaky ? 's-flaky' : 's-passed'
+    return `<i class="${cls}" style="height:${Math.max(4, Math.round(rate * 34))}px" title="${esc(new Date(r.startedAt).toLocaleString())} · ${r.counts.passed} passed, ${r.counts.failed} failed${r.scope !== 'all' ? ' (partial run)' : ''}"></i>`
+  }).join('')
+
+  const countChip = (key, label) => `<button class="count s-${key}" data-filter="${key}"><b>${c[key] ?? 0}</b><span>${label}</span></button>`
+  const failing = ts.tests.filter((t) => t.status === 'failed' || t.status === 'flaky')
+
+  const schedule = state.settings.schedule?.[ui.tab] ?? 0
+  const app = $('#app')
+  app.innerHTML = `
+    <section class="card overview">
+      <div>
+        <div class="headline"><span class="dot ${h.cls}"></span><span class="big">${esc(h.text)}</span></div>
+        <div class="meta">${lr
+          ? `Last run ${ago(lr.finishedAt)} · took ${dur(Date.parse(lr.finishedAt) - Date.parse(lr.startedAt))} · ${lr.trigger === 'schedule' ? 'scheduled' : 'started by you'}${lr.scope !== 'all' ? ' · partial re-run' : ''}${lr.stopped ? ' · stopped early' : ''}`
+          : `Press Run all to check ${ui.tab === 'local' ? 'your local copy of Sartima' : esc(ts.url || 'the live site')}.`}</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" data-act="run" ${state.running ? 'disabled' : ''}>Run all</button>
+        <button class="btn" data-act="rerun-failed" ${state.running || !failing.length ? 'disabled' : ''}>Re-run failing</button>
+        ${run ? '<button class="btn danger" data-act="stop">Stop</button>' : ''}
+      </div>
+      <div class="counts">
+        ${countChip('failed', 'Failing')}${countChip('passed', 'Passing')}${countChip('flaky', 'Flaky')}
+        ${countChip('setup', 'Needs setup')}${countChip('manual', 'Manual checks')}
+      </div>
+      <div class="controls">
+        <label>Re-run automatically
+          <select data-act="schedule">${SCHEDULES.map(([v, l]) => `<option value="${v}" ${Number(schedule) === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        </label>
+        ${ui.tab === 'local' ? `<label>Test against
+          <select data-act="localMode">
+            <option value="dev" ${state.settings.localMode === 'dev' ? 'selected' : ''}>Dev server (npm run dev)</option>
+            <option value="preview" ${state.settings.localMode === 'preview' ? 'selected' : ''}>Production build (build + preview)</option>
+          </select></label>` : ''}
+        ${trendBars ? `<span class="trend-label">Last ${Math.min(24, ts.history.length)} runs</span><div class="trend">${trendBars}</div>` : ''}
+      </div>
+    </section>
+
+    ${otherRun ? `<div class="card running"><span class="meta">A ${otherRun.target} run is in progress. Runs go one at a time.</span></div>` : ''}
+    ${run ? `
+      <section class="card running">
+        <div class="btn-row" style="justify-content:space-between">
+          <b>Running ${run.scope === 'all' ? 'the full checklist' : 'selected tests'}${run.localMode ? ` against the ${run.localMode === 'preview' ? 'production build' : 'dev server'}` : ''}</b>
+          <span class="meta" id="progressText">${run.done}${run.total ? ` / ${run.total}` : ''} done${run.failed ? ` · ${run.failed} failed so far` : ''}</span>
+        </div>
+        <div class="bar"><i id="progressBar" style="width:${run.total ? Math.round((run.done / run.total) * 100) : 3}%"></i></div>
+        <details ${ui.logOpen ? 'open' : ''} id="logDetails"><summary class="meta" style="cursor:pointer">Live output</summary><pre class="log" id="log">${esc(logLines.slice(-300).join('\n'))}</pre></details>
+      </section>` : ''}
+
+    ${failing.length ? `
+      <h2>Needs attention</h2>
+      <div class="card attention">${failing.map((t) => rowHtml(t, true)).join('')}</div>` : ''}
+
+    <div class="filters" role="toolbar">
+      ${FILTERS.map(([k, l]) => `<button class="chip" aria-pressed="${ui.filter === k}" data-filter="${k}">${l}</button>`).join('')}
+      <input type="search" id="search" placeholder="Search tests" value="${esc(ui.query)}">
+    </div>
+    ${sectionsHtml(ts)}
+    ${lr ? `<p class="meta" style="margin-top:20px">Full output of the last run: <a href="#" data-act="show-log">view log</a></p>` : ''}
+  `
+  if (run) {
+    const logEl = $('#log')
+    if (logEl) logEl.scrollTop = logEl.scrollHeight
+  }
+  renderDrawer()
+  updateTitle()
+}
+
+function tagsFor(t) {
+  const tags = []
+  const ann = (type) => t.annotations?.find((a) => a.type === type)
+  if (/free account/i.test(t.group)) tags.push('free account')
+  if (/Pro account/i.test(t.group)) tags.push('Pro account')
+  if (/throwaway|real gate|before an account|signed-in account/i.test(t.group)) tags.push('signed out')
+  if (ann('known-issue')) tags.push('<span class="tag warn">known issue</span>')
+  return tags.map((x) => x.startsWith('<') ? x : `<span class="tag">${esc(x)}</span>`).join('')
+}
+
+function rowHtml(t, attention = false) {
+  const s = statusKey(t.status)
+  const sub = attention
+    ? `${esc(t.section)}${t.failingSince ? ` · failing since ${ago(t.failingSince)}${t.failStreak > 1 ? ` (${t.failStreak} runs in a row)` : ''}` : ''}${t.error?.message ? ' · ' + esc(t.error.message.split('\n')[0]) : ''}`
+    : t.status === 'setup' ? esc(t.annotations?.find((a) => a.type === 'needs-setup')?.description ?? '')
+    : t.status === 'manual' ? (t.manualCheck ? `Checked by you ${ago(t.manualCheck.at)}: ${t.manualCheck.status === 'passed' ? 'works' : 'broken'}` : 'Not checked yet')
+    : t.status === 'failed' && t.error ? esc(t.error.message.split('\n')[0]) : ''
+  return `<button class="row ${ui.selected === t.id ? 'selected' : ''}" data-test="${esc(t.id)}">
+    <span class="dot s-${s === 'manual' && t.manualCheck ? (t.manualCheck.status === 'passed' ? 'passed' : 'failed') : s}" title="${STATUS[s]}"></span>
+    <span><div class="title">${esc(t.title)}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</span>
+    <span class="right">${tagsFor(t)}${t.duration && t.status !== 'setup' && t.status !== 'manual' ? dur(t.duration) : ''}</span>
+  </button>`
+}
+
+function matches(t) {
+  if (ui.filter !== 'all' && statusKey(t.status) !== ui.filter) return false
+  if (ui.query) {
+    const q = ui.query.toLowerCase()
+    return `${t.title} ${t.section} ${t.group}`.toLowerCase().includes(q)
+  }
+  return true
+}
+
+function sectionsHtml(ts) {
+  if (!ts.tests.length) {
+    return `<div class="card empty">No results for this target yet. Run the checklist to fill this in.</div>`
+  }
+  const bySection = new Map()
+  for (const t of ts.tests) {
+    if (!bySection.has(t.section)) bySection.set(t.section, [])
+    bySection.get(t.section).push(t)
+  }
+  const sections = [...bySection.entries()].sort(([a], [b]) => parseInt(a) - parseInt(b) || a.localeCompare(b))
+  const out = []
+  for (const [name, tests] of sections) {
+    const shown = tests.filter(matches)
+    if (!shown.length) continue
+    const n = (k) => tests.filter((t) => t.status === k).length
+    const open = ui.openSections.has(name) || ui.filter !== 'all' || ui.query || n('failed') > 0
+    const groups = new Map()
+    for (const t of shown) {
+      const g = t.group || ''
+      if (!groups.has(g)) groups.set(g, [])
+      groups.get(g).push(t)
+    }
+    out.push(`<details class="card section" ${open ? 'open' : ''} data-section="${esc(name)}">
+      <summary>
+        <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>
+        ${esc(name)}
+        <span class="mini">
+          ${n('failed') ? `<span class="pill s-failed">${n('failed')} failing</span>` : ''}
+          ${n('flaky') ? `<span class="pill s-flaky">${n('flaky')} flaky</span>` : ''}
+          <span class="pill s-passed">${n('passed')}/${tests.length - n('setup') - n('manual') - n('skipped')}</span>
+          ${n('setup') ? `<span class="pill s-setup">${n('setup')} setup</span>` : ''}
+          ${n('manual') ? `<span class="pill s-manual">${n('manual')} manual</span>` : ''}
+        </span>
+      </summary>
+      ${[...groups.entries()].map(([g, list]) => `${g ? `<div class="group-label">${esc(g)}</div>` : ''}${list.map((t) => rowHtml(t)).join('')}`).join('')}
+    </details>`)
+  }
+  return out.join('') || `<div class="card empty">Nothing matches this filter.</div>`
+}
+
+function renderDrawer() {
+  const root = $('#drawerRoot')
+  const t = ui.selected && state.targets[ui.tab].tests.find((x) => x.id === ui.selected)
+  if (!t) { root.innerHTML = ''; return }
+  const s = statusKey(t.status)
+  const ann = (type) => (t.annotations ?? []).filter((a) => a.type === type)
+  const shots = t.attachments.filter((a) => a.contentType?.startsWith('image/'))
+  const videos = t.attachments.filter((a) => a.contentType?.startsWith('video/'))
+  const trace = t.attachments.find((a) => a.name === 'trace')
+  const trail = (t.trail ?? []).map((x) => `<i class="s-${statusKey(x)}" title="${STATUS[statusKey(x)]}"></i>`).join('')
+
+  root.innerHTML = `
+    <div class="scrim" data-act="close"></div>
+    <aside class="drawer" role="dialog" aria-label="Test details">
+      <div class="drawer-head">
+        <button class="icon-btn close" data-act="close" aria-label="Close">Close</button>
+        <span class="pill s-${s}">${STATUS[s]}</span>
+        <h3>${esc(t.title)}</h3>
+        <div class="meta">${esc(t.section)}${t.group ? ' › ' + esc(t.group) : ''}</div>
+        <div class="meta">${esc(t.file)}:${t.line}${t.duration ? ` · ${dur(t.duration)}` : ''}${t.ranAt ? ` · ran ${ago(t.ranAt)}` : ''}${t.retries ? ` · passed on retry ${t.retries}` : ''}</div>
+      </div>
+      <div class="drawer-body">
+        <div class="btn-row">
+          ${t.status !== 'manual' ? `<button class="btn primary" data-act="rerun-one" ${state.running ? 'disabled' : ''}>Re-run this test</button>` : ''}
+          ${trace ? `<button class="btn" data-act="trace" data-url="${esc(trace.url)}">Open trace viewer</button>` : ''}
+        </div>
+        ${t.failingSince ? `<div class="callout s-failed"><b>Failing since ${new Date(t.failingSince).toLocaleString()}</b>${t.failStreak > 1 ? `, ${t.failStreak} runs in a row` : ''}.</div>` : ''}
+        ${ann('known-issue').map((a) => `<div class="callout s-flaky"><b>Known issue.</b> ${esc(a.description)}</div>`).join('')}
+        ${ann('needs-setup').map((a) => `<div class="callout s-setup"><b>Needs setup:</b> ${esc(a.description)}. See the Setup button at the top.</div>`).join('')}
+        ${ann('manual').map((a) => `<div class="callout s-manual"><b>Check by hand:</b> ${esc(a.description)}</div>`).join('')}
+        ${t.status === 'manual' ? `
+          <div>
+            <div class="label">Your check</div>
+            ${t.manualCheck ? `<p class="meta" style="margin:0 0 8px">Last marked <b>${t.manualCheck.status === 'passed' ? 'working' : 'broken'}</b> ${ago(t.manualCheck.at)}${t.manualCheck.note ? `: "${esc(t.manualCheck.note)}"` : ''}</p>` : ''}
+            <input type="text" id="manualNote" placeholder="Optional note" style="width:100%;margin-bottom:8px" value="${esc(t.manualCheck?.note ?? '')}">
+            <div class="btn-row">
+              <button class="btn" data-act="manual" data-status="passed">It works</button>
+              <button class="btn danger" data-act="manual" data-status="failed">It's broken</button>
+              ${t.manualCheck ? '<button class="btn" data-act="manual" data-status="clear">Clear</button>' : ''}
+            </div>
+          </div>` : ''}
+        ${ann('note').map((a) => `<div class="callout s-none">${esc(a.description)}</div>`).join('')}
+        ${t.error?.message ? `<div><div class="label">What went wrong</div><pre class="code">${esc(t.error.message.slice(0, 5000))}</pre></div>` : ''}
+        ${t.error?.snippet ? `<div><div class="label">Where${t.error.location ? ` · ${esc(t.error.location)}` : ''}</div><pre class="code">${esc(t.error.snippet)}</pre></div>` : ''}
+        ${shots.map((a) => `<div><div class="label">Screenshot at failure</div><a href="${esc(a.url)}" target="_blank" rel="noopener"><img class="shot" src="${esc(a.url)}" alt="Screenshot of the page when the test failed" loading="lazy"></a></div>`).join('')}
+        ${videos.map((a) => `<div><div class="label">Recording</div><video class="shot" src="${esc(a.url)}" controls preload="metadata"></video></div>`).join('')}
+        ${trail ? `<div><div class="label">Last ${t.trail.length} runs (oldest first)</div><div class="trail">${trail}</div></div>` : ''}
+        ${t.error?.stack ? `<details class="more"><summary>Stack trace</summary><pre class="code">${esc(t.error.stack.slice(0, 8000))}</pre></details>` : ''}
+        ${t.stdout ? `<details class="more"><summary>Console output</summary><pre class="code">${esc(t.stdout)}</pre></details>` : ''}
+      </div>
+    </aside>`
+}
+
+function renderSetup() {
+  const s = state.setup
+  const row = (ok, title, how) => `<div class="check"><span class="dot ${ok ? 's-passed' : 's-setup'}" style="margin-top:6px"></span><div><b>${title}</b><small>${how}</small></div></div>`
+  $('#modalRoot').innerHTML = `
+    <div class="scrim" data-act="close-modal"></div>
+    <div class="modal"><div class="card" role="dialog" aria-label="Setup">
+      <h3>Setup</h3>
+      <p class="meta">Settings live in <code>qa/.env</code> (copy <code>qa/.env.example</code>). Values never leave this computer; the dashboard only shows whether they're set.</p>
+      ${row(s.firebase, 'Firebase web config', 'Read from the app\'s <code>.env</code> (VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID).')}
+      ${row(s.freeAccount, 'Free test account', '<code>QA_FREE_EMAIL</code> / <code>QA_FREE_PASSWORD</code>: a dedicated account. Tests overwrite its closet and lists.')}
+      ${row(s.proAccount, 'Pro test account', '<code>QA_PRO_EMAIL</code> / <code>QA_PRO_PASSWORD</code>: a dedicated account with the Pro claim (or admin).')}
+      ${row(s.signupLocal, 'Throwaway accounts on Local', '<code>QA_ALLOW_SIGNUP_LOCAL=1</code> (default on). Creates and deletes @example.com accounts.')}
+      ${row(s.signupLive, 'Throwaway accounts on Live', '<code>QA_ALLOW_SIGNUP_LIVE=1</code> to allow sign-up / delete-account tests against the live site.')}
+      ${row(s.stripeTest, 'Stripe test-mode billing tests', '<code>QA_STRIPE_TEST_MODE=1</code>, only while the deployed Functions use Stripe test keys.')}
+      ${row(s.realFeedback, 'Real feedback emails', '<code>QA_REAL_FEEDBACK=1</code> sends real feedback + bug reports (one email each per run). Off: stubbed.')}
+      <p class="meta">Live site: <code>${esc(s.liveUrl)}</code></p>
+      <div class="btn-row" style="justify-content:flex-end"><button class="btn" data-act="close-modal">Close</button></div>
+    </div></div>`
+}
+
+async function showLog() {
+  const { lines } = await api(`/api/log?target=${ui.tab}`)
+  $('#modalRoot').innerHTML = `
+    <div class="scrim" data-act="close-modal"></div>
+    <div class="modal"><div class="card" role="dialog" aria-label="Run log" style="width:min(960px,100%)">
+      <h3>Last run output · ${ui.tab === 'local' ? 'Local' : 'Live'}</h3>
+      <pre class="log" style="max-height:70vh">${esc(lines.join('\n') || 'No output yet.')}</pre>
+      <div class="btn-row" style="justify-content:flex-end;margin-top:12px"><button class="btn" data-act="close-modal">Close</button></div>
+    </div></div>`
+}
+
+function updateTitle() {
+  const failing = ['local', 'live'].reduce((n, t) => n + state.targets[t].counts.failed, 0)
+  document.title = `${failing ? `(${failing}) ` : ''}Sartima QA`
+  const color = state.running ? '#2F6297' : failing ? '#B93A2A' : '#2F7D4F'
+  $('#favicon').href = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="${color}"/></svg>`)}`
+}
+
+// ── Events ───────────────────────────────────────────────────────────────────
+
+document.addEventListener('click', async (e) => {
+  const el = e.target.closest('[data-tab],[data-filter],[data-test],[data-act]')
+  if (!el) return
+  if (el.dataset.tab) {
+    ui.tab = el.dataset.tab; ui.selected = null; store.set('tab', ui.tab)
+    logLines = []
+    if (state.running?.target === ui.tab) logLines = (await api(`/api/log?target=${ui.tab}`)).lines
+    return render()
+  }
+  if (el.dataset.filter) { ui.filter = ui.filter === el.dataset.filter ? 'all' : el.dataset.filter; return render() }
+  if (el.dataset.test) { ui.selected = el.dataset.test; return renderDrawer(), render() }
+  const act = el.dataset.act
+  try {
+    if (act === 'close') { ui.selected = null; renderDrawer(); render() }
+    if (act === 'close-modal') $('#modalRoot').innerHTML = ''
+    if (act === 'run') { logLines = []; await api('/api/run', { target: ui.tab, scope: 'all' }); await refresh() }
+    if (act === 'rerun-failed') { logLines = []; await api('/api/run', { target: ui.tab, scope: 'failed' }); await refresh() }
+    if (act === 'stop') await api('/api/stop', {})
+    if (act === 'rerun-one') {
+      const t = state.targets[ui.tab].tests.find((x) => x.id === ui.selected)
+      logLines = []
+      await api('/api/run', { target: ui.tab, scope: 'tests', ids: [`${t.file}:${t.line}`] })
+      await refresh()
+    }
+    if (act === 'trace') await api('/api/trace', { url: el.dataset.url })
+    if (act === 'manual') {
+      const status = el.dataset.status === 'clear' ? null : el.dataset.status
+      await api('/api/manual', { target: ui.tab, id: ui.selected, status, note: $('#manualNote')?.value ?? '' })
+      await refresh()
+    }
+    if (act === 'show-log') { e.preventDefault(); await showLog() }
+  } catch (err) {
+    alert(err.message)
+  }
+})
+
+document.addEventListener('change', async (e) => {
+  const act = e.target.dataset.act
+  if (act === 'schedule') await api('/api/settings', { schedule: { [ui.tab]: Number(e.target.value) } })
+  if (act === 'localMode') await api('/api/settings', { localMode: e.target.value })
+  if (act) await refresh()
+})
+
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'search') return
+  ui.query = e.target.value
+  const pos = e.target.selectionStart
+  render()
+  const input = $('#search')
+  input.focus()
+  input.setSelectionRange(pos, pos)
+})
+
+document.addEventListener('toggle', (e) => {
+  const d = e.target
+  if (d.id === 'logDetails') ui.logOpen = d.open
+  if (d.dataset?.section) d.open ? ui.openSections.add(d.dataset.section) : ui.openSections.delete(d.dataset.section)
+}, true)
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if ($('#modalRoot').innerHTML) $('#modalRoot').innerHTML = ''
+    else if (ui.selected) { ui.selected = null; renderDrawer(); render() }
+  }
+})
+
+$('#setupBtn').addEventListener('click', () => state && renderSetup())
+$('#themeBtn').addEventListener('click', () => {
+  const root = document.documentElement
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+  root.dataset.theme = dark ? 'light' : 'dark'
+  store.set('theme', root.dataset.theme)
+})
+if (store.get('theme', '')) document.documentElement.dataset.theme = store.get('theme', '')
+
+// Live progress
+const events = new EventSource('/api/events')
+events.addEventListener('log', (e) => {
+  const d = JSON.parse(e.data)
+  if (d.target !== ui.tab) return
+  logLines.push(d.line)
+  if (logLines.length > 2000) logLines.shift()
+  const logEl = $('#log')
+  if (logEl) { logEl.textContent = logLines.slice(-300).join('\n'); logEl.scrollTop = logEl.scrollHeight }
+  const pt = $('#progressText'); const pb = $('#progressBar')
+  if (pt) pt.textContent = `${d.done}${d.total ? ` / ${d.total}` : ''} done${d.failed ? ` · ${d.failed} failed so far` : ''}`
+  if (pb && d.total) pb.style.width = `${Math.round((d.done / d.total) * 100)}%`
+})
+events.addEventListener('state', () => refresh())
+
+refresh()
+setInterval(refresh, 30_000)
+</script>
+</body>
+</html>

@@ -7,6 +7,20 @@ functions/node_modules/
 .firebase/
 playwright-report/
 test-results/
+qa/results/
+qa/.env
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
 test-*.png
 Business/
 scripts/output/
+
+# Android app (TWA) — signing secrets + build output. Back the keystore up; losing it
+# means existing installs can't be updated.
+android/keystore.properties
+android/*.keystore
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties

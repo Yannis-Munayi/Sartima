@@ -41,6 +41,9 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         globIgnores: ['**/data-products-*.js', '**/data-catalog-*.js', '**/data-content-*.js'],
+        // Real files the SW must not answer with the SPA shell: the Android APK
+        // download and Digital Asset Links (Android app verification).
+        navigateFallbackDenylist: [/^\/downloads\//, /^\/\.well-known\//],
         // Network-first for API calls; cache-first for static
         runtimeCaching: [
           {

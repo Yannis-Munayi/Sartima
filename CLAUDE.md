@@ -34,7 +34,12 @@ npm run dev        # Vite dev server with HMR
 npm run build      # Production build (Vite + chunk splitting)
 npm run preview    # Preview production build locally
 npm run lint       # ESLint (eslint.config.js) — src/, functions/, scripts/, e2e/
+npm test           # Vitest: unit (tests/unit — src logic) + functions (functions/test — Cloud Functions with mocked Admin SDK/Stripe/AI)
+npm run test:rules # Vitest against the Firestore + Storage emulators (tests/rules) — needs Java
 npm run test:e2e   # Playwright e2e smoke tests (e2e/) — auto-starts the dev server
+npm run qa         # Local-only QA dashboard (127.0.0.1:4545) for the full checklist suite in qa/
+npm run qa:local   # Checklist suite against localhost (qa:live → sartima.ca); see qa/README.md
+npm run android:build  # Build + sign the Android APK → public/downloads/sartima.apk (see android/README.md)
 ```
 
 ```bash
@@ -108,11 +113,15 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 **Jarvis hub bridge** — `components/HubBridge.jsx` (mounted in `App`) lets the owner's Jarvis assistant use Sartima when it frames the app: `services/hubBridge.js` is the postMessage protocol, `services/hubActions.js` the actions (profile, closet, outfit log, wishlist, catalog search). Actions go through the context functions, so persistence and plan limits match the UI. It does nothing when Sartima isn't in a frame.
 
+**Native apps** — Android is a Trusted Web Activity in `android/` (package `ca.sartima.app`, host `www.sartima.ca`) that runs the live site in Chrome, so web deploys update it with no new APK. `public/.well-known/assetlinks.json` holds the signing-key fingerprint that removes the address bar. The keystore and `keystore.properties` are gitignored and must be backed up. Windows installs the PWA through the browser's install prompt. `components/GetTheApp.jsx` (bottom of Home, and the sign-in screen) offers both and hides itself inside an installed app (`services/appInstall.js`).
+
 **Context sync** — All persisted contexts use the functional `setState` form in Firestore `.then` callbacks so in-flight additions are never overwritten on load.
 
 **Firebase Function calls** — Always use `httpsCallable(functions, 'functionName')`. Every function requires auth except `validateEmail` / `submitFeedback` / `submitCrashReport` / `searchImages` (guest browsing needs photos); the SDK passes the ID token automatically. Tier limits are re-enforced server-side — client `isAtLimit` checks are UX, not security.
 
 **New persistence** — Prefer a `prefs/{key}` document (already covered by Firestore rules), written with `savePrefsDoc(uid, key, data)` from `src/services/prefsDoc.js`. Never call `setDoc(...).catch()` from an effect: `setDoc` validates synchronously, so a bad value throws past the `.catch` and crashes the whole tree. Firestore is initialized with `ignoreUndefinedProperties`, so optional fields can be passed through as `undefined`. New subcollections require a new `match` block in `firestore.rules` and a redeploy before any writes.
+
+**Tests** — Keep logic out of hooks/contexts so it can be unit-tested: pure helpers live in `src/services/` (e.g. `tierLimits.js`, `closetGaps.js`, `wardrobeRecap.js`) and hooks just memoise them. Functions tests drive callables with `fn.run(request)` and the in-memory fakes in `functions/test/fakes.js`; every metered callable must validate input *before* charging usage, and refund on upstream failure — there are tests for both.
 
 **Error logging** — Import `logError` / `logWarn` from `src/services/logger.js` in every service file. Never call `console.error` directly in services.
 
