@@ -1,6 +1,6 @@
 import { httpsCallable } from 'firebase/functions'
 import { functions } from './firebase'
-import { logError } from './logger'
+import { logError, logWarn } from './logger'
 import { createBoundedCache } from './cache'
 
 // Stock photography: Unsplash first, Pexels fallback. The provider chain runs
@@ -9,6 +9,58 @@ import { createBoundedCache } from './cache'
 const cache    = createBoundedCache()
 const pending  = new Map()   // cacheKey → in-flight promise, so duplicate queries share one call
 const imagesFn = httpsCallable(functions, 'searchImages')
+
+// Persistent layer: photo URLs survive reloads and app relaunches. Without it,
+// every launch of the Android app (a fresh page) re-asked the Function for every
+// card's photo — slow, and enough repeat calls drain the free Unsplash/Pexels
+// hourly quotas, after which cards stay on their gradient. The image bytes are
+// already cached by the service worker (CacheFirst, 7 days), so a cached URL
+// renders without touching the network.
+const STORE_KEY   = 'sartima_photo_urls_v1'
+const STORE_TTL   = 7 * 24 * 60 * 60_000
+const STORE_MAX   = 600
+let store = null          // cacheKey → { urls, at }
+let saveTimer = null
+
+function loadStore() {
+  if (store) return store
+  store = {}
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || '{}')
+    const now = Date.now()
+    for (const [k, v] of Object.entries(raw)) {
+      if (v && Array.isArray(v.urls) && now - v.at < STORE_TTL) store[k] = v
+    }
+  } catch { /* storage blocked or corrupt — start empty */ }
+  return store
+}
+
+function saveStoreSoon() {
+  if (saveTimer) return
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    try {
+      const entries = Object.entries(store)
+      if (entries.length > STORE_MAX) {
+        entries.sort((a, b) => b[1].at - a[1].at)
+        store = Object.fromEntries(entries.slice(0, STORE_MAX))
+      }
+      localStorage.setItem(STORE_KEY, JSON.stringify(store))
+    } catch (err) {
+      logWarn('stockPhotos', 'could not persist photo cache', { error: err?.message })
+    }
+  }, 1000)
+}
+
+function readStored(cacheKey) {
+  const hit = loadStore()[cacheKey]
+  return hit && Date.now() - hit.at < STORE_TTL ? hit.urls : null
+}
+
+function writeStored(cacheKey, urls) {
+  loadStore()[cacheKey] = { urls, at: Date.now() }
+  saveStoreSoon()
+}
 
 // A grid of cards mounting at once would otherwise fire dozens of calls in
 // the same tick; cap concurrency so bursts stay inside the server's budget.
@@ -55,10 +107,18 @@ export async function fetchPhotos(query, count = 1) {
   const cacheKey = `stock:${query}:${count}`
   if (cache.has(cacheKey)) return cache.get(cacheKey)
   if (pending.has(cacheKey)) return pending.get(cacheKey)
+  const stored = readStored(cacheKey)
+  if (stored) {
+    cache.set(cacheKey, stored)
+    return stored
+  }
 
   const request = searchStock(query, count)
     .then((urls) => {
       cache.set(cacheKey, urls)
+      // Only persist hits: an empty result is usually a spent quota, not a
+      // query with no photos, so it should be retried on the next launch.
+      if (urls.length > 0) writeStored(cacheKey, urls)
       return urls
     })
     .catch((err) => {

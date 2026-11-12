@@ -125,7 +125,7 @@ Server keys must also be set in the Firebase console (Functions → Edit → Env
 
 **Error logging** — Import `logError` / `logWarn` from `src/services/logger.js` in every service file. Never call `console.error` directly in services.
 
-**Image cache** — Use `createBoundedCache()` from `src/services/cache.js` (not `new Map()`) in any service that caches API responses.
+**Image cache** — Use `createBoundedCache()` from `src/services/cache.js` (not `new Map()`) in any service that caches API responses. Stock-photo URLs (`services/stockPhotos.js`) are also persisted to localStorage for 7 days. Every Android app launch is a fresh page, and refetching each card's photo through `searchImages` used up the free Unsplash/Pexels quotas. Route new photo lookups through `fetchPhotos` / `fetchPhotosWithFallback` so they share that cache.
 
 **CSS variables** — Never use hardcoded hex fallbacks in `var()`. Use `var(--bg-elevated)` for solid sheet/modal backgrounds. Theme is set via `data-theme` on `:root`; **light is the default** (`localStorage sartima_theme`). Accent is champagne gold `#B8956A` (dark) / `#8B6840` (light) — always via `var(--accent)`.
 

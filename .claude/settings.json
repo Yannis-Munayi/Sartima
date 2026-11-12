@@ -28,7 +28,13 @@
       "Bash(npx vite *)",
       "PowerShell(Get-ChildItem qa/results/local/artifacts -Directory | Where-Object { $_.Name -match '05-home-5-Home-guest-The-hero|04-discover|01-signup-1-Sign-up-login--8a383' } | ForEach-Object { \"#### $\\($_.Name\\)\"; Get-Content \\(Join-Path $_.FullName 'error-context.md'\\) -TotalCount 60 })",
       "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/05-home.spec.js qa/tests/04-discover.spec.js qa/tests/01-signup.spec.js -g \"carousel|Build your digital|Fresh Looks|Hide the Swipe|consent step\" --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|flaky|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 20)",
-      "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/01-signup.spec.js -g \"consent step\" --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 10)"
+      "PowerShell($env:QA_TARGET='local'; npx playwright test -c qa/playwright.config.js qa/tests/01-signup.spec.js -g \"consent step\" --reporter=line 2>&1 | Select-String -Pattern \"passed|failed|skipped|\\\\d+\\\\\\) \\\\[|^\\\\s+Error:\" | Select-Object -Last 10)",
+      "Bash(awk '{printf \"%8.0f KB  %s\\\\n\", $5/1024, $9}')",
+      "Bash(awk '{print $5, $9}')",
+      "PowerShell(\\(Get-CimInstance Win32_Process -Filter \"ProcessId=4808\"\\).CommandLine; Stop-Process -Id 4808 -Confirm:$false)",
+      "Bash(curl -s http://localhost:9222/json/list)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4174/)",
+      "Bash(node -e ' *)"
     ]
   }
 }

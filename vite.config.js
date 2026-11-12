@@ -40,12 +40,31 @@ export default defineConfig({
       workbox: {
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        globIgnores: ['**/data-products-*.js', '**/data-catalog-*.js', '**/data-content-*.js'],
+        // Not precached: the big data chunks (runtime-cached below instead, so the
+        // SW install doesn't double the first launch's download), the background-
+        // removal runtime (only loaded when someone uses "prettify"), and the
+        // social-share image (only crawlers fetch it).
+        globIgnores: [
+          '**/data-products-*.js', '**/data-catalog-*.js', '**/data-content-*.js',
+          '**/ort.*.js', 'og-image.png',
+        ],
         // Real files the SW must not answer with the SPA shell: the Android APK
         // download and Digital Asset Links (Android app verification).
         navigateFallbackDenylist: [/^\/downloads\//, /^\/\.well-known\//],
         // Network-first for API calls; cache-first for static
         runtimeCaching: [
+          {
+            // Catalog data chunks: file names are content-hashed, so a cached copy
+            // is never stale. Kept after the first launch, so later launches
+            // don't wait on the network for 5+ MB of catalog.
+            urlPattern: /\/assets\/data-[\w-]+\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'catalog-chunks',
+              expiration: { maxEntries: 12, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Pexels images — cache for 7 days
             urlPattern: /^https:\/\/images\.pexels\.com\/.*/i,
