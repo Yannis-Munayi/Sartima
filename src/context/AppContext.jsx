@@ -4,6 +4,7 @@ import { CLOTHING_ITEMS } from '../data/categories'
 import { AESTHETIC_QUIZ_ITEMS } from '../data/aestheticItems'
 import { LABEL_WEIGHTS, getItemLabels } from '../data/labels'
 import { shuffle } from '../services/shuffle'
+import { readTempUnit, TEMP_UNIT_KEY, TEMP_UNIT_EVENT } from '../services/temperature'
 
 const AppContext = createContext(null)
 
@@ -324,11 +325,19 @@ export function useTheme() {
 }
 
 // ── Temperature unit hook ─────────────────────────────────────────────────────
+// Every mounted user of this hook stays in sync: setUnit broadcasts a window
+// event, so weather already on screen switches unit without a remount.
 export function useTempUnit() {
-  const [unit, setUnitState] = useState(() => localStorage.getItem('sartima_temp_unit') ?? 'c')
+  const [unit, setUnitState] = useState(readTempUnit)
+  useEffect(() => {
+    const sync = () => setUnitState(readTempUnit())
+    window.addEventListener(TEMP_UNIT_EVENT, sync)
+    return () => window.removeEventListener(TEMP_UNIT_EVENT, sync)
+  }, [])
   function setUnit(u) {
-    localStorage.setItem('sartima_temp_unit', u)
+    try { localStorage.setItem(TEMP_UNIT_KEY, u) } catch { /* private mode */ }
     setUnitState(u)
+    window.dispatchEvent(new Event(TEMP_UNIT_EVENT))
   }
   return { unit, setUnit }
 }

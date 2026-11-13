@@ -21,7 +21,13 @@ export default function ItemActionSheet({ item, onShop, onRemove, onClose }) {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.sheet}
+        role="dialog"
+        aria-modal="true"
+        aria-label={item.name}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Item preview */}
         <div className={styles.itemPreview} style={{ background: item.gradient }}>
           {isProduct && item.brand

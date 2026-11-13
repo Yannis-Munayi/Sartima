@@ -24,6 +24,10 @@ export function ClosetProvider({ children }) {
   const loadedUid               = useRef(null)
   // Block saves from running before the initial load resolves
   const loadReady               = useRef(false)
+  // The exact array the last load put into state. Saving it back would only
+  // echo the server's copy — and if the closet changed elsewhere meanwhile
+  // (another device, the Jarvis hub), that stale echo would overwrite it.
+  const loadedItems             = useRef(null)
 
   const loadItems = useCallback(() => {
     if (!user) return
@@ -34,6 +38,7 @@ export function ClosetProvider({ children }) {
     getDoc(doc(db, 'users', user.uid, 'prefs', PREF_DOC))
       .then((snap) => {
         const stored = snap.exists() ? (snap.data().items ?? []) : []
+        loadedItems.current = stored
         setItems((current) => {
           // Preserve any items added while the load was in-flight
           const storedIds = new Set(stored.map((i) => i.id))
@@ -66,6 +71,8 @@ export function ClosetProvider({ children }) {
   // Persist whenever items change (after initial load)
   useEffect(() => {
     if (!user || !loadReady.current || loadedUid.current !== user.uid) return
+    // Unchanged since the load (no items were added while it was in flight)
+    if (items === loadedItems.current) return
     savePrefsDoc(user.uid, PREF_DOC, { items })
   }, [items, user])
 

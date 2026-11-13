@@ -1,15 +1,6 @@
 import { httpsCallable } from 'firebase/functions'
 import { functions } from './firebase'
-
-const SEASON_MAP = {
-  1: 'winter', 2: 'winter', 3: 'spring', 4: 'spring',
-  5: 'spring', 6: 'summer', 7: 'summer', 8: 'summer',
-  9: 'fall',   10: 'fall',  11: 'fall',  12: 'winter',
-}
-
-function currentSeason() {
-  return SEASON_MAP[new Date().getMonth() + 1]
-}
+import { outfitCandidates, targetSeasons } from './outfitPool'
 
 function closetHash(items) {
   return items.slice(0, 5).map((i) => i.id).join('-')
@@ -43,27 +34,21 @@ const outfitFn = httpsCallable(functions, 'anthropicOutfit')
  * @param {string} opts.dateStr      - "YYYY-MM-DD"
  * @param {string} opts.gender       - "men" | "women" | "both"
  * @param {string|null} opts.occupation
+ * @param {string[]} [opts.preferredSeasons] - Settings → Preferred seasons; empty = current season
  * @returns {Promise<GeneratedOutfit|null>}
  */
-export async function generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation }) {
+export async function generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation, preferredSeasons }) {
   if (!closetItems || closetItems.length < 3) return null
 
-  const cacheKey = `sartima_outfit_${dateStr}_${occasion}_${closetHash(closetItems)}`
+  const seasonKey = [...targetSeasons(preferredSeasons)].sort().join('+')
+  const cacheKey  = `sartima_outfit_${dateStr}_${occasion}_${seasonKey}_${closetHash(closetItems)}`
   const cached   = getCached(cacheKey)
   if (cached) {
     const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
     return { ...cached, items: cached.itemIds.map((id) => itemMap[id]).filter(Boolean) }
   }
 
-  const season = currentSeason()
-  const pool   = closetItems.filter(
-    (i) => !i.seasons?.length || i.seasons.includes(season)
-  )
-
-  const occasionFiltered = pool.filter(
-    (i) => !i.occasions?.length || i.occasions.includes(occasion)
-  )
-  const candidates = occasionFiltered.length >= 5 ? occasionFiltered : pool
+  const candidates = outfitCandidates(closetItems, { occasion, preferredSeasons })
 
   const items = candidates.map((i) => ({
     id:        i.id,

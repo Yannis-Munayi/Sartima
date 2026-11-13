@@ -6,18 +6,13 @@ import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useOutfitLog } from '../hooks/useOutfitLog'
 import { getWeatherEmoji } from '../services/weather'
+import { formatTemp, readTempUnit } from '../services/temperature'
 import styles from './DailyLookScreen.module.css'
 import Icon from '../components/Icon'
 
 const CATEGORY_EMOJIS = {
   tops: '👕', bottoms: '👖', outerwear: '🧥',
   dresses: '👗', footwear: '👟', accessories: '👜',
-}
-
-function formatTemp(tempC) {
-  const unit = localStorage.getItem('sartima_temp_unit') ?? 'c'
-  if (unit === 'f') return `${Math.round(tempC * 9 / 5 + 32)}°F`
-  return `${tempC}°C`
 }
 
 // ── Outfit board card (used in My Outfits saved looks) ────────────────────────
@@ -175,7 +170,7 @@ export default function MyOutfitsTab() {
                     <span className={styles.logOccasion}>{entry.occasion}</span>
                     {entry.weather && (
                       <span className={styles.logWeather}>
-                        {getWeatherEmoji(entry.weather.condition)} {formatTemp(entry.weather.temp)}
+                        {getWeatherEmoji(entry.weather.condition)} {formatTemp(entry.weather.temp, readTempUnit())}
                       </span>
                     )}
                   </div>

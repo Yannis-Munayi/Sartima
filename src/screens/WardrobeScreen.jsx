@@ -95,7 +95,9 @@ function LikedItemCard({ item, onSelect, onTryOn }) {
       {TRYON_CATEGORIES.includes(bucketFor(item)) && (
         <button
           className={styles.tryOnBtn}
-          onClick={(e) => { e.stopPropagation(); onTryOn?.(item) }}
+          // Try on the photo the card shows: products without a curated `image`
+          // show a stock photo resolved here, which the item itself doesn't carry
+          onClick={(e) => { e.stopPropagation(); onTryOn?.({ ...item, imageUrl: item.imageUrl || photo || item.image }) }}
         >
           Try On
         </button>

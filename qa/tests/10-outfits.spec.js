@@ -125,10 +125,14 @@ test.describe('10. Outfits', () => {
         await page.getByRole('button', { name: 'Tops', exact: true }).first().click()
         await page.locator('[class*="itemCard"]').filter({ hasText: 'QA White Tee' }).first().click()
         await page.getByRole('button', { name: /^Save Outfit \(/ }).click()
-        await page.getByPlaceholder('Outfit name (e.g. Sunday Brunch)').fill(name)
-        await page.getByPlaceholder('Outfit name (e.g. Sunday Brunch)').press('Enter')
-        const save = page.getByRole('button', { name: /^Save/ }).last()
-        if (await save.isVisible().catch(() => false)) await save.click()
+        const input = page.getByPlaceholder('Outfit name (e.g. Sunday Brunch)')
+        await input.fill(name)
+        await input.press('Enter')
+        // Enter submits and closes the sheet (and on a free account's 2nd board the paywall opens over
+        // the studio). Only fall back to the sheet's own Save button if the sheet is genuinely still open —
+        // a loose /^Save/ match would hit the studio's "Save Outfit (n)" button behind the paywall.
+        const closed = await input.waitFor({ state: 'hidden', timeout: 3_000 }).then(() => true, () => false)
+        if (!closed) await page.getByRole('button', { name: 'Save', exact: true }).last().click()
       }
 
       await buildBoard('QA Board One')
@@ -157,14 +161,20 @@ test.describe('10. Outfits', () => {
 
     test("Open a liked item's action sheet → Pinterest, Shop and Remove from liked each work", async ({ page, account }) => {
       note('The sheet offers View on Pinterest, Shop at <brand>, a brand search link and Remove from liked. It has no try-on, add-to-closet or share actions.')
-      const liked = sampleProducts('tops', 2)
+      // Distinct names: the catalog has colourways sharing a name (e.g. two Supima tees),
+      // which would make the "removed item is gone" check below see the other one.
+      const liked = sampleProducts('tops', 20)
+        .filter((p, i, all) => all.findIndex((q) => q.name === p.name) === i)
+        .slice(0, 2)
       await account.reset({ liked })
       await open(page, 'home')
       await openOutfitsSubTab(page, 'Liked')
       await page.getByText(liked[0].name, { exact: true }).first().click()
-      await expect(page.getByRole('link', { name: /View on Pinterest/ })).toHaveAttribute('href', /pinterest\./)
-      await expect(page.getByRole('link', { name: new RegExp(`Shop at ${liked[0].brand}`) })).toHaveAttribute('href', /^https?:/)
-      await page.getByRole('button', { name: /Remove from liked/ }).click()
+      // Scope to the sheet: each liked card in the grid has its own "Shop at <brand>" link too.
+      const sheet = page.getByRole('dialog', { name: liked[0].name })
+      await expect(sheet.getByRole('link', { name: /View on Pinterest/ })).toHaveAttribute('href', /pinterest\./)
+      await expect(sheet.getByRole('link', { name: new RegExp(`Shop at ${liked[0].brand}`) })).toHaveAttribute('href', /^https?:/)
+      await sheet.getByRole('button', { name: /Remove from liked/ }).click()
       await expect(page.getByText(liked[0].name, { exact: true })).toHaveCount(0)
       await expect.poll(async () => ((await account.prefs('liked'))?.items ?? []).map((i) => i.id)).not.toContain(liked[0].id)
     })

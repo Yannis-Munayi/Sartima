@@ -118,7 +118,8 @@ test.describe('14. Profile and Settings', () => {
       await go(page, 'profile')
       await expect(page.getByText('Your top aesthetics')).toBeVisible()
       await expect(page.getByText('Style evolution', { exact: true })).toBeVisible()
-      await expect(page.getByText('Quiz history', { exact: true })).toBeVisible()
+      // The heading carries a count badge ("Quiz history · 2 quizzes"), so match its start.
+      await expect(page.getByRole('heading', { name: /^Quiz history/ })).toBeVisible()
     })
 
     test('Switch °C/°F → the weather display updates', async ({ page, account }) => {
@@ -156,6 +157,12 @@ test.describe('14. Profile and Settings', () => {
     test('Turn on the daily reminder and set a time → the time is saved for the reminder job', async ({ page, context, account }) => {
       note('Whether the push actually arrives at that time (FCM + the 15-minute scheduler) is a manual check.')
       await context.grantPermissions(['notifications'])
+      // Headless Chromium reports Notification.permission as 'denied' even after
+      // grantPermissions (navigator.permissions.query says 'granted'), so Settings
+      // would show "Blocked" instead of the time picker. Report what real Chrome does.
+      await context.addInitScript(() => {
+        Object.defineProperty(Notification, 'permission', { get: () => 'granted', configurable: true })
+      })
       await account.reset()
       await open(page, 'home')
       await openSettings(page)

@@ -1,8 +1,9 @@
 import { httpsCallable } from 'firebase/functions'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { functions, db } from './firebase'
+import { garmentPhoto, garmentCategory } from './tryOnGarment'
 
-export const TRYON_CATEGORIES = ['tops', 'bottoms', 'outerwear', 'dresses']
+export { TRYON_CATEGORIES } from './tryOnGarment'
 
 const generateFn = httpsCallable(functions, 'generateTryOn', { timeout: 120000 })
 
@@ -43,7 +44,8 @@ function itemsCacheKey(items) {
  * Checks Firestore cache first; cache key is sorted item IDs + avatarUpdatedAt.
  *
  * @param {string}   uid
- * @param {object[]} items          — closet/liked items with { id, name, category, imageUrl, thumbnailUrl }
+ * @param {object[]} items          — closet items { id, name, category, imageUrl, thumbnailUrl }
+ *                                    or catalog products { id, name, parentType, image }
  * @param {string}   avatarUrl      — original avatar photo (not prettified — model prefers full photos)
  * @param {number}   avatarUpdatedAt — timestamp set when the avatar was last uploaded
  * @returns {Promise<string>}       — result image URL
@@ -56,9 +58,9 @@ export async function generateTryOnResult(uid, items, avatarUrl, avatarUpdatedAt
   }
 
   const garments = items.map((item) => ({
-    garmentImageUrl: item.imageUrl ?? item.thumbnailUrl,
+    garmentImageUrl: garmentPhoto(item),
     garmentName:     item.name ?? 'clothing item',
-    category:        item.category ?? 'tops',
+    category:        garmentCategory(item) ?? 'tops',
   }))
 
   if (garments.some((g) => !g.garmentImageUrl)) throw new Error('One or more items have no image')

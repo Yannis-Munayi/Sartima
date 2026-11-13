@@ -118,7 +118,10 @@ async function loginThroughUi(browser, email, password) {
 }
 
 async function ensureStorageState(browser, role) {
-  const file = path.join(RESULTS_DIR, 'auth', `${role}.json`)
+  // Keyed by origin too: Firebase keeps the login per origin, so a state saved
+  // against the dev server (:5180) is signed out on the production build (:4180).
+  const origin = new URL(BASE_URL).host.replace(/[^a-z0-9]+/gi, '_')
+  const file = path.join(RESULTS_DIR, 'auth', `${role}-${origin}.json`)
   try {
     if (Date.now() - fs.statSync(file).mtimeMs < 6 * 60 * 60 * 1000) {
       await prepareAccount(role)
@@ -282,7 +285,8 @@ export async function open(page, hash = 'home') {
   await expect(page).toHaveURL(/#\/home$/)
   if (hash !== 'home') {
     await go(page, hash)
-    // Parameterised links (wardrobe-builder/<piece>) settle on their base tab
+    // Parameterised links (aesthetic/<id>, wardrobe-builder/<piece>) may keep
+    // their parameter or settle on their base tab
     const base = hash.split('/')[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     await expect(page).toHaveURL(new RegExp(`#/${base}(/|$)`))
   }
@@ -350,7 +354,10 @@ export const test = base.extend({
       return use(null)
     }
     await withLock(role, () => use(role))
-  }, { auto: true }],
+    // Its own timeout: queueing behind other workers' tests on the same account
+    // (a Prettify test can hold it for minutes) must not eat into this test's
+    // 120s. withLock gives up after 40 minutes, so this only backs that up.
+  }, { auto: true, timeout: 41 * 60 * 1000 }],
 
   storageState: async ({ role, accountLock, browser }, use) => {
     if (!accountLock) return use(undefined)

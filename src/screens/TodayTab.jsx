@@ -4,7 +4,7 @@ import LockedOverlay from '../components/LockedOverlay'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
-import { useApp } from '../context/AppContext'
+import { useApp, useDefaultOccasion, usePreferredSeasons } from '../context/AppContext'
 import { useCloset } from '../context/ClosetContext'
 import { useWishlist } from '../context/WishlistContext'
 import { generateOutfit } from '../services/outfitAI'
@@ -102,9 +102,14 @@ export default function TodayTab() {
   const { closetItems, updateClosetItem } = useCloset()
   const { liked }             = useWishlist()
   const { isAtLimit, openPaywall, isPro } = useSubscription()
+  const { occasion: defaultOccasion }     = useDefaultOccasion()
+  const { preferredSeasons }              = usePreferredSeasons()
 
   const [source, setSource]                 = useState('closet')
-  const [occasion, setOccasion]             = useState(null)
+  // Settings → Default occasion is pre-selected (it only offers free occasions).
+  const [occasion, setOccasion]             = useState(
+    () => (OCCASIONS.some((o) => o.id === defaultOccasion) ? defaultOccasion : null)
+  )
   const [occasionPicked, setOccasionPicked] = useState(false)
   const [outfit, setOutfit]                 = useState(null)
   const [generating, setGenerating]         = useState(false)
@@ -127,7 +132,9 @@ export default function TodayTab() {
   const poolRef    = useRef(itemPool)
   const weatherRef = useRef(null)
   const genderRef  = useRef(state.gender)
+  const seasonsRef = useRef(preferredSeasons)
   useEffect(() => { poolRef.current    = itemPool     }, [itemPool])
+  useEffect(() => { seasonsRef.current = preferredSeasons }, [preferredSeasons])
   useEffect(() => { weatherRef.current = weather      }, [weather])
   useEffect(() => { genderRef.current  = state.gender }, [state.gender])
 
@@ -157,6 +164,7 @@ export default function TodayTab() {
         dateStr:     todayStr(),
         gender:      genderRef.current,
         occupation:  null,
+        preferredSeasons: seasonsRef.current,
       })
       if (result) {
         setOutfit(result)

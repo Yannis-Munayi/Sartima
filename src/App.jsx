@@ -264,8 +264,14 @@ function AppShell() {
   })
   const isDesktop = useIsDesktop()
 
-  // Shareable URLs + browser back/forward, mapped onto the tab-ID scheme
-  useHashRouting(activeTab, handleTabChange)
+  // Shareable URLs + browser back/forward, mapped onto the tab-ID scheme.
+  // Shop Scout keeps its pre-selected piece outside activeTab, so fold it back
+  // into the route ID; otherwise a deep link like wardrobe-builder:slim-jeans
+  // would surface as a bare #/wardrobe-builder and lose the piece on reload/back.
+  const routeTab = activeTab === 'wardrobe-builder' && wardrobeBuilderPiece
+    ? `wardrobe-builder:${wardrobeBuilderPiece}${wardrobeBuilderSpecificName ? `|${wardrobeBuilderSpecificName}` : ''}`
+    : activeTab
+  useHashRouting(routeTab, handleTabChange)
 
   // Attribute outbound retailer/affiliate clicks to the tab they came from
   useOutboundClickTracking(activeTab)

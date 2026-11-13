@@ -508,16 +508,56 @@ function isProxyHostAllowed(hostname) {
   )
 }
 
+// A Firebase Storage download URL: /v0/b/{bucket}/o/{url-encoded object path}
+const STORAGE_URL_PATH = /^\/v0\/b\/([^/]+)\/o\/([^/]+)$/
+
+/**
+ * The user's own photos (closet uploads) live in Firebase Storage, which the
+ * browser can't fetch cross-origin unless the bucket has a CORS policy.
+ * Read them with the Admin SDK instead — only from this app's bucket, and
+ * only inside the caller's own users/{uid}/ folder.
+ */
+async function proxyStorageImage(parsed, uid) {
+  const match = STORAGE_URL_PATH.exec(parsed.pathname)
+  if (!match) throw new HttpsError('permission-denied', 'Host not allowed')
+  const bucket = admin.storage().bucket()
+  let objectPath
+  try {
+    objectPath = decodeURIComponent(match[2])
+  } catch {
+    throw new HttpsError('invalid-argument', 'invalid url')
+  }
+  if (match[1] !== bucket.name || !objectPath.startsWith(`users/${uid}/`) || objectPath.includes('..')) {
+    throw new HttpsError('permission-denied', 'Not your file')
+  }
+  const file = bucket.file(objectPath)
+  let buffer, metadata
+  try {
+    [[buffer], [metadata]] = await Promise.all([file.download(), file.getMetadata()])
+  } catch (err) {
+    if (err?.code === 404) throw new HttpsError('not-found', 'File not found')
+    throw new HttpsError('unavailable', 'Storage read failed')
+  }
+  const mimeType = metadata?.contentType ?? 'image/jpeg'
+  return { dataUrl: `data:${mimeType};base64,${Buffer.from(buffer).toString('base64')}` }
+}
+
 export const proxyImage = onCall({ timeoutSeconds: 30, cors: true, invoker: 'public' }, async (request) => {
   requireAuth(request)
+  const uid = request.auth.uid
   const { url } = request.data
   if (!url || typeof url !== 'string') throw new HttpsError('invalid-argument', 'url required')
 
-  let hostname
+  let parsed, hostname
   try {
-    hostname = new URL(url).hostname
+    parsed = new URL(url)
+    hostname = parsed.hostname
   } catch {
     throw new HttpsError('invalid-argument', 'invalid url')
+  }
+
+  if (parsed.protocol === 'https:' && hostname === 'firebasestorage.googleapis.com') {
+    return proxyStorageImage(parsed, uid)
   }
 
   if (!isProxyHostAllowed(hostname)) {

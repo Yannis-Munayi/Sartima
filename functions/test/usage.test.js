@@ -273,6 +273,42 @@ describe('proxyImage', () => {
     }
     await expect(call(fns.proxyImage, { uid, data: { url: 'not a url' } })).rejects.toMatchObject({ code: 'invalid-argument' })
   })
+
+  describe('Firebase Storage photos (no bucket CORS, so the browser cannot fetch them)', () => {
+    const storageUrl = (bucket, path) =>
+      `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media&token=t`
+    const BUCKET = 'test-bucket.firebasestorage.app'
+
+    it("reads the caller's own file through the Admin SDK, without a network fetch", async () => {
+      const fetchSpy = vi.fn()
+      vi.stubGlobal('fetch', fetchSpy)
+      const uid = newUid()
+      fake.files.set(`users/${uid}/wardrobe/pieces/1.jpg`, { bytes: [1, 2, 3], contentType: 'image/jpeg' })
+      expect(await call(fns.proxyImage, { uid, data: { url: storageUrl(BUCKET, `users/${uid}/wardrobe/pieces/1.jpg`) } }))
+        .toEqual({ dataUrl: 'data:image/jpeg;base64,AQID' })
+      expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    it("refuses someone else's files, other buckets and path tricks", async () => {
+      const uid = newUid()
+      const other = newUid()
+      fake.files.set(`users/${other}/wardrobe/pieces/1.jpg`, { bytes: [1], contentType: 'image/jpeg' })
+      for (const url of [
+        storageUrl(BUCKET, `users/${other}/wardrobe/pieces/1.jpg`),
+        storageUrl('someone-elses-bucket.appspot.com', `users/${uid}/wardrobe/pieces/1.jpg`),
+        storageUrl(BUCKET, `users/${uid}/../${other}/wardrobe/pieces/1.jpg`),
+        'https://firebasestorage.googleapis.com/v0/b/x/o',
+      ]) {
+        await expect(call(fns.proxyImage, { uid, data: { url } })).rejects.toMatchObject({ code: 'permission-denied' })
+      }
+    })
+
+    it('reports a missing file as not-found', async () => {
+      const uid = newUid()
+      await expect(call(fns.proxyImage, { uid, data: { url: storageUrl(BUCKET, `users/${uid}/gone.jpg`) } }))
+        .rejects.toMatchObject({ code: 'not-found' })
+    })
+  })
 })
 
 describe('validateEmail', () => {

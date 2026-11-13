@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useCloset } from '../../context/ClosetContext'
 import { generateOutfit } from '../../services/outfitAI'
 import { getWeather, getWeatherEmoji } from '../../services/weather'
+import { formatTemp } from '../../services/temperature'
+import { useTempUnit, useDefaultOccasion, usePreferredSeasons } from '../../context/AppContext'
 import styles from '../../screens/HomeScreen.module.css'
 
 const CATEGORY_EMOJIS_HOME = {
@@ -13,6 +15,9 @@ const CATEGORY_EMOJIS_HOME = {
 export default function DailyOutfitPreview({ navigate, gender }) {
   const { user }        = useAuth()
   const { closetItems } = useCloset()
+  const { unit }        = useTempUnit()
+  const { occasion }    = useDefaultOccasion()
+  const { preferredSeasons } = usePreferredSeasons()
   const [outfit, setOutfit]   = useState(null)
   const [weather, setWeather] = useState(null)
   const [done, setDone]       = useState(false)
@@ -25,10 +30,10 @@ export default function DailyOutfitPreview({ navigate, gender }) {
     if (!user || closetItems.length < 3 || done) return
     setDone(true)
     const dateStr = new Date().toISOString().slice(0, 10)
-    generateOutfit({ closetItems, weather, occasion: 'casual', dateStr, gender, occupation: null })
+    generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation: null, preferredSeasons })
       .then(setOutfit)
       .catch(() => {})
-  }, [user, closetItems.length, done, gender, weather])
+  }, [user, closetItems.length, done, gender, weather, occasion, preferredSeasons])
 
   // Too-small closet → the "Build your digital closet" prompt lives in the
   // Home notification bell (useHomeNotifications), not here.
@@ -41,7 +46,7 @@ export default function DailyOutfitPreview({ navigate, gender }) {
           <h3 className={styles.dailyPreviewTitle}>Today's Look</h3>
           {weather && (
             <span className={styles.dailyWeather}>
-              {getWeatherEmoji(weather.condition)} {weather.temp}°C · {weather.city}
+              {getWeatherEmoji(weather.condition)} {formatTemp(weather.temp, unit)} · {weather.city}
             </span>
           )}
         </div>

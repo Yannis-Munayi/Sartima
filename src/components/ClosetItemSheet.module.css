@@ -66,6 +66,35 @@
   border-radius: var(--radius-sm);
 }
 
+.favBtn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.favBtn:active {
+  transform: scale(0.92);
+}
+
+.favBtnActive {
+  color: var(--accent);
+}
+
+.favBtnActive svg {
+  fill: currentColor;
+}
+
 /* ── Body ── */
 .body {
   flex: 1;

@@ -1,8 +1,11 @@
 ﻿import { useEffect, useState } from 'react'
 import { getWeather, getWeatherEmoji } from '../services/weather'
+import { formatTemp } from '../services/temperature'
+import { useTempUnit } from '../context/AppContext'
 import styles from './WeatherWidget.module.css'
 
 export default function WeatherWidget({ compact = false }) {
+  const { unit } = useTempUnit()
   const [weather, setWeather] = useState(undefined) // undefined = loading
 
   useEffect(() => {
@@ -19,7 +22,7 @@ export default function WeatherWidget({ compact = false }) {
     return (
       <div className={styles.compact}>
         <span className={styles.emoji}>{getWeatherEmoji(weather.condition)}</span>
-        <span className={styles.compactTemp}>{weather.temp}°</span>
+        <span className={styles.compactTemp}>{formatTemp(weather.temp, unit, { withUnit: false })}</span>
         <span className={styles.compactCity}>{weather.city}</span>
       </div>
     )
@@ -29,7 +32,7 @@ export default function WeatherWidget({ compact = false }) {
     <div className={styles.widget}>
       <span className={styles.weatherEmoji}>{getWeatherEmoji(weather.condition)}</span>
       <div className={styles.info}>
-        <span className={styles.temp}>{weather.temp}°C</span>
+        <span className={styles.temp}>{formatTemp(weather.temp, unit)}</span>
         <span className={styles.desc}>{weather.description} · {weather.city}</span>
       </div>
       <span className={styles.humidity}>{weather.humidity}% humidity</span>

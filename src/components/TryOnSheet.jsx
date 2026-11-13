@@ -5,7 +5,8 @@ import { useAvatar } from '../hooks/useAvatar'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { useWishlist } from '../context/WishlistContext'
 import { useSubscription } from '../context/SubscriptionContext'
-import { generateTryOnResult, TRYON_CATEGORIES } from '../services/tryOn'
+import { generateTryOnResult } from '../services/tryOn'
+import { garmentPhoto, garmentDisplayPhoto, garmentCategory } from '../services/tryOnGarment'
 import { purchaseTryOnPackSession } from '../services/subscriptionService'
 import { recordSignal } from '../services/interestTracker'
 import styles from './TryOnSheet.module.css'
@@ -21,7 +22,7 @@ const LOADING_STAGES = [
 
 function LoadingView({ items, avatarUrl }) {
   const [stage, setStage] = useState(0)
-  const primaryPhoto = items[0]?.prettifiedUrl ?? items[0]?.imageUrl ?? items[0]?.thumbnailUrl
+  const primaryPhoto = garmentDisplayPhoto(items[0])
 
   useEffect(() => {
     const stageTimer = setInterval(() => {
@@ -65,9 +66,9 @@ function ClosetPicker({ selectedIds, onSelect, onClose }) {
   useEscapeKey(onClose)
   const available = closetItems.filter(
     (i) =>
-      TRYON_CATEGORIES.includes(i.category) &&
+      garmentCategory(i) &&
       !selectedIds.has(i.id) &&
-      (i.imageUrl || i.thumbnailUrl)  // only items that have a photo
+      garmentPhoto(i)  // only items that have a photo
   )
 
   return (
@@ -81,7 +82,7 @@ function ClosetPicker({ selectedIds, onSelect, onClose }) {
       ) : (
         <div className={styles.pickerGrid}>
           {available.map((item) => {
-            const photo = item.prettifiedUrl ?? item.thumbnailUrl ?? item.imageUrl
+            const photo = item.prettifiedUrl || item.thumbnailUrl || garmentPhoto(item)
             return (
               <button key={item.id} className={styles.pickerItem} onClick={() => onSelect(item)}>
                 {photo && <img src={photo} alt={item.name} className={styles.pickerItemImg} />}
@@ -129,7 +130,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
 
   async function handleGenerate() {
     if (!avatarUrl || selectedItems.length === 0) return
-    const missingImage = selectedItems.find((i) => !i.imageUrl && !i.thumbnailUrl)
+    const missingImage = selectedItems.find((i) => !garmentPhoto(i))
     if (missingImage) {
       setErrorMessage(`"${missingImage.name}" has no photo — remove it and try again.`)
       setPhase('error')
@@ -177,7 +178,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
   }
 
   function handleAddItem(newItem) {
-    if (!newItem.imageUrl && !newItem.thumbnailUrl) return  // item has no photo — skip silently
+    if (!garmentPhoto(newItem)) return                      // item has no photo — skip silently
     if (selectedIds.has(newItem.id)) return                 // already selected
     setSelectedItems((prev) => [...prev, newItem])
     setShowPicker(false)
@@ -295,7 +296,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
           {avatarUrl && phase !== 'loading' && (
             <div className={styles.piecesStrip}>
               {selectedItems.map((si) => {
-                const photo = si.prettifiedUrl ?? si.thumbnailUrl ?? si.imageUrl
+                const photo = si.prettifiedUrl || si.thumbnailUrl || garmentPhoto(si)
                 return (
                   <div key={si.id} className={styles.pieceThumb}>
                     {photo && <img src={photo} alt={si.name} className={styles.pieceThumbImg} />}
@@ -368,7 +369,7 @@ export default function TryOnSheet({ item, onClose, onSaved }) {
             <div className={styles.idleView}>
               <div className={styles.idlePreview}>
                 {(() => {
-                  const photo = selectedItems[0]?.prettifiedUrl ?? selectedItems[0]?.imageUrl ?? selectedItems[0]?.thumbnailUrl
+                  const photo = garmentDisplayPhoto(selectedItems[0])
                   return photo ? <img src={photo} alt={selectedItems[0].name} className={styles.idleGarmentImg} /> : null
                 })()}
               </div>

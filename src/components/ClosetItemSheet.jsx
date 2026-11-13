@@ -4,8 +4,10 @@ import { storage } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useCloset } from '../context/ClosetContext'
 import { prettifyImage } from '../services/prettify'
+import { logError } from '../services/logger'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import CareSymbolPicker from './CareSymbolPicker'
+import Icon from './Icon'
 import {
   CARE_SYMBOLS,
   WASH_FREQUENCIES,
@@ -80,6 +82,8 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
   const [prettifyProgress, setProgress] = useState(0)
   const [error, setError]           = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // Saved on tap (not with the edit form) so it works from either mode
+  const [favorite, setFavorite]     = useState(Boolean(item.favorite))
 
   // Esc steps back one level, like the sheet's own Cancel buttons
   useEscapeKey(() => {
@@ -135,6 +139,18 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
     }
   }
 
+  async function handleToggleFavorite() {
+    const next = !favorite
+    setFavorite(next)
+    setError(null)
+    try {
+      await updateClosetItem(item.id, { favorite: next })
+    } catch {
+      setFavorite(!next)
+      setError("Couldn't update favourite. Please try again.")
+    }
+  }
+
   async function handlePrettify() {
     const src = item.imageUrl ?? item.thumbnailUrl
     if (!src || !user) {
@@ -155,6 +171,7 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
       await updateClosetItem(item.id, { prettifiedUrl: downloadUrl })
       onUpdate()
     } catch (err) {
+      logError('closetItemSheet', 'Prettify failed', { error: err, itemId: item.id })
       setError('Prettify failed. The browser may not support this feature.')
     } finally {
       setPrettifying(false)
@@ -186,6 +203,15 @@ export default function ClosetItemSheet({ item, onClose, onUpdate }) {
           {item.prettifiedUrl && (
             <span className={styles.prettifiedBadge}>✦ Prettified</span>
           )}
+          <button
+            type="button"
+            className={`${styles.favBtn} ${favorite ? styles.favBtnActive : ''}`}
+            onClick={handleToggleFavorite}
+            aria-pressed={favorite}
+            aria-label={favorite ? 'Remove from favourites' : 'Add to favourites'}
+          >
+            <Icon name="heart" size={20} />
+          </button>
         </div>
 
         <div className={styles.body}>

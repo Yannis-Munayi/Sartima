@@ -25,6 +25,7 @@ export const fake = {
   users: new Map(),
   order: [],            // deleteAccount step order
   deletedPrefixes: [],
+  files: new Map(),     // Storage objects: path → { bytes, contentType }
   autoId: 0,
 }
 
@@ -115,8 +116,23 @@ const auth = {
 
 export const messaging = { send: vi.fn(async () => 'msg-id') }
 
+const missingFile = () => Object.assign(new Error('No such object'), { code: 404 })
+
 const bucket = {
+  name: 'test-bucket.firebasestorage.app',
   deleteFiles: vi.fn(async ({ prefix }) => { fake.order.push('storage'); fake.deletedPrefixes.push(prefix) }),
+  file: (path) => ({
+    download: async () => {
+      const f = fake.files.get(path)
+      if (!f) throw missingFile()
+      return [Buffer.from(f.bytes)]
+    },
+    getMetadata: async () => {
+      const f = fake.files.get(path)
+      if (!f) throw missingFile()
+      return [{ contentType: f.contentType }]
+    },
+  }),
 }
 
 export const admin = {
@@ -143,6 +159,7 @@ export function resetFakes() {
   fake.users.clear()
   fake.order.length = 0
   fake.deletedPrefixes.length = 0
+  fake.files.clear()
   for (const group of [auth, messaging, bucket, mail, stripe.customers, stripe.checkout.sessions, stripe.billingPortal.sessions, stripe.subscriptions, stripe.webhooks]) {
     for (const fn of Object.values(group)) fn.mockClear?.()
   }

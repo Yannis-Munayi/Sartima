@@ -1,5 +1,5 @@
 import {
-  test, expect, open, openOutfitsSubTab, openSettings, closetItem, basicCloset, note,
+  test, expect, open, openOutfitsSubTab, openSettings, closetItem, basicCloset, note, QA_PHOTO,
 } from '../lib/fixtures.js'
 
 test.use({ role: 'free' })
@@ -58,6 +58,17 @@ async function openItemSheet(page, name) {
   await expect(page.getByRole('button', { name: '✎ Edit Details' })).toBeVisible()
 }
 
+/**
+ * For polling a Prettify: the item's prettifiedUrl once it's saved, or the
+ * sheet's error text if it failed, so a failure ends the poll straight away
+ * (and shows up in the report) instead of after the full timeout.
+ */
+async function prettifyOutcome(page, account, name) {
+  const failed = page.getByText(/Prettify failed/)
+  if (await failed.count()) return `FAILED: ${await failed.first().textContent()}`
+  return (await account.closet()).find((i) => i.name === name)?.prettifiedUrl ?? ''
+}
+
 test.describe('9. Closet', () => {
   test('Upload a photo → the AI picks out the items and adds them to your closet', async ({ page, account, fns }) => {
     note('The vision call is stubbed (no AI spend); the photo really uploads to Storage.')
@@ -112,22 +123,33 @@ test.describe('9. Closet', () => {
 
     await openItemSheet(page, 'QA Prettify Me')
     await page.getByRole('button', { name: '✦ Prettify' }).click()
-    await expect.poll(async () => (await account.closet()).find((i) => i.name === 'QA Prettify Me')?.prettifiedUrl ?? '',
+    await expect.poll(() => prettifyOutcome(page, account, 'QA Prettify Me'),
       { timeout: 240_000, intervals: [3_000] }).toMatch(/^https:/)
-    await expect(page.getByText('Prettify failed')).toHaveCount(0)
   })
 
-  test('Prettify a catalog item\'s photo → the background is removed (through the proxyImage Function)', async ({ page, account }) => {
-    test.setTimeout(300_000)
-    await account.reset({ closet: [closetItem('QA Catalog Photo', 'tops')] })
-    const proxied = []
-    page.on('request', (req) => { if (/\/proxyImage(\?|$)/.test(req.url()) && req.method() === 'POST') proxied.push(req.url()) })
-    await openCloset(page)
-    await openItemSheet(page, 'QA Catalog Photo')
-    await page.getByRole('button', { name: '✦ Prettify' }).click()
-    await expect.poll(async () => (await account.closet()).find((i) => i.name === 'QA Catalog Photo')?.prettifiedUrl ?? '',
-      { timeout: 240_000, intervals: [3_000] }).toMatch(/^https:/)
-    expect(proxied.length, 'the cross-origin photo went through proxyImage').toBeGreaterThan(0)
+  test.describe(() => {
+    // The PWA service worker answers Pexels requests from its cache, and
+    // page.route can't see requests a service worker handles.
+    test.use({ serviceWorkers: 'block' })
+
+    test('Prettify a catalog item\'s photo → the background is removed (through the proxyImage Function)', async ({ page, account }) => {
+      test.setTimeout(300_000)
+      await account.reset({ closet: [closetItem('QA Catalog Photo', 'tops')] })
+      // Pexels sends `Access-Control-Allow-Origin: *`, so the browser's direct fetch
+      // would succeed and the proxy would never be needed. Fail that fetch (as a
+      // CORS-blocking host would) so the app has to fall back to proxyImage, whose
+      // server-side fetch isn't affected. The card's <img> still loads normally.
+      await page.route((url) => url.href === QA_PHOTO, (route) =>
+        route.request().resourceType() === 'fetch' ? route.abort('failed') : route.continue())
+      const proxied = []
+      page.on('request', (req) => { if (/\/proxyImage(\?|$)/.test(req.url()) && req.method() === 'POST') proxied.push(req.url()) })
+      await openCloset(page)
+      await openItemSheet(page, 'QA Catalog Photo')
+      await page.getByRole('button', { name: '✦ Prettify' }).click()
+      await expect.poll(async () => (await account.closet()).find((i) => i.name === 'QA Catalog Photo')?.prettifiedUrl ?? '',
+        { timeout: 240_000, intervals: [3_000] }).toMatch(/^https:/)
+      expect(proxied.length, 'the cross-origin photo went through proxyImage').toBeGreaterThan(0)
+    })
   })
 
   test('Add an item through catalog search → it appears in your closet', async ({ page, account }) => {

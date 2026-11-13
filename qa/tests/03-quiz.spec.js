@@ -122,9 +122,15 @@ test.describe('3. Style quiz', () => {
         await completeQuiz(page)
         await expect.poll(async () => (await account.quizzes()).length, { timeout: 20_000 }).toBe(before + 2)
       }
+      const total = (await account.quizzes()).length
       await go(page, 'profile')
-      await expect(page.getByText('Quiz history', { exact: true })).toBeVisible()
-      expect(await page.locator('[class*="quizCard"]').count()).toBeGreaterThanOrEqual(2)
+      // The heading carries a count badge ("Quiz history 2 quizzes"), so match it by prefix
+      const history = page.getByRole('heading', { name: /^Quiz history/ })
+      await expect(history).toBeVisible({ timeout: 15_000 })
+      await expect(history).toContainText(`${total} quizzes`)
+      // Count the cards themselves, not their quizCardHeader/quizCardLeft/quizCardBody children
+      const cards = page.locator('[class*="quizCard"]:not([class*="quizCardHeader"]):not([class*="quizCardLeft"]):not([class*="quizCardBody"])')
+      expect(await cards.count()).toBeGreaterThanOrEqual(2)
       await expect(page.getByText('Style evolution', { exact: true })).toBeVisible()
     })
   })

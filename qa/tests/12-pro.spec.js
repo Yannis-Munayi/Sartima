@@ -150,7 +150,8 @@ test.describe('12. Pro features', () => {
       await account.reset({ liked: [{ ...top, image: QA_PHOTO }] })
       await open(page, 'home')
       await openOutfitsSubTab(page, 'Liked')
-      await page.getByRole('button', { name: 'Try On' }).first().click()
+      // exact: the whole card is a role="button" whose name also contains "Try On"
+      await page.getByRole('button', { name: 'Try On', exact: true }).first().click()
       await expect(page.getByText(/has no photo/)).toHaveCount(0)
       await expect(page.getByAltText('Virtual try-on')).toBeVisible({ timeout: 30_000 })
     })
