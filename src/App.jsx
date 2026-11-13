@@ -208,13 +208,18 @@ function AppShell() {
   }, [user])
 
   // Post-auth account checks, run once per account and never while the auth
-  // screen is active (so they can't yank away an in-progress signup step):
+  // screen or the entry SignupFlow is active (so they can't yank away an
+  // in-progress signup step). SignupFlow matters especially: `user` turns
+  // truthy the moment the account is created, before signup() has written
+  // the consent fields and before finalizeOnboardingAnswers() has written
+  // onboardingComplete — checking then would read an empty doc and send a
+  // brand-new account to ConsentGate/onboarding instead of the quiz.
   //  - missing ToS/age consent  → full-screen ConsentGate (new Google
   //    sign-ins, legacy accounts, failed signup writes)
   //  - onboarding not completed → onboarding wizard (after consent, if both)
   //  - stale accepted legal version → update banner
   useEffect(() => {
-    if (!user || state.screen === SCREENS.AUTH) return
+    if (!user || !entryDone || state.screen === SCREENS.AUTH) return
     if (userDocCheckedRef.current === user.uid) return
     userDocCheckedRef.current = user.uid
     getDoc(doc(db, 'users', user.uid)).then((snap) => {
@@ -227,7 +232,7 @@ function AppShell() {
         if (data?.legalVersion !== LEGAL_VERSION) setLegalVersionMismatch(true)
       }
     }).catch(() => {})
-  }, [user, state.screen, dispatch])
+  }, [user, entryDone, state.screen, dispatch])
 
   function handleConsentDone() {
     setNeedsConsent(false)

@@ -51,11 +51,12 @@ a trace (opens Playwright's trace viewer), and its last 20 results.
 
 ## Cost and side effects
 
-- AI, weather, try-on and feedback Functions are **stubbed** by default, so
-  there's no Gemini spend, no Replicate charges and no emails.
+- AI, weather, try-on, feedback and image-search Functions are **stubbed** by
+  default, so there's no Gemini spend, no Replicate charges, no emails, and no
+  drain on the shared Unsplash/Pexels quota or the per-IP guest photo limit.
 - A few checks call real Functions on purpose, because the point is to check
   the backend:
-  - `validateEmail` and `searchImages` (free).
+  - `validateEmail`, and `searchImages` once directly in 16-backend (free).
   - `getWeather`, once per run.
   - One `anthropicOutfit` call a day at most, for the free-tier daily limit.
   - Up to 3 `anthropicTrip` calls a month, for the Pro monthly limit.

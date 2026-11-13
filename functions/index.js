@@ -412,9 +412,13 @@ async function searchUnsplash(query, count) {
   )
   if (res.status === 403 || res.status === 429) {
     unsplashCooldownUntil = Date.now() + UNSPLASH_COOLDOWN_MS
+    console.warn(`searchImages: Unsplash quota spent (${res.status}), using Pexels for ${UNSPLASH_COOLDOWN_MS / 60_000} min`)
     return []
   }
-  if (!res.ok) return []
+  if (!res.ok) {
+    console.warn('searchImages: Unsplash answered', res.status)
+    return []
+  }
   const data = await res.json()
   // `regular` is fixed at 1080px wide, which blurs once stretched across a
   // full-width desktop hero/card on a large or high-DPI viewport. Build a
@@ -431,7 +435,12 @@ async function searchPexels(query, count) {
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=portrait`,
     { headers: { Authorization: key } }
   )
-  if (!res.ok) return []
+  // Logged because an empty `urls` is otherwise indistinguishable from "no
+  // matches"; a 429 here means Pexels' hourly quota is spent as well.
+  if (!res.ok) {
+    console.warn('searchImages: Pexels answered', res.status)
+    return []
+  }
   const data = await res.json()
   // `large` caps at 940x650 with no dpr multiplier — on a portrait source
   // that clips to ~430px wide, which upscales (blurs) once it's stretched

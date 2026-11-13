@@ -108,7 +108,7 @@ async function loginThroughUi(browser, email, password) {
     try { localStorage.setItem('sartima_analytics_consent', 'denied') } catch { /* */ }
   })
   const page = await ctx.newPage()
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Log in', exact: true }).click()
   await page.getByPlaceholder('you@example.com').fill(email)
   await page.getByPlaceholder('••••••••').fill(password)
@@ -201,10 +201,21 @@ export const basicCloset = () => [
 
 // ── Function stubs ───────────────────────────────────────────────────────────
 
+// searchImages is stubbed too. Guests are rate-limited per IP (a 60-call burst),
+// and every parallel guest test starts with an empty photo cache from the same
+// IP, so the suite drained that bucket within minutes and later screens (the
+// Brands grid) got only 429s and showed no photos. It also spent the
+// production Unsplash/Pexels hourly quota that real users rely on. The real
+// Function is still checked directly in 16-backend.
 const STUBBED = [
   'anthropicVision', 'anthropicOutfit', 'anthropicGapReasoning', 'anthropicTrip',
-  'generateTryOn', 'getWeather', 'submitFeedback', 'submitCrashReport',
+  'generateTryOn', 'getWeather', 'submitFeedback', 'submitCrashReport', 'searchImages',
 ]
+
+/** An inline photo stand-in, so stubbed image searches load with no network. */
+export const qaStockPhoto = (label = 'QA photo') => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#8B6840"/><text x="150" y="200" font-size="22" text-anchor="middle" fill="#fff">${label.replace(/[<&>"]/g, '')}</text></svg>`,
+)
 
 /** Return this from a stub handler to answer with a callable error. */
 export const fnError = (status, message) => ({ __error: { status, message } })
@@ -242,6 +253,9 @@ const DEFAULT_RESPONSES = {
   getWeather: () => ({ ...STUB_WEATHER, fetchedAt: Date.now() }),
   submitFeedback: () => ({ ok: true }),
   submitCrashReport: () => ({ ok: true }),
+  searchImages: (d) => ({
+    urls: Array.from({ length: Math.max(1, Math.min(d.count ?? 3, 10)) }, (_, i) => qaStockPhoto(`QA photo ${i + 1}`)),
+  }),
 }
 
 const CORS = {
@@ -397,6 +411,21 @@ export const test = base.extend({
       last: (name) => (calls[name] ?? []).at(-1),
     })
   }, { auto: true }],
+
+  // goto/reload wait for DOMContentLoaded instead of "load". "load" also waits
+  // for every product photo from external image hosts, so one stalled image
+  // (or a busy Vite dev server) timed out page.goto at 45s across a whole batch
+  // of tests. Every test then waits for the UI it needs (ready(), expect...),
+  // which is the real readiness check. An explicit waitUntil still wins.
+  page: async ({ page }, use) => {
+    for (const method of ['goto', 'reload']) {
+      const original = page[method].bind(page)
+      page[method] = method === 'goto'
+        ? (url, opts) => original(url, { waitUntil: 'domcontentloaded', ...opts })
+        : (opts) => original({ waitUntil: 'domcontentloaded', ...opts })
+    }
+    await use(page)
+  },
 
   /** Uncaught page exceptions, checked by tests that care. */
   pageErrors: async ({ page }, use) => {

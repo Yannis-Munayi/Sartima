@@ -11,7 +11,8 @@ test.describe('16. Backend health', () => {
     expect(res.status()).toBe(200)
     const html = await res.text()
     expect(html).toContain('id="root"')
-    const script = html.match(/<script[^>]+src="([^"]+\.(?:js|jsx|mjs))"/)?.[1]
+    // The dev server can append a cache-busting query (main.jsx?t=…) after an edit.
+    const script = html.match(/<script[^>]+src="([^"?#]+\.(?:js|jsx|mjs|ts|tsx)(?:[?#][^"]*)?)"/)?.[1]
     expect(script, 'the page references its JS bundle').toBeTruthy()
     const js = await request.get(new URL(script, BASE_URL + '/').toString())
     expect(js.status()).toBe(200)
@@ -28,7 +29,14 @@ test.describe('16. Backend health', () => {
     test.skip(!FIREBASE.projectId, 'Needs setup: Firebase web config')
     const res = await fb.callFunction(null, 'searchImages', { query: 'trench coat outfit', count: 2, source: 'stock' })
     expect(res.ok, `${res.status} ${res.message}`).toBe(true)
-    expect(JSON.stringify(res.result)).toMatch(/https:\/\//)
+    // An empty list almost always means Unsplash (50/h) and Pexels have both
+    // spent their hourly quota, e.g. after an unstubbed run of the browser
+    // suite. Users then see gradient cards instead of photos until the quota
+    // resets. The searchImages logs name the provider and status.
+    expect(res.result?.urls?.length ?? 0,
+      'No photos came back: the Unsplash and Pexels hourly quotas are probably spent. Check the searchImages logs and retry within the hour.',
+    ).toBeGreaterThan(0)
+    expect(res.result.urls[0]).toMatch(/^https:\/\//)
   })
 
   test.describe('free account', () => {

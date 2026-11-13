@@ -253,10 +253,12 @@
   border-radius: var(--radius-sm);
 }
 
+/* Top-right: bottom-right belongs to ProductImageToggle's gender-photo pill. */
 .heartBtn {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
   width: 28px;
   height: 28px;
   border-radius: 50%;

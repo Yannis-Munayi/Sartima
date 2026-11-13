@@ -40,7 +40,10 @@ export function setting(key, fallback = '') {
 
 export const TARGET     = process.env.QA_TARGET === 'live' ? 'live' : 'local'
 export const LOCAL_MODE = setting('QA_LOCAL_MODE', 'dev') === 'preview' ? 'preview' : 'dev'
-export const LOCAL_PORT = LOCAL_MODE === 'preview' ? 4173 : 5173
+// Dedicated ports (not Vite's usual 5173/4173), so a run never reuses a dev
+// server you left open: a long-lived one slowed page loads past the 45s
+// navigation timeout and failed unrelated tests.
+export const LOCAL_PORT = LOCAL_MODE === 'preview' ? 4180 : 5180
 export const LIVE_URL   = setting('QA_LIVE_URL', 'https://sartima.ca').replace(/\/+$/, '')
 export const BASE_URL   = TARGET === 'live' ? LIVE_URL : `http://localhost:${LOCAL_PORT}`
 

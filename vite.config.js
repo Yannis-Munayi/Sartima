@@ -114,6 +114,21 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    watch: {
+      // Not app source. The QA suite streams videos, traces and screenshots
+      // into qa/results for the whole run, and agent worktrees under .claude
+      // are full copies of the repo; watching them slowed page loads enough
+      // that QA tests timed out in page.goto.
+      ignored: ['**/qa/results/**', '**/.claude/**', '**/test-results/**', '**/playwright-report/**'],
+    },
+  },
+  // Only scan the app's own entry page for dependencies to pre-bundle (by
+  // default Vite crawls every .html in the repo, including qa/dashboard and
+  // the worktree copies).
+  optimizeDeps: {
+    entries: ['index.html'],
+  },
   build: {
     rollupOptions: {
       output: {
