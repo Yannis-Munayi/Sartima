@@ -1,6 +1,8 @@
 // Reads the product catalog straight from src/data/products/*.js so tests can
 // check what the app shows (a card's name → its brand, garment type, colour,
-// price tier) without importing app code. Each product sits on one line.
+// price tier) without importing app code. Most files put each product on one
+// line, but core.js spreads them over several, so products are split out of
+// the whole file text at each `{ id: '…'` rather than line by line.
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,10 +22,10 @@ export function catalog() {
   const dir = path.join(ROOT, 'src/data/products')
   const products = []
   for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.js'))) {
-    for (const line of fs.readFileSync(path.join(dir, file), 'utf8').split(/\r?\n/)) {
-      if (!/^\s*\{\s*id:\s*'/.test(line)) continue
+    const chunks = fs.readFileSync(path.join(dir, file), 'utf8').split(/\{\s*(?=id:\s*')/).slice(1)
+    for (const chunk of chunks) {
       const p = {}
-      for (const key of FIELDS) p[key] = field(line, key)
+      for (const key of FIELDS) p[key] = field(chunk, key)
       if (p.id && p.name) products.push(p)
     }
   }

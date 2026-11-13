@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { useInterests } from '../../context/InterestContext'
 import { fetchPhotosWithFallback } from '../../services/stockPhotos'
-import { resolveProductImage, getAltProductImage } from '../../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
 import { getPieceOption, PRIORITIES, BUDGET_BY_ID, countOutfits } from '../../services/wardrobeRecommend'
 import styles from '../WardrobeBuildScreen.module.css'
@@ -14,7 +14,7 @@ function ProductPhoto({ product }) {
   const [photo, setPhoto] = useState(null)
   const { state } = useApp()
   const gender = state.gender
-  const altPhoto = getAltProductImage(product, gender)
+  const swapItem = canSwapGenderPhoto(product, gender) ? product : null
   const ref     = useRef(null)
   const fetched = useRef(false)
 
@@ -36,7 +36,7 @@ function ProductPhoto({ product }) {
     <div ref={ref} className={styles.productPhoto}
       style={{ background: product.gradient ?? 'var(--surface)' }}
     >
-      <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.productPhotoImg} />
+      <ProductImageToggle photo={photo} swapItem={swapItem} alt={product.name} imgClassName={styles.productPhotoImg} />
     </div>
   )
 }

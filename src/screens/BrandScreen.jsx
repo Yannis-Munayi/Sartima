@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getBrandById, BRAND_NAME_TO_ID } from '../data/brands'
 import { PRODUCTS } from '../data/products'
 import { fetchPhotosWithFallback } from '../services/stockPhotos'
-import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../services/productImage'
 import { useExplore } from '../context/ExploreContext'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
@@ -119,7 +119,7 @@ function BrandProductCard({ product }) {
   const { state } = useApp()
   const gender = state.gender
   const liked = isLiked(product.id)
-  const altPhoto = getAltProductImage(product, gender)
+  const swapItem = canSwapGenderPhoto(product, gender) ? product : null
   const cardRef = useRef(null)
 
   useEffect(() => {
@@ -152,6 +152,7 @@ function BrandProductCard({ product }) {
         shopUrl: product.shopUrl, shopFallbackUrl: product.shopFallbackUrl,
         seasons: product.seasons,
         image: product.image, imageMen: product.imageMen, googleQuery: product.googleQuery,
+        gender: product.gender,
       })
     }
   }
@@ -161,7 +162,7 @@ function BrandProductCard({ product }) {
   return (
     <div className={styles.shopCard} ref={cardRef}>
       <div className={styles.shopCardPhoto} style={{ background: product.gradient ?? 'var(--bg-elevated)' }}>
-        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.shopCardImg} />
+        <ProductImageToggle photo={photo} swapItem={swapItem} alt={product.name} imgClassName={styles.shopCardImg} />
         <button
           className={`${styles.heartBtn} ${liked ? styles.heartBtnActive : ''}`}
           onClick={toggleLike}

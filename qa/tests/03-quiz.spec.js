@@ -1,4 +1,4 @@
-import { test, expect, open, go, completeQuiz, currentCardName, note, knownIssue } from '../lib/fixtures.js'
+import { test, expect, open, go, completeQuiz, currentCardName, note } from '../lib/fixtures.js'
 import { productsNamed } from '../lib/catalog.js'
 
 const like = (page) => page.getByRole('button', { name: 'Like', exact: true })
@@ -84,7 +84,6 @@ test.describe('3. Style quiz', () => {
     })
 
     test('Choose seasons and categories → the quiz items match what you chose', async ({ page }) => {
-      knownIssue('The Discover feed (useDiscoveryQueue) may not read the seasons and categories picked on these screens.')
       await open(page, 'home')
       await completeQuiz(page)
       // "Start over" returns to the welcome screen, which leads into the season → category setup

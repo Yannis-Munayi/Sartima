@@ -22,3 +22,9 @@
 .toggle:hover {
   background: rgba(0, 0, 0, 0.75);
 }
+
+/* Fetching the other side's photo */
+.toggle[aria-busy='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}

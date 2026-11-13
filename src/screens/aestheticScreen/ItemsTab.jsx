@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { STYLES } from '../../data/styles'
 import { AESTHETIC_ITEMS, TYPE_EMOJI, inferCat, inferSeasons, inferGender } from '../../data/aestheticItems'
 import { fetchPhotosWithFallback } from '../../services/stockPhotos'
-import { resolveProductImage, getAltProductImage } from '../../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
 import { PRODUCTS } from '../../data/products'
 import { useWishlist } from '../../context/WishlistContext'
@@ -70,7 +70,7 @@ function ProductGridCard({ product }) {
   const { state } = useApp()
   const gender = state.gender
   const liked = isLiked(product.id)
-  const altPhoto = getAltProductImage(product, gender)
+  const swapItem = canSwapGenderPhoto(product, gender) ? product : null
 
   useEffect(() => {
     let cancelled = false
@@ -96,6 +96,7 @@ function ProductGridCard({ product }) {
         shopUrl: product.shopUrl, shopFallbackUrl: product.shopFallbackUrl,
         seasons: product.seasons,
         image: product.image, imageMen: product.imageMen, googleQuery: product.googleQuery,
+        gender: product.gender,
       })
     }
   }
@@ -103,7 +104,7 @@ function ProductGridCard({ product }) {
   return (
     <div className={styles.productGridCard}>
       <div className={styles.productGridPhoto} style={{ background: product.gradient }}>
-        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.itemImg} />
+        <ProductImageToggle photo={photo} swapItem={swapItem} alt={product.name} imgClassName={styles.itemImg} />
         {product.brand && <span className={styles.brandBadge}>{product.brand}</span>}
         <button
           className={`${styles.heartBtnSmall} ${liked ? styles.heartBtnSmallActive : ''}`}

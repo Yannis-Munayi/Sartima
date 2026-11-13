@@ -83,6 +83,7 @@ const productEntry = (p) => ({
   shopUrl: p.shopUrl, shopFallbackUrl: p.shopFallbackUrl,
   seasons: p.seasons,
   image: p.image, imageMen: p.imageMen, googleQuery: p.googleQuery,
+  gender: p.gender,
 })
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -231,6 +232,7 @@ export function sartimaHubActions(deps) {
               seasons: prod.seasons ?? [],
               itemType: prod.type,
               parentType: prod.parentType,
+              gender: prod.gender,
               styleWeights: prod.styleWeights ?? {},
               ...(prod.image ? { thumbnailUrl: prod.image } : {}),
               ...fields,

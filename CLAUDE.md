@@ -48,6 +48,8 @@ firebase deploy --only firestore:rules    # Deploy Firestore security rules
 firebase emulators:start --only functions # Local function emulator
 ```
 
+**CI** (`.github/workflows/ci.yml`, on every push to `main` and every PR) runs four parallel jobs: build (+ catalog lint, and `npm run lint` as report-only until the app's existing lint errors are fixed), `npm test`, `npm run test:rules` and `npm run test:e2e`. It uses a placeholder Firebase config, so it needs no secrets; keep e2e specs stubbing every Cloud Function so that stays true. The `qa/` suite is not in CI (it needs test accounts and can hit the live site).
+
 ---
 
 ## Stack

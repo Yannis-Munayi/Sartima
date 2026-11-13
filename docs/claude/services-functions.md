@@ -178,7 +178,7 @@ Thin wrappers over the Stripe Functions: `createCheckoutSession(uid, plan)` (mon
 
 **`stockPhotos.js`** — Stock photography via `searchImages` Function (`source: 'stock'`): Unsplash first, Pexels fallback. The provider chain runs server-side so a fallback doesn't cost a second rate-limited call. Bounded cache + in-flight dedupe; at most 4 calls in flight (the rest queue); a `resource-exhausted` reply is retried after 2s/5s/10s instead of moving on. `fetchPhotosWithFallback(queries)` tries alternate queries in order and is the primary export.
 
-**`productImage.js`** — `resolveProductImage` / `getAltProductImage`: picks a product card's image (curated inline `image`/`imageMen` URL, else a stock photo for `pexelsQuery ?? name`, else the card's gradient placeholder). Used with `ProductImageToggle`.
+**`productImage.js`** — `resolveProductImage` picks a product card's image (curated inline `image`/`imageMen` URL, else a stock photo for `pexelsQuery ?? name`, else the card's gradient placeholder). `canSwapGenderPhoto` / `resolveGenderPhoto` drive `ProductImageToggle`'s men's/women's swap. It is offered only with gender "Both", for products with both curated photos or unisex products with no curated photo. Unisex products get `men …` / `women …` stock photos, fetched on first tap and cached like any other stock photo.
 
 **`CatalogSearchSheet`** searches stock photos (Unsplash → Pexels). If nothing comes back, shows a generic "no results" error.
 

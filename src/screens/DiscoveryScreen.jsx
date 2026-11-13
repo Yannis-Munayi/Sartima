@@ -20,16 +20,21 @@ export default function DiscoveryScreen() {
   const { user }  = useAuth()
   const gender    = state.gender ?? 'both'
   const quizMode  = state.quizMode ?? false
+  // Picked on the season → category setup screens; the season sheet below
+  // edits the same list
+  const activeSeasons = state.selectedSeasons ?? []
 
   const {
-    currentProduct, remaining, onLike, onSkip, onPrev, slotOf,
+    currentProduct, onLike, onSkip, onPrev, slotOf,
     styleScores, isQuizFinished, quizProgress, quizQueue, quizLikedItems,
     seeded, reset,
-  } = useDiscoveryQueue(gender, quizMode, state.quizWarmStart)
+  } = useDiscoveryQueue(gender, quizMode, state.quizWarmStart, {
+    categories: state.selectedCategories,
+    seasons:    activeSeasons,
+  })
 
   const [showFilter,     setShowFilter]     = useState(false)
   const [filterSeasons,  setFilterSeasons]  = useState([])
-  const [activeSeasons,  setActiveSeasons]  = useState([])
   const [likedCount,     setLikedCount]     = useState(0)
   const [swipedCount,    setSwipedCount]    = useState(0)
   useEscapeKey(() => setShowFilter(false), !quizMode && showFilter)
@@ -56,11 +61,6 @@ export default function DiscoveryScreen() {
   }, [isQuizFinished, dispatch, quizLikedItems, quizQueue, styleScores])
 
   function handleLike(product) {
-    // Filter by active seasons if a filter is set
-    if (activeSeasons.length > 0 && !product.seasons?.some((s) => activeSeasons.includes(s))) {
-      onSkip(product)
-      return
-    }
     onLike(product)
     recordSignal(user, 'like', { product, slot: slotOf(product.id) })
     setLikedCount((c) => c + 1)
@@ -80,7 +80,7 @@ export default function DiscoveryScreen() {
   }
 
   function applyFilter() {
-    setActiveSeasons(filterSeasons)
+    dispatch({ type: 'SET_SEASONS', seasons: filterSeasons })
     setShowFilter(false)
   }
 

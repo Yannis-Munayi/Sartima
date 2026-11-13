@@ -120,7 +120,7 @@ Slide-up sheet from ProfileScreen containing every user setting:
 | `TabBar.jsx` / `Sidebar.jsx` | Bottom nav (mobile) / left rail (desktop). Same tab IDs, same `handleTabChange`. |
 | `ProductCard.jsx` | Discovery item card: image, name, style tags, like/skip. |
 | `ClothingCard.jsx` | Closet/liked item card with category badge and action menu. |
-| `ProductImageToggle.jsx` | Toggles a product card between real product photo and colour-gradient placeholder (`productImage.js` resolves the source). |
+| `ProductImageToggle.jsx` | Renders a product card's photo, plus a ♂/♀ pill that swaps between the product's men's and women's photos when `swapItem` is set (`canSwapGenderPhoto` in `productImage.js`). Each side is fetched on its first tap. |
 | `AuthWidget.jsx` | Guest-user sign-in/up prompt CTA. |
 | `ItemActionSheet.jsx` | Bottom sheet: try-on, add to closet, add to wishlist, share, remove. |
 | `TryOnSheet.jsx` | Virtual try-on UI. Upload person photo + select garments → `generateTryOn` Function → Replicate IDM-VTON result. Pro-gated. |

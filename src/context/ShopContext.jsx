@@ -3,6 +3,8 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { savePrefsDoc } from '../services/prefsDoc'
 import { useAuth } from './AuthContext'
+import { groupsNeedGender, fillGroupGender, loadProductsById } from '../services/entryGender'
+import { logWarn } from '../services/logger'
 
 const ShopContext = createContext(null)
 
@@ -48,6 +50,13 @@ export function ShopProvider({ children }) {
           const pending   = current.filter((g) => !storedIds.has(g.id))
           return pending.length > 0 ? [...pending, ...storedGroups] : storedGroups
         })
+
+        // Older scouted products lack `gender`; fill it from the catalog
+        if (groupsNeedGender(storedGroups)) {
+          loadProductsById()
+            .then((byId) => setScoutedGroups((current) => fillGroupGender(current, byId)))
+            .catch((err) => logWarn('ShopContext', 'gender backfill failed', { error: err?.message }))
+        }
       })
       .catch(() => {})
       .finally(() => setLoadReady(true))
@@ -95,7 +104,7 @@ export function ShopProvider({ children }) {
 
   // ── Scout result groups ───────────────────────────────────────────────────
   // group shape: { id, pieceId, pieceName, emoji, budgetTier, budgetLabel, products, savedAt }
-  // products shape (stripped for Firestore): { id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen }
+  // products shape (stripped for Firestore): { id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen, gender }
 
   const addScoutedGroup = useCallback((group) => {
     setScoutedGroups((prev) => {

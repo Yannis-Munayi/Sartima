@@ -3,7 +3,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
 import { useInterests } from '../context/InterestContext'
 import { useApp } from '../context/AppContext'
-import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../services/productImage'
 import ItemActionSheet from '../components/ItemActionSheet'
 import ShopPanel from '../components/ShopPanel'
 import TryOnSheet from '../components/TryOnSheet'
@@ -46,7 +46,7 @@ function LikedItemCard({ item, onSelect, onTryOn }) {
   const { state } = useApp()
   const gender = state.gender
   const isProduct = item.type === 'product'
-  const altPhoto = getAltProductImage(item, gender)
+  const swapItem = canSwapGenderPhoto(item, gender) ? item : null
 
   useEffect(() => {
     let cancelled = false
@@ -59,7 +59,7 @@ function LikedItemCard({ item, onSelect, onTryOn }) {
   return (
     <div className={styles.item} onClick={() => onSelect(item)} role="button" tabIndex={0}>
       <div className={styles.itemPhoto} style={{ background: item.gradient }}>
-        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={item.name} imgClassName={styles.itemImg} />
+        <ProductImageToggle photo={photo} swapItem={swapItem} alt={item.name} imgClassName={styles.itemImg} />
         {isProduct
           ? <span className={styles.brandBadge}>{item.brand}</span>
           : <span className={styles.itemEmoji}>{item.emoji}</span>

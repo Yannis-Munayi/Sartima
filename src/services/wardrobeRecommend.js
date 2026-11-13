@@ -227,7 +227,8 @@ export const SIZE_BY_ROLE = {
 }
 
 // ── Recommendation engine ─────────────────────────────────────────────────────
-// Products in the chosen budget tier are prioritised (+5 score boost).
+// Products outside the chosen budget tier are filtered out (out-of-budget
+// options are only offered behind "View anyway" when nothing fits).
 // Result count comes from the user's Settings preference (default 10, range 5–100).
 
 function scoreProduct(product, priorities, budgetTier, styleAffinities = {}) {
@@ -307,11 +308,15 @@ export function recommendProducts(pieceOption, budgetTier, priorities, gender, p
     primaryPool = allCandidates; suggestedPool = []
   }
 
-  // Hard filters applied only when searching for a specific item
+  // The chosen budget is always a hard filter — "Under $50" must never show a
+  // luxury piece. Colour is a hard filter only for a specific item; otherwise
+  // it just lifts matching colours (see scoreAll). Products with no price tag
+  // pass, since we can't say they're off-budget.
+  const budgetActive = !!(budgetTier && budgetTier !== 'any')
+  const hardColor    = hasSpecific ? colorFilter : null
   const passesHard = (p) => {
-    if (!hasSpecific) return true
-    if (budgetTier && budgetTier !== 'any' && p.priceRange && p.priceRange !== budgetTier) return false
-    if (colorFilter && !p.color?.toLowerCase().includes(colorFilter)) return false
+    if (budgetActive && p.priceRange && p.priceRange !== budgetTier) return false
+    if (hardColor && !p.color?.toLowerCase().includes(hardColor)) return false
     return true
   }
 
@@ -335,7 +340,7 @@ export function recommendProducts(pieceOption, budgetTier, priorities, gender, p
     suggested:     scoredSuggested,
     outOfFilter:   primaryFiltered.length === 0 ? scoredOutOfFilter : [],
     filterMismatch: primaryFiltered.length === 0 && primaryOutOfFilter.length > 0
-      ? describeFilterMismatch(primaryOutOfFilter, budgetTier, colorFilter)
+      ? describeFilterMismatch(primaryOutOfFilter, budgetTier, hardColor)
       : null,
     specificName,
   }

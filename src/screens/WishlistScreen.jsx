@@ -2,7 +2,7 @@
 import { addDoc, collection, getDocs, orderBy, query as firestoreQuery, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { useAuth } from '../context/AuthContext'
-import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../services/productImage'
 import { useWishlist } from '../context/WishlistContext'
 import { useInterests } from '../context/InterestContext'
 import { useApp } from '../context/AppContext'
@@ -33,7 +33,7 @@ function ItemWishCard({ entry, onRemove, onSelect }) {
   const gender = state.gender
 
   const isProduct = entry.type === 'product'
-  const altPhoto = getAltProductImage(entry, gender)
+  const swapItem = canSwapGenderPhoto(entry, gender) ? entry : null
 
   useEffect(() => {
     let cancelled = false
@@ -47,7 +47,7 @@ function ItemWishCard({ entry, onRemove, onSelect }) {
     <div className={styles.itemCard}>
       <button className={styles.itemPhotoBtn} onClick={() => onSelect(entry)}>
         <div className={styles.itemPhoto} style={{ background: entry.gradient }}>
-          <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={entry.name} imgClassName={styles.itemImg} />
+          <ProductImageToggle photo={photo} swapItem={swapItem} alt={entry.name} imgClassName={styles.itemImg} />
           {isProduct && entry.brand && (
             <span className={styles.brandBadge}>{entry.brand}</span>
           )}

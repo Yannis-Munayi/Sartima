@@ -3,8 +3,9 @@ import { PRODUCTS } from '../data/products'
 import { useApp } from '../context/AppContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useStyleAffinity } from '../hooks/useStyleAffinity'
-import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../services/productImage'
 import { buildSearchSuggestions, productAffinity } from '../services/styleRanking'
+import { matchTier } from '../services/catalogSearch'
 import ProductImageToggle from '../components/ProductImageToggle'
 import ItemActionSheet from '../components/ItemActionSheet'
 import AuthWidget from '../components/AuthWidget'
@@ -22,25 +23,6 @@ function genderFilter(gender) {
   return (p) => p.gender === 'unisex' || p.gender === gender || gender === 'both'
 }
 
-// How directly a product answers the query — lower is better, -1 is no
-// match. An exact brand / colour / type hit leads (so "Red" lists red items
-// before Red Wing boots), then partial brand, name, attribute and finally
-// description hits ("Gant" before descriptions that merely say "elegant").
-// Types are matched with hyphens as spaces so "oxford shirt" finds the
-// `oxford-shirt` type.
-function matchTier(p, query) {
-  const spaced = query.replace(/-/g, ' ')
-  const brand  = p.brand?.toLowerCase()
-  const color  = p.color?.toLowerCase()
-  const type   = p.type?.replace(/-/g, ' ')
-  if (brand === query || color === query || type === spaced) return 0
-  if (brand?.includes(query)) return 1
-  if (p.name.toLowerCase().includes(query)) return 2
-  if (type?.includes(spaced) || p.parentType?.toLowerCase().includes(query) || color?.includes(query)) return 3
-  if (p.description?.toLowerCase().includes(query)) return 4
-  return -1
-}
-
 function productToEntry(product) {
   return {
     id: product.id, type: 'product',
@@ -53,6 +35,7 @@ function productToEntry(product) {
     shopUrl: product.shopUrl, shopFallbackUrl: product.shopFallbackUrl,
     seasons: product.seasons,
     image: product.image, imageMen: product.imageMen, googleQuery: product.googleQuery,
+    gender: product.gender,
   }
 }
 
@@ -60,7 +43,7 @@ function SearchResultCard({ product, gender, onSelect }) {
   const [photo, setPhoto] = useState(null)
   const { addToLiked, removeFromLiked, isLiked } = useWishlist()
   const liked = isLiked(product.id)
-  const altPhoto = getAltProductImage(product, gender)
+  const swapItem = canSwapGenderPhoto(product, gender) ? product : null
   const cardRef = useRef(null)
 
   useEffect(() => {
@@ -85,7 +68,7 @@ function SearchResultCard({ product, gender, onSelect }) {
   return (
     <div className={styles.card} ref={cardRef} onClick={() => onSelect(productToEntry(product))}>
       <div className={styles.cardPhoto} style={{ background: product.gradient ?? 'var(--bg-elevated)' }}>
-        <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={styles.cardImg} />
+        <ProductImageToggle photo={photo} swapItem={swapItem} alt={product.name} imgClassName={styles.cardImg} />
         {product.brand && <span className={styles.brandBadge}>{product.brand}</span>}
         <button
           className={`${styles.heartBtn} ${liked ? styles.heartBtnActive : ''}`}

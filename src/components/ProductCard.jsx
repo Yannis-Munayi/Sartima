@@ -4,7 +4,7 @@ import { useNavigation } from '../context/NavigationContext'
 import { useApp } from '../context/AppContext'
 import { useInterests } from '../context/InterestContext'
 import { BRAND_NAME_TO_ID } from '../data/brands'
-import { resolveProductImage, getAltProductImage } from '../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../services/productImage'
 import { hasOpenLayer } from '../hooks/useEscapeKey'
 import { isTypingTarget } from '../hooks/useKeyboardShortcuts'
 import ProductImageToggle from './ProductImageToggle'
@@ -31,7 +31,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
   const [dragging,    setDragging]  = useState(false)
   const [flyDir,      setFlyDir]    = useState(null)
 
-  const altPhoto  = getAltProductImage(product, gender)
+  const swapItem  = canSwapGenderPhoto(product, gender) ? product : null
 
   const startXRef = useRef(null)
   const cardRef   = useRef(null)
@@ -67,6 +67,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
       image:        product.image,
       imageMen:     product.imageMen,
       googleQuery:  product.googleQuery,
+      gender:       product.gender,
     })
   }
 
@@ -185,7 +186,7 @@ export default function ProductCard({ product, onLike, onSkip }) {
           className={`${styles.carousel} ${loadingPhoto ? styles.pulsing : ''}`}
           style={{ background: product.gradient }}
         >
-          <ProductImageToggle photo={photo} altPhoto={altPhoto} imgClassName={styles.photo} />
+          <ProductImageToggle photo={photo} swapItem={swapItem} imgClassName={styles.photo} />
           <div className={styles.photoOverlay} />
         </div>
 

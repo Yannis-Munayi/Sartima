@@ -5,6 +5,7 @@ import { useCloset } from '../context/ClosetContext'
 import { useClosetGaps } from './useClosetGaps'
 import { trackEvent } from '../services/firebase'
 import { shuffle } from '../services/shuffle'
+import { discoveryFilter } from '../services/discoveryFilter'
 import {
   applySignals, createSession, getTasteModel, loadTasteProfile, tasteCloset,
 } from '../services/tasteProfile'
@@ -63,12 +64,17 @@ function isCold(taste) {
 
 // One batch of { product, slot }. Leaves out what this visit already queued
 // or swiped, what the user acted on in earlier visits (the profile's recent
-// touches), and the other gender's catalog. With no signal at all yet there's
-// nothing to rank on, so a cold start is a plain shuffle.
-function buildBatch({ taste, session, closet, gender, count, excluded }) {
+// touches), the other gender's catalog, and anything outside the picked
+// seasons/categories. With no signal at all yet there's nothing to rank on,
+// so a cold start is a plain shuffle.
+function buildBatch({ taste, session, closet, gender, filter, count, excluded }) {
   const allowed = genderFilter(gender)
   const exclude = {
-    has: (id) => excluded.has(id) || Object.hasOwn(taste.touches, id) || !allowed(PRODUCTS_BY_ID[id]),
+    has: (id) => {
+      if (excluded.has(id) || Object.hasOwn(taste.touches, id)) return true
+      const product = PRODUCTS_BY_ID[id]
+      return !allowed(product) || !filter(product)
+    },
   }
 
   if (isCold(taste)) {
@@ -82,8 +88,17 @@ function buildBatch({ taste, session, closet, gender, count, excluded }) {
     .map(({ product, slot }) => ({ product: PRODUCTS_BY_ID[product.id], slot }))
 }
 
-export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart = null) {
+export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart = null, filters = null) {
   const { interests }    = useInterests() ?? {}
+  // Seasons/categories from the setup screens; keyed by value so a new array
+  // with the same picks doesn't rebuild the queue
+  const categoriesKey    = (filters?.categories ?? []).join(',')
+  const seasonsKey       = (filters?.seasons ?? []).join(',')
+  const filter           = useMemo(() => discoveryFilter(PRODUCTS, {
+    categories: categoriesKey ? categoriesKey.split(',') : [],
+    seasons:    seasonsKey ? seasonsKey.split(',') : [],
+  }), [categoriesKey, seasonsKey])
+  const filterRef        = useRef(filter)
   const { closetItems }  = useCloset()
   const closetGaps       = useClosetGaps()
   const [queue,          setQueue]          = useState([])
@@ -131,6 +146,7 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart =
       session:  sessionRef.current,
       closet:   closetRef.current,
       gender:   forGender,
+      filter:   filterRef.current,
       count,
       excluded: excludedRef.current,
     })
@@ -144,6 +160,9 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart =
   // Seed queue on mount / gender change / mode change
   useEffect(() => {
     interestsSeeded.current = !!interests
+    // Seeding already uses the current filter, so the filter-change effect
+    // below has nothing to redo this render
+    filterRef.current   = filter
     tasteRef.current    = loadTasteProfile(interests)
     sessionRef.current  = createSession()
     excludedRef.current = new Set()
@@ -203,6 +222,22 @@ export function useDiscoveryQueue(gender = 'both', quizMode = false, warmStart =
     setIndex(0)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interests])
+
+  // New season/category picks mid-feed: swap out the cards not yet swiped,
+  // keeping the swiped ones (so Previous still works) and this visit's taste
+  useEffect(() => {
+    if (filterRef.current === filter) return
+    filterRef.current = filter
+    if (queue.length === 0) return
+    const kept = queue.slice(0, currentIndex)
+    for (const product of queue.slice(currentIndex)) {
+      excludedRef.current.delete(product.id)
+      slotsRef.current.delete(product.id)
+    }
+    const size = quizModeRef.current ? QUIZ_SIZE - kept.length : BUFFER_SIZE
+    setQueue([...kept, ...rank(size, genderRef.current)])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter])
 
   // Refill when buffer runs low — infinite mode only
   useEffect(() => {

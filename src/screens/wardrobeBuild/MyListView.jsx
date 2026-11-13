@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext'
 import { useShop } from '../../context/ShopContext'
 import { useInterests } from '../../context/InterestContext'
 import { fetchPhotos } from '../../services/stockPhotos'
-import { resolveProductImage, getAltProductImage } from '../../services/productImage'
+import { resolveProductImage, canSwapGenderPhoto } from '../../services/productImage'
 import ProductImageToggle from '../../components/ProductImageToggle'
 import ShopPanel from '../../components/ShopPanel'
 import listStyles from '../ShopList.module.css'
@@ -13,7 +13,7 @@ function ProductRowPhoto({ product }) {
   const [photo, setPhoto] = useState(null)
   const { state } = useApp()
   const gender = state.gender
-  const altPhoto = getAltProductImage(product, gender)
+  const swapItem = canSwapGenderPhoto(product, gender) ? product : null
   const ref     = useRef(null)
   const fetched = useRef(false)
 
@@ -33,7 +33,7 @@ function ProductRowPhoto({ product }) {
 
   return (
     <div ref={ref} className={listStyles.productRowPhoto}>
-      <ProductImageToggle photo={photo} altPhoto={altPhoto} alt={product.name} imgClassName={listStyles.productRowImg} />
+      <ProductImageToggle photo={photo} swapItem={swapItem} alt={product.name} imgClassName={listStyles.productRowImg} />
     </div>
   )
 }

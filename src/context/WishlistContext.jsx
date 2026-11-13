@@ -6,10 +6,12 @@ import { useAuth } from './AuthContext'
 import { showToast } from '../components/Toast'
 import { useSubscription } from './SubscriptionContext'
 import { recordSignal } from '../services/interestTracker'
+import { entriesNeedGender, fillEntryGender, loadProductsById } from '../services/entryGender'
+import { logWarn } from '../services/logger'
 
 const WishlistContext = createContext(null)
 
-function usePersistedList(user, docId) {
+function usePersistedList(user, docId, { backfillGender = false } = {}) {
   const [list, setList]         = useState([])
   const [loadReady, setReady]   = useState(false)
   const loadedUid               = useRef(null)
@@ -27,10 +29,17 @@ function usePersistedList(user, docId) {
           const pending   = current.filter((i) => !storedIds.has(i.id))
           return pending.length > 0 ? [...pending, ...stored] : stored
         })
+        // Older entries lack `gender`; fill it from the catalog. The save
+        // effect then persists the filled list once.
+        if (backfillGender && entriesNeedGender(stored)) {
+          loadProductsById()
+            .then((byId) => setList((current) => fillEntryGender(current, byId)))
+            .catch((err) => logWarn('WishlistContext', 'gender backfill failed', { docId, error: err?.message }))
+        }
       })
       .catch(() => {})
       .finally(() => setReady(true))
-  }, [user, docId])
+  }, [user, docId, backfillGender])
 
   useEffect(() => {
     if (!user || !loadReady || loadedUid.current !== user.uid) return
@@ -43,8 +52,8 @@ function usePersistedList(user, docId) {
 export function WishlistProvider({ children }) {
   const { user } = useAuth()
   const { isPro, limits, openPaywall } = useSubscription()
-  const [wishlist,      setWishlist]      = usePersistedList(user, 'wishlist')
-  const [liked,         setLiked]         = usePersistedList(user, 'liked')
+  const [wishlist,      setWishlist]      = usePersistedList(user, 'wishlist', { backfillGender: true })
+  const [liked,         setLiked]         = usePersistedList(user, 'liked', { backfillGender: true })
   const [outfitBoards,  setOutfitBoards]  = usePersistedList(user, 'outfitBoards')
 
   const addToWishlist = useCallback((entry) => {

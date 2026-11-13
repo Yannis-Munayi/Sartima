@@ -106,8 +106,8 @@ export default function WardrobeBuildScreen({ onBack, initialPiece = null, initi
       const allProducts = [...recs.primary, ...recs.suggested, ...recs.outOfFilter]
       const safeProducts = allProducts
         .filter((p) => selectedIds.has(p.id))
-        .map(({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen }) =>
-          ({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen })
+        .map(({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen, gender }) =>
+          ({ id, brand, name, description, shopUrl, shopFallbackUrl, googleQuery, priceRange, image, imageMen, gender })
         )
       if (safeProducts.length === 0) return
       addScoutedGroup({

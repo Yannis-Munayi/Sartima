@@ -70,12 +70,27 @@ describe('recommendProducts', () => {
     expect(recommendProducts(tee, 'any', [], 'both', {}, 5).primary).toHaveLength(5)
   })
 
-  it('puts products in the chosen budget tier first', () => {
-    const { primary } = recommendProducts(tee, 'budget', [], 'both', {}, 50)
-    const firstOther = primary.findIndex((p) => p.priceRange !== 'budget')
-    const lastBudget = primary.map((p) => p.priceRange).lastIndexOf('budget')
-    expect(primary[0].priceRange).toBe('budget')
-    if (firstOther !== -1) expect(lastBudget).toBeLessThan(firstOther)
+  it('only recommends products in the chosen budget tier', () => {
+    // Priorities that favour pricey pieces must not pull them past the budget
+    const { primary, outOfFilter } = recommendProducts(tee, 'budget', ['brand', 'versatile'], 'both', {}, 50)
+    expect(primary.length).toBeGreaterThan(0)
+    for (const p of primary) expect(p.priceRange ?? 'budget').toBe('budget')
+    expect(outOfFilter).toHaveLength(0)
+  })
+
+  it('offers out-of-budget options behind a notice when nothing fits the budget', () => {
+    // Find a piece + tier the catalog has nothing for (e.g. boots under $50)
+    let gap = null
+    for (const piece of PIECE_OPTIONS) {
+      const tiers = new Set(recommendProducts(piece, 'any', [], 'both', {}, 1000).primary.map((p) => p.priceRange))
+      const tier = ['budget', 'mid', 'premium', 'luxury'].find((t) => !tiers.has(t))
+      if (tier) { gap = { piece, tier }; break }
+    }
+    expect(gap, 'the catalog has some piece missing a budget tier').not.toBeNull()
+    const res = recommendProducts(gap.piece, gap.tier, [], 'both', {}, 10)
+    expect(res.primary).toHaveLength(0)
+    expect(res.outOfFilter.length).toBeGreaterThan(0)
+    expect(res.filterMismatch).toMatch(/priced/)
   })
 
   it('a colour filter lifts that colour to the top', () => {

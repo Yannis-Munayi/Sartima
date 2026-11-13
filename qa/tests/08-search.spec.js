@@ -1,8 +1,10 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { test, expect, open, go, completeQuiz, openSettings, note } from '../lib/fixtures.js'
-import { productsNamed } from '../lib/catalog.js'
-import { ROOT } from '../lib/env.js'
+import { catalog, productsNamed } from '../lib/catalog.js'
+
+const STUB_CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
+const stubPhoto = (label) => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#B8956A"/><text x="150" y="200" font-size="28" text-anchor="middle" fill="#fff">${label}</text></svg>`,
+)
 
 const searchBox = (page) => page.getByPlaceholder('Search by brand, item, or color…')
 const resultNames = (page) => page.locator('[class*="cardName"]')
@@ -59,18 +61,41 @@ test.describe('8. Search', () => {
     expect(men, `men ${men} vs women ${women}`).not.toBe(women)
   })
 
-  test("Products with both men's and women's photos show a swap toggle", async ({ page }) => {
-    note('The toggle swaps a product\'s men\'s and women\'s photos (it is not a photo/gradient switch). It only renders with gender "Both" for products that have both images.')
-    const dir = path.join(ROOT, 'src/data/products')
-    const withAlt = fs.readdirSync(dir).reduce((n, f) => n + (fs.readFileSync(path.join(dir, f), 'utf8').match(/imageMen:/g)?.length ?? 0), 0)
-    expect(withAlt, 'No product in src/data/products has an imageMen photo, so the toggle can never appear').toBeGreaterThan(0)
+  test("Unisex products show a men's/women's photo swap toggle", async ({ page }) => {
+    note('With gender "Both", unisex products get a toggle that swaps between a men\'s and a women\'s photo (curated imageMen/image when a product has both, otherwise gendered stock photos fetched on tap). searchImages is stubbed here so the test spends no Unsplash/Pexels quota.')
+    const unisex = catalog().products.filter((p) => p.gender === 'unisex').length
+    expect(unisex, 'No unisex product in src/data/products, so the toggle can never appear').toBeGreaterThan(0)
+
+    const queries = []
+    await page.route(/\/searchImages(\?[^/]*)?$/, async (route) => {
+      const req = route.request()
+      if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: STUB_CORS })
+      const query = req.postDataJSON()?.data?.query ?? ''
+      queries.push(query)
+      const side = /^(men|women) /.exec(query)?.[1] ?? 'default'
+      await route.fulfill({ status: 200, headers: STUB_CORS, contentType: 'application/json', body: JSON.stringify({ result: { urls: [stubPhoto(side)] } }) })
+    })
 
     await open(page, 'search')
     await search(page, 'shirt')
-    const toggle = page.getByRole('button', { name: "Show men's photo" }).first()
-    await expect(toggle).toBeVisible()
+    // Locate by attribute so it keeps pointing at the same button as its label flips
+    const toggle = page.locator('button[aria-label="Show men\'s photo"], button[aria-label="Show women\'s photo"]').first()
+    await expect(toggle).toHaveAttribute('aria-label', "Show men's photo")
     await toggle.click()
-    await expect(page.getByRole('button', { name: "Show women's photo" }).first()).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-label', "Show women's photo")
+    expect(queries.some((q) => q.startsWith('men ')), `searchImages queries: ${queries.join(' | ')}`).toBe(true)
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-label', "Show men's photo")
+    expect(queries.some((q) => q.startsWith('women ')), `searchImages queries: ${queries.join(' | ')}`).toBe(true)
+  })
+
+  test("A narrowed gender setting hides the photo swap toggle", async ({ page }) => {
+    await open(page, 'search')
+    await setGender(page, 'Men')
+    await go(page, 'search')
+    await search(page, 'shirt')
+    await expect(page.locator('[class*="cardName"]').first()).toBeVisible()
+    await expect(page.locator('button[aria-label="Show men\'s photo"]')).toHaveCount(0)
   })
 
   test("The empty state shows personalised suggestions once you've done the quiz", async ({ page }) => {
