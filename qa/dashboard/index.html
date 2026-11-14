@@ -256,7 +256,7 @@ function renderTabs() {
     const isRunning = state.running?.target === t
     const cls = isRunning ? 's-manual' : failing ? 's-failed' : ts.lastRun ? 's-passed' : 's-none'
     const name = t === 'local' ? 'Local' : 'Live'
-    const where = t === 'local' ? (state.settings.localMode === 'preview' ? 'localhost:4173' : 'localhost:5173') : (ts.url || '').replace(/^https?:\/\//, '')
+    const where = t === 'local' ? (state.settings.localMode === 'preview' ? 'localhost:4180' : 'localhost:5180') : (ts.url || '').replace(/^https?:\/\//, '')
     return `<button class="tab" role="tab" aria-selected="${ui.tab === t}" data-tab="${t}">
       <span class="dot ${cls}"></span>${name} <small>${esc(where)}</small>${failing ? `<span class="pill s-failed">${failing}</span>` : ''}
     </button>`
@@ -541,7 +541,7 @@ document.addEventListener('click', async (e) => {
     if (act === 'rerun-one') {
       const t = state.targets[ui.tab].tests.find((x) => x.id === ui.selected)
       logLines = []
-      await api('/api/run', { target: ui.tab, scope: 'tests', ids: [`${t.file}:${t.line}`] })
+      await api('/api/run', { target: ui.tab, scope: 'tests', ids: [t.id] })
       await refresh()
     }
     if (act === 'trace') await api('/api/trace', { url: el.dataset.url })

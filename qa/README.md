@@ -15,7 +15,10 @@ npm run qa          # dashboard at http://127.0.0.1:4545
 
 Pick the **Local** or **Live** tab and press **Run all**. Local starts
 `npm run dev` for you, or a production build if you choose that in
-"Test against".
+"Test against". The checks that only work in a production build (offline app
+shell, Sentry) build and serve one themselves when the rest of the run uses
+the dev server, so they run either way. That build goes to
+`qa/results/prod-build` and adds a minute or two to runs that include them.
 
 From the terminal, without the dashboard:
 

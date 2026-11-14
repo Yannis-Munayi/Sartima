@@ -184,6 +184,18 @@ describe('stripeWebhook', () => {
       expect(claimsOf(uid)).toEqual({ sartima_tier: 'pro' })
     })
 
+    it('a portal cancellation scheduled through cancel_at counts as cancelling, and Pro stays', async () => {
+      const uid = newUid()
+      addUser(uid, { customClaims: { sartima_tier: 'pro' } })
+      const endSecs = Math.floor((Date.now() + 10 * DAY) / 1000)
+      await webhook(subEvent('customer.subscription.updated', { status: 'active', metadata: { uid }, cancel_at: endSecs, cancel_at_period_end: false }))
+      expect(subDoc(uid)).toMatchObject({ status: 'active', cancelAtPeriodEnd: true, cancelAt: endSecs * 1000 })
+      expect(claimsOf(uid)).toEqual({ sartima_tier: 'pro' })
+
+      await webhook(subEvent('customer.subscription.updated', { status: 'active', metadata: { uid }, cancel_at: null, cancel_at_period_end: false }))
+      expect(subDoc(uid)).toMatchObject({ cancelAtPeriodEnd: false, cancelAt: null })
+    })
+
     it('finds the user through the Stripe customer when the subscription has no uid', async () => {
       const uid = newUid()
       addUser(uid)

@@ -64,14 +64,13 @@ function startRun(target, { scope = 'all', ids = [], trigger = 'manual' } = {}) 
   if (!TARGETS.includes(target)) return { ok: false, error: 'Unknown target' }
   const s = settings()
   const args = [PW_CLI, 'test', '-c', path.join(QA_DIR, 'playwright.config.js')]
-  if (scope === 'failed') {
-    const latest = readJson(latestFile(target), null)
-    const failing = (latest?.tests ?? []).filter((t) => t.status === 'failed' || t.status === 'flaky')
-    if (!failing.length) return { ok: false, error: 'Nothing is failing.' }
-    args.push(...new Set(failing.map((t) => `${t.file}:${t.line}`)))
-  } else if (scope === 'tests') {
-    if (!ids.length) return { ok: false, error: 'No tests given.' }
-    args.push(...ids)
+  if (scope === 'failed' || scope === 'tests') {
+    const known = readJson(latestFile(target), null)?.tests ?? []
+    const picked = scope === 'failed'
+      ? known.filter((t) => t.status === 'failed' || t.status === 'flaky')
+      : known.filter((t) => ids.includes(t.id))
+    if (!picked.length) return { ok: false, error: scope === 'failed' ? 'Nothing is failing.' : 'No tests given.' }
+    args.push(...selectTests(picked))
   }
   const env = {
     ...process.env,
@@ -126,6 +125,19 @@ function startRun(target, { scope = 'all', ids = [], trigger = 'manual' } = {}) 
     broadcast('state', { running: null, finished: { target, code, summary } })
   })
   return { ok: true }
+}
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * Playwright args that select these tests by file + title. Not `file:line`:
+ * the stored line numbers go stale as soon as a spec is edited, and a stale
+ * line selects nothing ("No tests found"), leaving the old result on screen.
+ */
+function selectTests(tests) {
+  const files = [...new Set(tests.map((t) => escapeRegex(t.file)))]
+  const titles = [...new Set(tests.map((t) => `${escapeRegex(t.title)}$`))]
+  return [...files, '--grep', titles.join('|')]
 }
 
 function publicRunning() {

@@ -17,20 +17,89 @@ async function createLongLivedAccount() {
   return { email, password }
 }
 
+/**
+ * Returns the first visible match for `make(frame)` in any frame of the page
+ * (or null after `timeout`). Stripe Checkout now renders its form inside an
+ * iframe, with the card fields in a further nested iframe, so top-level
+ * locators never see them. Older Checkout pages render inline; both work.
+ */
+async function findInFrames(page, make, timeout = 0) {
+  const deadline = Date.now() + timeout
+  for (;;) {
+    for (const frame of page.frames()) {
+      const loc = make(frame).first()
+      if (await loc.isVisible().catch(() => false)) return loc
+    }
+    if (Date.now() >= deadline) return null
+    await page.waitForTimeout(250)
+  }
+}
+
+const CARD_NUMBER = '#cardNumber, input[name="cardnumber"], input[name="number"], input[autocomplete="cc-number"]'
+const CARD_EXPIRY = '#cardExpiry, input[name="exp-date"], input[name="expiry"], input[autocomplete="cc-exp"]'
+const CARD_CVC = '#cardCvc, input[name="cvc"], input[autocomplete="cc-csc"]'
+const BILLING_NAME = '#billingName, input[autocomplete="cc-name"], input[autocomplete="name"]'
+const BILLING_COUNTRY = '#billingCountry, select[name="country"], select[autocomplete="country"]'
+const BILLING_POSTAL = '#billingPostalCode, input[name="postalCode"], input[name="postal"], input[autocomplete="postal-code"]'
+
+async function fillIn(page, selector, value, timeout = 0) {
+  const field = await findInFrames(page, (f) => f.locator(selector), timeout)
+  if (!field) return false
+  await field.fill(value)
+  return true
+}
+
 /** Fills Stripe's hosted Checkout with the 4242 test card and pays. */
 async function payWithTestCard(page) {
   await page.waitForURL(/checkout\.stripe\.com/, { timeout: 60_000 })
-  const cardTab = page.getByRole('button', { name: /^Card$/ })
-  if (await cardTab.isVisible({ timeout: 3_000 }).catch(() => false)) await cardTab.click()
-  await page.locator('#cardNumber').fill('4242 4242 4242 4242')
-  await page.locator('#cardExpiry').fill('12 / 34')
-  await page.locator('#cardCvc').fill('123')
-  const name = page.locator('#billingName')
-  if (await name.isVisible().catch(() => false)) await name.fill('Sartima QA')
-  const zip = page.locator('#billingPostalCode')
-  if (await zip.isVisible().catch(() => false)) await zip.fill('10001')
-  await page.locator('button[type="submit"], .SubmitButton').first().click()
+  // Card is an accordion option next to Klarna etc.; the fields only appear once it's picked
+  const cardOption = await findInFrames(page,
+    (f) => f.getByRole('button', { name: /^Card\b/ }).or(f.getByRole('radio', { name: /^Card\b/ })), 15_000)
+  if (cardOption) await cardOption.click()
+
+  if (!(await fillIn(page, CARD_NUMBER, '4242424242424242', 30_000))) {
+    throw new Error('Stripe Checkout: no card-number field appeared in any frame')
+  }
+  if (!(await fillIn(page, CARD_EXPIRY, '12 / 34', 5_000))) throw new Error('Stripe Checkout: no expiry field')
+  if (!(await fillIn(page, CARD_CVC, '123', 5_000))) throw new Error('Stripe Checkout: no CVC field')
+  await fillIn(page, BILLING_NAME, 'Sartima QA')
+  // The account is Canadian by default; pin the US so the 5-digit ZIP is valid
+  const country = await findInFrames(page, (f) => f.locator(BILLING_COUNTRY))
+  if (country) await country.selectOption('US').catch(() => {})
+  await fillIn(page, BILLING_POSTAL, '10001', 2_000)
+
+  // Anchored at both ends so "Pay securely with Link" (opens a Link popup) never matches
+  const submit = await findInFrames(page,
+    (f) => f.getByRole('button', { name: /^(Subscribe|Start trial|Pay(\s+now|\s+\S*\$[\d.,]+)?)$/i }).or(f.locator('.SubmitButton')), 10_000)
+  if (!submit) throw new Error('Stripe Checkout: no Subscribe/Pay button')
+  await submit.click()
   await page.waitForURL((url) => !/stripe\.com/.test(url.hostname), { timeout: 120_000 })
+}
+
+/**
+ * Finishes cancelling on the billing portal's "Review your changes" page. The
+ * portal may ask "why you're leaving" in a dialog that covers the confirm
+ * button, before or after it's pressed, so step through whichever shows.
+ */
+async function cancelInPortal(page) {
+  const confirm = page.getByTestId('confirm')
+  const reasonContinue = page.getByRole('button', { name: /Continue to cancellation/i })
+  await expect(confirm.or(reasonContinue).first()).toBeVisible({ timeout: 30_000 })
+  const deadline = Date.now() + 60_000
+  while (Date.now() < deadline) {
+    if (await reasonContinue.isVisible().catch(() => false)) {
+      const reason = page.getByLabel('Reason')
+      if (await reason.isVisible().catch(() => false)) await reason.selectOption({ index: 1 }).catch(() => {})
+      await reasonContinue.click()
+    } else if (await confirm.isVisible().catch(() => false)) {
+      // Disabled while the cancellation is submitting; just wait for the page to move on
+      if (await confirm.isEnabled().catch(() => false)) await confirm.click({ timeout: 5_000 }).catch(() => {})
+    } else {
+      return
+    }
+    await page.waitForTimeout(1_000)
+  }
+  throw new Error('Billing portal: cancellation never completed')
 }
 
 async function claims(email, password) {
@@ -107,8 +176,7 @@ test.describe('13. Billing', () => {
       await page.getByRole('button', { name: 'Manage billing' }).click()
       await page.waitForURL(/billing\.stripe\.com/, { timeout: 60_000 })
       await page.getByRole('link', { name: /Cancel (plan|subscription)/i }).or(page.getByRole('button', { name: /Cancel (plan|subscription)/i })).first().click()
-      await page.getByRole('button', { name: /Cancel (plan|subscription)/i }).last().click()
-      await expect(page.getByText(/cancel/i).first()).toBeVisible()
+      await cancelInPortal(page)
 
       expect((await claims(acc.email, acc.password)).sartima_tier).toBe('pro')
       await page.goto(`${BASE_URL}/#/profile`)

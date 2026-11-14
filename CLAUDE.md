@@ -74,7 +74,7 @@ firebase emulators:start --only functions # Local function emulator
 
 **Client (`.env`) — `VITE_` prefix, bundled into the browser:**
 - `VITE_FIREBASE_*` (7 keys incl. `MEASUREMENT_ID`) — intentionally public; security is enforced by Firestore rules + Auth
-- `VITE_FIREBASE_VAPID_KEY` — web-push key for FCM; if unset, notification enable silently no-ops with a logged warning
+- `VITE_FIREBASE_VAPID_KEY` — web-push key for FCM; optional override — `services/notifications.js` falls back to the project's public key (a Vercel deploy without this var once made "Enable" a silent no-op)
 - `VITE_SENTRY_DSN` — if empty, Sentry is skipped entirely (safe for local dev)
 - `VITE_USE_EMULATOR=true` — connects Functions SDK to `localhost:5001`
 - `VITE_HUB_ORIGINS` — optional, comma-separated: extra addresses of the owner's Jarvis hub (e.g. its Tailscale phone address) allowed to call the hub bridge. Localhost is always allowed.

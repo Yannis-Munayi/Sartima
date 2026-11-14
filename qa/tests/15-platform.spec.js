@@ -1,5 +1,5 @@
 import {
-  test, expect, open, go, ready, openSettings, basicCloset, note, requireProdBuild,
+  test, expect, open, go, ready, openSettings, basicCloset, note,
 } from '../lib/fixtures.js'
 import { ACCOUNTS, BASE_URL, legalVersion } from '../lib/env.js'
 import { sampleProducts } from '../lib/catalog.js'
@@ -209,11 +209,15 @@ test.describe('15. Platform-wide', () => {
     })
   })
 
+  // Against the dev server these build the app and serve it on demand
+  // (prodURL), so they run in order in one worker and share that one build.
   test.describe('production build', () => {
-    test('Install the PWA → it launches and the app shell loads offline', async ({ page, context }) => {
-      requireProdBuild()
+    test.describe.configure({ mode: 'default' })
+
+    test('Install the PWA → it launches and the app shell loads offline', async ({ page, context, prodURL }) => {
       note('Checks the manifest and service worker, then reloads with the network off. The install prompt itself is a manual check.')
-      await open(page, 'home')
+      await page.goto(`${prodURL}/`)
+      await ready(page)
       await expect(page.locator('link[rel="manifest"]')).toHaveCount(1)
       const sw = await page.evaluate(() => Promise.race([
         navigator.serviceWorker.ready.then((r) => Boolean(r.active)),
@@ -231,15 +235,15 @@ test.describe('15. Platform-wide', () => {
       }
     })
 
-    test('In a production build, an uncaught error is reported to Sentry', async ({ page, context }) => {
-      requireProdBuild()
+    test('In a production build, an uncaught error is reported to Sentry', async ({ page, context, prodURL }) => {
       note('Sentry requests are intercepted, so nothing reaches your Sentry project. The "Something went wrong" fallback screen is a manual check.')
       const envelopes = []
       await context.route(/sentry\.io|ingest\.(us|de)\.sentry/, async (route) => {
         envelopes.push(route.request().postData() ?? '')
         await route.fulfill({ status: 200, body: '{}' })
       })
-      await open(page, 'home')
+      await page.goto(`${prodURL}/`)
+      await ready(page)
       await page.evaluate(() => setTimeout(() => { throw new Error('QA Sentry probe') }, 0))
       await expect.poll(() => envelopes.some((b) => b.includes('QA Sentry probe')), {
         timeout: 20_000, message: 'Sentry sent the error (is VITE_SENTRY_DSN set for production builds?)',

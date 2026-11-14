@@ -140,7 +140,7 @@ generateTrip({ destination, nights, closetItems, gender })
 
 Daily outfit push reminders via Firebase Cloud Messaging:
 
-- **`notifications.js`** — lazy-imports the FCM SDK; `requestNotificationToken()` registers the dedicated service worker `public/firebase-messaging-sw.js` at scope `/firebase-cloud-messaging-push-scope` (so it coexists with the root-scope Workbox SW), requests permission, and returns a token using `VITE_FIREBASE_VAPID_KEY` (null if unsupported/denied/unset). `onForegroundMessage(cb)` for in-app messages.
+- **`notifications.js`** — lazy-imports the FCM SDK; `requestNotificationToken()` registers the dedicated service worker `public/firebase-messaging-sw.js` at scope `/firebase-cloud-messaging-push-scope` (so it coexists with the root-scope Workbox SW), requests permission, and resolves to `{ token, reason }` (`reason`: `'unsupported' | 'denied' | 'error'` on failure, shown to the user by SettingsSheet). Uses `VITE_FIREBASE_VAPID_KEY`, falling back to the project's public VAPID key. `onForegroundMessage(cb)` for in-app messages.
 - **`notificationPrefs.js`** — persists `{ fcmTokens[], reminderTime, timezone, enabled }` to `prefs/notifications`; `saveNotificationToken`, `saveReminderTime`, `disableNotifications`.
 - **`iosDetect.js`** — dependency-free `isIOSStandaloneRequired()`: iOS Safari only delivers web push to an installed (Add to Home Screen) PWA, so the Settings UI gates on it.
 - Delivery is done by the scheduled `sendDailyOutfitReminders` Function (below).

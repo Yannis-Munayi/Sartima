@@ -157,6 +157,12 @@
   margin: 0;
 }
 
+.settingsError {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  margin: var(--space-2) 0 0;
+}
+
 .toggle {
   width: 44px;
   height: 24px;

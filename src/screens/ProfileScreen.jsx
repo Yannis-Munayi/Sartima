@@ -22,7 +22,7 @@ export default function ProfileScreen({ onBack, scrollToQuiz, onScrollComplete }
   const { tier, isPro, usage, billing, paymentDue, openPaywall } = useSubscription()
   // Canceled subscriptions keep Pro until the paid period ends
   const isCanceling = billing?.cancelAtPeriodEnd || (billing?.status === 'canceled' && billing?.downgradeAt)
-  const proEndMs    = billing?.downgradeAt ?? billing?.currentPeriodEnd
+  const proEndMs    = billing?.downgradeAt ?? billing?.cancelAt ?? billing?.currentPeriodEnd
   const proEndDate  = isCanceling && proEndMs
     ? new Date(proEndMs).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })
     : null

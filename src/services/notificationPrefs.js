@@ -26,8 +26,9 @@ export async function loadNotificationPrefs(uid) {
   }
 }
 
+/** Resolves to true once the token is stored, false if the write failed. */
 export async function saveNotificationToken(uid, token, reminderTime, timezone) {
-  if (!uid || !token) return
+  if (!uid || !token) return false
   try {
     await setDoc(ref(uid), {
       fcmTokens:    arrayUnion(token),
@@ -36,8 +37,10 @@ export async function saveNotificationToken(uid, token, reminderTime, timezone) 
       enabled:      true,
       updatedAt:    Date.now(),
     }, { merge: true })
+    return true
   } catch (err) {
     logError(SERVICE, 'Failed to save notification token', { error: err, uid })
+    return false
   }
 }
 

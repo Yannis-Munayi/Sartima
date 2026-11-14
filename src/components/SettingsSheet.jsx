@@ -377,25 +377,47 @@ function NotificationSettings() {
   const [permission, setPermission] = useState(supported ? Notification.permission : 'unavailable')
   const [reminderTime, setReminderTime] = useState('08:00')
   const [enabling, setEnabling] = useState(false)
+  const [enableError, setEnableError] = useState(null)
+  // null while loading; false when no push token is stored, so a user whose
+  // browser permission is granted but whose setup failed can retry.
+  const [registered, setRegistered] = useState(null)
 
   useEffect(() => {
     if (!user) return
     loadNotificationPrefs(user.uid).then((prefs) => {
       if (prefs?.reminderTime) setReminderTime(prefs.reminderTime)
+      setRegistered(Boolean(prefs?.enabled && prefs?.fcmTokens?.length))
     })
   }, [user])
 
   async function handleEnable() {
     if (!user || enabling) return
     setEnabling(true)
-    const { requestNotificationToken } = await import('../services/notifications')
-    const token = await requestNotificationToken()
-    setEnabling(false)
-    setPermission(supported ? Notification.permission : 'unavailable')
-    if (!token) return
-    await saveNotificationToken(user.uid, token, reminderTime)
-    trackEvent('notification_permission_granted')
+    setEnableError(null)
+    try {
+      const { requestNotificationToken } = await import('../services/notifications')
+      const { token, reason } = await requestNotificationToken()
+      if (!token) {
+        if (reason === 'unsupported') setEnableError('Reminders aren’t supported in this browser.')
+        else if (reason === 'error') setEnableError('Couldn’t set up reminders. Please try again.')
+        return
+      }
+      const saved = await saveNotificationToken(user.uid, token, reminderTime)
+      if (!saved) {
+        setEnableError('Couldn’t save your reminder. Please try again.')
+        return
+      }
+      setRegistered(true)
+      trackEvent('notification_permission_granted')
+    } catch {
+      setEnableError('Couldn’t set up reminders. Please try again.')
+    } finally {
+      setEnabling(false)
+      setPermission(supported ? Notification.permission : 'unavailable')
+    }
   }
+
+  const showEnable = permission === 'default' || (permission === 'granted' && registered === false)
 
   function handleTimeChange(t) {
     setReminderTime(t)
@@ -415,7 +437,7 @@ function NotificationSettings() {
           Add Sartima to your Home Screen first — iOS only delivers reminders to installed apps.
         </p>
       )}
-      {supported && !needsHomeScreen && permission === 'default' && (
+      {supported && !needsHomeScreen && showEnable && (
         <div className={styles.settingsToggleRow}>
           <p className={styles.settingsToggleSub}>Morning nudge to plan your outfit</p>
           <button className={styles.permBtn} onClick={handleEnable} disabled={enabling}>
@@ -423,7 +445,10 @@ function NotificationSettings() {
           </button>
         </div>
       )}
-      {supported && !needsHomeScreen && permission === 'granted' && (
+      {enableError && (
+        <p className={styles.settingsError} role="alert">{enableError}</p>
+      )}
+      {supported && !needsHomeScreen && permission === 'granted' && !showEnable && (
         <div className={styles.settingsToggleRow}>
           <div>
             <p className={styles.settingsToggleLabel}>Reminder time</p>

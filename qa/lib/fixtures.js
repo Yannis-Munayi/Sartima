@@ -21,6 +21,7 @@ import {
   RESULTS_DIR, STRIPE_TEST_MODE, TARGET, legalVersion,
 } from './env.js'
 import * as fb from './firebase-rest.js'
+import { startProdServer } from './prod-server.js'
 
 export { expect }
 
@@ -51,9 +52,6 @@ export function needs(ok, what) {
   annotate('needs-setup', what)
   base.skip(true, `Needs setup: ${what}`)
 }
-
-export const requireProdBuild = () =>
-  needs(IS_PROD_BUILD, 'a production build. Run the Live tab, or set Local to "Production build"')
 
 export const requireSignup = () =>
   needs(ALLOW_SIGNUP && FIREBASE.apiKey, TARGET === 'live'
@@ -340,6 +338,24 @@ export const test = base.extend({
   role: ['guest', { option: true }],
   realFunctions: [[], { option: true }],
   consent: ['denied', { option: true }],
+
+  // The production build, started at most once per worker and only when a
+  // test asks for prodURL against the dev server (see lib/prod-server.js).
+  // eslint-disable-next-line no-empty-pattern
+  prodServer: [async ({}, use) => {
+    let pending = null
+    await use({ start: () => (pending ??= startProdServer()) })
+    if (pending) (await pending.catch(() => null))?.stop()
+  }, { scope: 'worker' }],
+
+  /**
+   * Where a production build of the app is served: the target itself on the
+   * Live tab or a Local "Production build" run, otherwise one built on demand.
+   * Its own timeout, because the on-demand build takes a minute or two.
+   */
+  prodURL: [async ({ prodServer }, use) => {
+    await use(IS_PROD_BUILD ? BASE_URL : (await prodServer.start()).url)
+  }, { timeout: 300_000 }],
 
   accountLock: [async ({ role }, use, testInfo) => {
     if (role !== 'free' && role !== 'pro') return use(null)

@@ -1046,9 +1046,13 @@ async function syncSubscription(sub) {
   if (!uid) return
 
   const now    = Date.now()
+  // Newer Stripe API versions schedule a portal "cancel at period end" through
+  // `cancel_at` and leave `cancel_at_period_end` false, so either one counts
+  const cancelAt = sub.cancel_at ? sub.cancel_at * 1000 : null
   const update = {
     status:            sub.status,
-    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+    cancelAtPeriodEnd: Boolean(sub.cancel_at_period_end) || cancelAt != null,
+    cancelAt,
     currentPeriodEnd:  periodEndMs(sub),
     updatedAt:         FieldValue.serverTimestamp(),
   }
