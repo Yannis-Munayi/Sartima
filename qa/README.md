@@ -40,6 +40,34 @@ requirement is missing shows as **Needs setup** and says what it needs.
 - **Stripe:** the billing tests only run with `QA_STRIPE_TEST_MODE=1`, while
   the deployed Functions use Stripe test keys.
 
+### Turning a flag on for one run
+
+The 0/1 flags (`QA_ALLOW_SIGNUP_LOCAL`, `QA_ALLOW_SIGNUP_LIVE`,
+`QA_STRIPE_TEST_MODE`, `QA_REAL_FEEDBACK`) can stay at their safe values in
+`qa/.env`. A test skipped for a flag records which one it needs, and the
+dashboard offers two buttons:
+
+- **Run with QA_…=1** in a test's inspector re-runs that test with the flag on.
+- **Run N waiting on a flag** at the top runs every such test, each flag on.
+
+Both ask you to confirm first, apply to that run only, and never touch
+`qa/.env`. Scheduled runs always use `qa/.env` as it is. The inspector shows
+"ran with …" on results that came from a flag run.
+
+From the terminal, set the flag in the environment for that command:
+
+```powershell
+$env:QA_STRIPE_TEST_MODE=1; npm run qa:local -- -g "Billing"; Remove-Item Env:QA_STRIPE_TEST_MODE
+```
+
+```bash
+QA_STRIPE_TEST_MODE=1 npm run qa:local -- -g "Billing"
+```
+
+In a new spec, gate on a flag with `needs(ok, what, 'QA_FLAG_NAME')` (or the
+`requireSignup` / `requireStripeTest` / `requireSignupAndStripe` helpers), and
+add the flag's name to `FLAG_NAMES` in `lib/env.js`.
+
 ## What the statuses mean
 
 | Status | Meaning |

@@ -418,6 +418,10 @@ function NotificationSettings() {
   }
 
   const showEnable = permission === 'default' || (permission === 'granted' && registered === false)
+  // The time is pickable before reminders are enabled too: handleEnable saves
+  // the chosen time with the token, and the scheduler ignores docs without
+  // `enabled: true`, so saving it early is harmless.
+  const canRemind = supported && !needsHomeScreen && (permission === 'default' || permission === 'granted')
 
   function handleTimeChange(t) {
     setReminderTime(t)
@@ -437,18 +441,7 @@ function NotificationSettings() {
           Add Sartima to your Home Screen first — iOS only delivers reminders to installed apps.
         </p>
       )}
-      {supported && !needsHomeScreen && showEnable && (
-        <div className={styles.settingsToggleRow}>
-          <p className={styles.settingsToggleSub}>Morning nudge to plan your outfit</p>
-          <button className={styles.permBtn} onClick={handleEnable} disabled={enabling}>
-            {enabling ? 'Enabling…' : 'Enable'}
-          </button>
-        </div>
-      )}
-      {enableError && (
-        <p className={styles.settingsError} role="alert">{enableError}</p>
-      )}
-      {supported && !needsHomeScreen && permission === 'granted' && !showEnable && (
+      {canRemind && (
         <div className={styles.settingsToggleRow}>
           <div>
             <p className={styles.settingsToggleLabel}>Reminder time</p>
@@ -461,6 +454,17 @@ function NotificationSettings() {
             onChange={(e) => handleTimeChange(e.target.value)}
           />
         </div>
+      )}
+      {canRemind && showEnable && (
+        <div className={styles.settingsToggleRow}>
+          <p className={styles.settingsToggleSub}>Morning nudge to plan your outfit</p>
+          <button className={styles.permBtn} onClick={handleEnable} disabled={enabling}>
+            {enabling ? 'Enabling…' : 'Enable'}
+          </button>
+        </div>
+      )}
+      {enableError && (
+        <p className={styles.settingsError} role="alert">{enableError}</p>
       )}
       {supported && permission === 'denied' && (
         <p className={styles.settingsToggleSub}>

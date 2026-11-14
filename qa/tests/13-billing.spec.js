@@ -1,5 +1,5 @@
 import {
-  test, expect, go, ready, loginAs, manual, note, requireSignup, requireStripeTest,
+  test, expect, go, ready, loginAs, manual, note, requireSignupAndStripe,
   accountApi, basicCloset, fnError, QA_PHOTO,
 } from '../lib/fixtures.js'
 import * as fb from '../lib/firebase-rest.js'
@@ -134,8 +134,7 @@ test.describe('13. Billing', () => {
     })
 
     test("Subscribe monthly with Stripe's test card → you become Pro without reloading (the webhook updates the claim)", async ({ page }) => {
-      requireSignup()
-      requireStripeTest()
+      requireSignupAndStripe()
       test.setTimeout(240_000)
       // Kept past this test: the next steps in the chain use it
       acc = await createLongLivedAccount()
@@ -143,8 +142,7 @@ test.describe('13. Billing', () => {
     })
 
     test('Buy a try-on pack → your credits go up', async ({ page, fns }) => {
-      requireSignup()
-      requireStripeTest()
+      requireSignupAndStripe()
       test.skip(!acc, 'the monthly subscription step did not complete')
       test.setTimeout(240_000)
       const s = await fb.signIn(acc.email, acc.password)
@@ -165,8 +163,7 @@ test.describe('13. Billing', () => {
     })
 
     test('Open the billing portal from Profile and cancel → you stay Pro until the end of the period you paid for', async ({ page }) => {
-      requireSignup()
-      requireStripeTest()
+      requireSignupAndStripe()
       test.skip(!acc, 'the monthly subscription step did not complete')
       test.setTimeout(240_000)
       note('The hourly enforceBillingDowngrades job moving the account to free once the period ends is a manual check (needs a Stripe test clock).')
@@ -188,8 +185,7 @@ test.describe('13. Billing', () => {
     test.use({ role: 'gate' })
 
     test('Do the same with the annual plan', async ({ page, throwaway }) => {
-      requireSignup()
-      requireStripeTest()
+      requireSignupAndStripe()
       test.setTimeout(240_000)
       const created = await throwaway.create()
       await subscribe(page, created, 'annual')

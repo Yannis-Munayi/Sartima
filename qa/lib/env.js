@@ -78,6 +78,14 @@ export const ALLOW_SIGNUP = TARGET === 'live'
 export const STRIPE_TEST_MODE = setting('QA_STRIPE_TEST_MODE', '0') === '1'
 export const REAL_FEEDBACK    = setting('QA_REAL_FEEDBACK', '0') === '1'
 
+// The 0/1 switches above. qa/.env holds their defaults; one run can turn them
+// on or off without editing it (the dashboard's "Run with …" buttons, or
+// `$env:QA_STRIPE_TEST_MODE=1` before `npm run qa:local`), because the process
+// environment wins over qa/.env. The dashboard accepts only these names.
+export const FLAG_NAMES = [
+  'QA_ALLOW_SIGNUP_LOCAL', 'QA_ALLOW_SIGNUP_LIVE', 'QA_STRIPE_TEST_MODE', 'QA_REAL_FEEDBACK',
+]
+
 // Service worker, Sentry and other production-only behaviour
 export const IS_PROD_BUILD = TARGET === 'live' || LOCAL_MODE === 'preview'
 

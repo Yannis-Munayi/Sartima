@@ -13,7 +13,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
-import { QA_DIR, ROOT, RESULTS_ROOT, setupSummary, LIVE_URL } from './lib/env.js'
+import { QA_DIR, ROOT, RESULTS_ROOT, setupSummary, LIVE_URL, FLAG_NAMES } from './lib/env.js'
 
 const PORT = Number(process.env.QA_DASHBOARD_PORT || 4545)
 const HOST = '127.0.0.1'
@@ -59,21 +59,49 @@ function broadcast(event, data) {
 
 let running = null // { target, child, startedAt, trigger, scope, total, done, failed, log: [] }
 
-function startRun(target, { scope = 'all', ids = [], trigger = 'manual' } = {}) {
+/** Only the known 0/1 flags, only as '0' or '1'. Anything else is dropped. */
+function cleanFlags(flags) {
+  const out = {}
+  for (const [k, v] of Object.entries(flags ?? {})) {
+    if (FLAG_NAMES.includes(k) && (String(v) === '0' || String(v) === '1')) out[k] = String(v)
+  }
+  return out
+}
+
+/** The flags a test said it was missing (fixtures.js `needs-flag` labels). */
+const neededFlags = (t) => (t.annotations ?? []).filter((a) => a.type === 'needs-flag').map((a) => a.description)
+
+function startRun(target, { scope = 'all', ids = [], trigger = 'manual', flags = {} } = {}) {
   if (running) return { ok: false, error: `A ${running.target} run is already in progress.` }
   if (!TARGETS.includes(target)) return { ok: false, error: 'Unknown target' }
   const s = settings()
   const args = [PW_CLI, 'test', '-c', path.join(QA_DIR, 'playwright.config.js')]
-  if (scope === 'failed' || scope === 'tests') {
+  // Flags apply to this run only; qa/.env keeps its values for every other run
+  const runFlags = cleanFlags(flags)
+  if (scope === 'failed' || scope === 'tests' || scope === 'setup') {
     const known = readJson(latestFile(target), null)?.tests ?? []
     const picked = scope === 'failed'
       ? known.filter((t) => t.status === 'failed' || t.status === 'flaky')
-      : known.filter((t) => ids.includes(t.id))
-    if (!picked.length) return { ok: false, error: scope === 'failed' ? 'Nothing is failing.' : 'No tests given.' }
+      : scope === 'setup'
+        ? known.filter((t) => t.status === 'setup' && neededFlags(t).length)
+        : known.filter((t) => ids.includes(t.id))
+    if (!picked.length) {
+      return {
+        ok: false,
+        error: scope === 'failed' ? 'Nothing is failing.'
+          : scope === 'setup' ? 'No skipped test is waiting on a flag.'
+          : 'No tests given.',
+      }
+    }
+    // Turn on what the picked tests asked for (explicit flags still win)
+    if (scope === 'setup') {
+      for (const f of picked.flatMap(neededFlags)) runFlags[f] ??= '1'
+    }
     args.push(...selectTests(picked))
   }
   const env = {
     ...process.env,
+    ...runFlags,
     QA_TARGET: target,
     QA_LOCAL_MODE: s.localMode,
     FORCE_COLOR: '0',
@@ -87,6 +115,7 @@ function startRun(target, { scope = 'all', ids = [], trigger = 'manual' } = {}) 
     startedAt: new Date().toISOString(),
     total: null, done: 0, failed: 0, log: [],
     localMode: target === 'local' ? s.localMode : null,
+    flags: runFlags,
   }
   broadcast('state', { running: publicRunning() })
 
@@ -142,8 +171,8 @@ function selectTests(tests) {
 
 function publicRunning() {
   if (!running) return null
-  const { target, startedAt, trigger, scope, total, done, failed, localMode } = running
-  return { target, startedAt, trigger, scope, total, done, failed, localMode }
+  const { target, startedAt, trigger, scope, total, done, failed, localMode, flags } = running
+  return { target, startedAt, trigger, scope, total, done, failed, localMode, flags }
 }
 
 function stopRun() {
@@ -238,6 +267,7 @@ function ingest(target, run, exitCode) {
       attachments,
       runId,
       ranAt: result?.startTime ?? run.startedAt,
+      flags: run.flags ?? {},
     })
   }
 
@@ -257,6 +287,7 @@ function ingest(target, run, exitCode) {
     trigger: run.trigger,
     scope: run.scope,
     localMode: run.localMode,
+    flags: run.flags ?? {},
     exitCode,
     stopped: Boolean(run.stopped),
     counts,
@@ -419,7 +450,9 @@ const server = http.createServer(async (req, res) => {
     try { body = await readBody(req) } catch { return send(res, 400, { error: 'Bad body' }) }
 
     if (p === '/api/run') {
-      const r = startRun(body.target, { scope: body.scope ?? 'all', ids: body.ids ?? [], trigger: 'manual' })
+      const r = startRun(body.target, {
+        scope: body.scope ?? 'all', ids: body.ids ?? [], trigger: 'manual', flags: body.flags ?? {},
+      })
       return send(res, r.ok ? 202 : 409, r)
     }
     if (p === '/api/stop') { stopRun(); return send(res, 200, { ok: true }) }

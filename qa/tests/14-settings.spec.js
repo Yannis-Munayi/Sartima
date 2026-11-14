@@ -154,8 +154,8 @@ test.describe('14. Profile and Settings', () => {
       await expect(page.locator('[class*="emailInput"]')).toHaveValue(email)
     })
 
-    test('Turn on the daily reminder and set a time → the time is saved for the reminder job', async ({ page, context, account }) => {
-      note('Whether the push actually arrives at that time (FCM + the 15-minute scheduler) is a manual check.')
+    test('Set a daily reminder time → the time is saved for the reminder job', async ({ page, context, account }) => {
+      note('Tapping Enable (FCM push token) and whether the push actually arrives at that time (15-minute scheduler) are manual checks — headless Chromium has no push service.')
       await context.grantPermissions(['notifications'])
       // Headless Chromium reports Notification.permission as 'denied' even after
       // grantPermissions (navigator.permissions.query says 'granted'), so Settings

@@ -194,6 +194,19 @@ const FILTERS = [
   ['setup', 'Needs setup'], ['manual', 'Manual'],
 ]
 const SCHEDULES = [[0, 'Off'], [60, 'Every hour'], [360, 'Every 6 hours'], [1440, 'Daily']]
+// What turning each qa/.env flag on does, shown before a "Run with …" run
+const FLAG_INFO = {
+  QA_ALLOW_SIGNUP_LOCAL: 'creates and deletes throwaway @example.com accounts in Firebase',
+  QA_ALLOW_SIGNUP_LIVE: 'creates and deletes throwaway @example.com accounts through the live site',
+  QA_STRIPE_TEST_MODE: 'opens Stripe Checkout with the 4242 test card. Only safe while the deployed Functions use Stripe TEST keys',
+  QA_REAL_FEEDBACK: 'sends real feedback and bug reports (saved to Firestore and emailed to you)',
+}
+const neededFlags = (t) => [...new Set((t.annotations ?? []).filter((a) => a.type === 'needs-flag').map((a) => a.description))]
+const flagList = (flags) => Object.entries(flags ?? {}).map(([k, v]) => `${k}=${v}`).join(', ')
+function confirmFlags(names) {
+  const lines = names.map((n) => `• ${n}=1: ${FLAG_INFO[n] ?? 'turns this flag on'}`)
+  return confirm(`Run with these flags on, for this run only (qa/.env is not changed)?\n\n${lines.join('\n')}`)
+}
 
 let state = null
 let logLines = []
@@ -291,6 +304,8 @@ function render() {
 
   const countChip = (key, label) => `<button class="count s-${key}" data-filter="${key}"><b>${c[key] ?? 0}</b><span>${label}</span></button>`
   const failing = ts.tests.filter((t) => t.status === 'failed' || t.status === 'flaky')
+  const waitingOnFlag = ts.tests.filter((t) => t.status === 'setup' && neededFlags(t).length)
+  const waitingFlags = [...new Set(waitingOnFlag.flatMap(neededFlags))]
 
   const schedule = state.settings.schedule?.[ui.tab] ?? 0
   const app = $('#app')
@@ -305,6 +320,7 @@ function render() {
       <div class="actions">
         <button class="btn primary" data-act="run" ${state.running ? 'disabled' : ''}>Run all</button>
         <button class="btn" data-act="rerun-failed" ${state.running || !failing.length ? 'disabled' : ''}>Re-run failing</button>
+        ${waitingOnFlag.length ? `<button class="btn" data-act="run-setup" data-flags="${esc(waitingFlags.join(','))}" title="Turns on ${esc(waitingFlags.join(', '))} for this run only" ${state.running ? 'disabled' : ''}>Run ${waitingOnFlag.length} waiting on a flag</button>` : ''}
         ${run ? '<button class="btn danger" data-act="stop">Stop</button>' : ''}
       </div>
       <div class="counts">
@@ -328,7 +344,7 @@ function render() {
     ${run ? `
       <section class="card running">
         <div class="btn-row" style="justify-content:space-between">
-          <b>Running ${run.scope === 'all' ? 'the full checklist' : 'selected tests'}${run.localMode ? ` against the ${run.localMode === 'preview' ? 'production build' : 'dev server'}` : ''}</b>
+          <b>Running ${run.scope === 'all' ? 'the full checklist' : 'selected tests'}${run.localMode ? ` against the ${run.localMode === 'preview' ? 'production build' : 'dev server'}` : ''}${flagList(run.flags) ? ` with ${esc(flagList(run.flags))}` : ''}</b>
           <span class="meta" id="progressText">${run.done}${run.total ? ` / ${run.total}` : ''} done${run.failed ? ` · ${run.failed} failed so far` : ''}</span>
         </div>
         <div class="bar"><i id="progressBar" style="width:${run.total ? Math.round((run.done / run.total) * 100) : 3}%"></i></div>
@@ -446,16 +462,17 @@ function renderDrawer() {
         <span class="pill s-${s}">${STATUS[s]}</span>
         <h3>${esc(t.title)}</h3>
         <div class="meta">${esc(t.section)}${t.group ? ' › ' + esc(t.group) : ''}</div>
-        <div class="meta">${esc(t.file)}:${t.line}${t.duration ? ` · ${dur(t.duration)}` : ''}${t.ranAt ? ` · ran ${ago(t.ranAt)}` : ''}${t.retries ? ` · passed on retry ${t.retries}` : ''}</div>
+        <div class="meta">${esc(t.file)}:${t.line}${t.duration ? ` · ${dur(t.duration)}` : ''}${t.ranAt ? ` · ran ${ago(t.ranAt)}` : ''}${t.retries ? ` · passed on retry ${t.retries}` : ''}${flagList(t.flags) ? ` · ran with ${esc(flagList(t.flags))}` : ''}</div>
       </div>
       <div class="drawer-body">
         <div class="btn-row">
           ${t.status !== 'manual' ? `<button class="btn primary" data-act="rerun-one" ${state.running ? 'disabled' : ''}>Re-run this test</button>` : ''}
+          ${t.status === 'setup' && neededFlags(t).length ? `<button class="btn" data-act="rerun-flags" data-flags="${esc(neededFlags(t).join(','))}" ${state.running ? 'disabled' : ''}>Run with ${esc(neededFlags(t).map((f) => `${f}=1`).join(', '))}</button>` : ''}
           ${trace ? `<button class="btn" data-act="trace" data-url="${esc(trace.url)}">Open trace viewer</button>` : ''}
         </div>
         ${t.failingSince ? `<div class="callout s-failed"><b>Failing since ${new Date(t.failingSince).toLocaleString()}</b>${t.failStreak > 1 ? `, ${t.failStreak} runs in a row` : ''}.</div>` : ''}
         ${ann('known-issue').map((a) => `<div class="callout s-flaky"><b>Known issue.</b> ${esc(a.description)}</div>`).join('')}
-        ${ann('needs-setup').map((a) => `<div class="callout s-setup"><b>Needs setup:</b> ${esc(a.description)}. See the Setup button at the top.</div>`).join('')}
+        ${ann('needs-setup').map((a) => `<div class="callout s-setup"><b>Needs setup:</b> ${esc(a.description)}. ${neededFlags(t).length ? 'Use the button above to turn it on for one run, or set it in qa/.env.' : 'See the Setup button at the top.'}</div>`).join('')}
         ${ann('manual').map((a) => `<div class="callout s-manual"><b>Check by hand:</b> ${esc(a.description)}</div>`).join('')}
         ${t.status === 'manual' ? `
           <div>
@@ -542,6 +559,22 @@ document.addEventListener('click', async (e) => {
       const t = state.targets[ui.tab].tests.find((x) => x.id === ui.selected)
       logLines = []
       await api('/api/run', { target: ui.tab, scope: 'tests', ids: [t.id] })
+      await refresh()
+    }
+    if (act === 'rerun-flags') {
+      const names = el.dataset.flags.split(',')
+      if (!confirmFlags(names)) return
+      logLines = []
+      await api('/api/run', {
+        target: ui.tab, scope: 'tests', ids: [ui.selected],
+        flags: Object.fromEntries(names.map((n) => [n, '1'])),
+      })
+      await refresh()
+    }
+    if (act === 'run-setup') {
+      if (!confirmFlags(el.dataset.flags.split(','))) return
+      logLines = []
+      await api('/api/run', { target: ui.tab, scope: 'setup' })
       await refresh()
     }
     if (act === 'trace') await api('/api/trace', { url: el.dataset.url })

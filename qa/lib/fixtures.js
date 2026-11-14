@@ -46,20 +46,45 @@ export function manual(reason) {
   base.skip(true, `Manual check: ${reason}`)
 }
 
-/** Skip with a "needs setup" reason when a requirement isn't configured. */
-export function needs(ok, what) {
-  if (ok) return
-  annotate('needs-setup', what)
-  base.skip(true, `Needs setup: ${what}`)
+/**
+ * Skip with a "needs setup" reason when a requirement isn't configured. When
+ * the missing piece is one of the 0/1 flags (env.js FLAG_NAMES), pass its name
+ * too: the dashboard then offers to run the test with that flag set to 1.
+ */
+export function needs(ok, what, flag) {
+  requireAll([{ ok, what, flag }])
 }
 
-export const requireSignup = () =>
-  needs(ALLOW_SIGNUP && FIREBASE.apiKey, TARGET === 'live'
-    ? 'QA_ALLOW_SIGNUP_LIVE=1 in qa/.env (creates and deletes throwaway @example.com accounts)'
-    : 'QA_ALLOW_SIGNUP_LOCAL=1 in qa/.env (creates and deletes throwaway @example.com accounts)')
+/** Record every missing requirement first, then skip once, so none is hidden. */
+function requireAll(reqs) {
+  const missing = reqs.filter((r) => !r.ok)
+  if (!missing.length) return
+  for (const r of missing) {
+    annotate('needs-setup', r.what)
+    if (r.flag) annotate('needs-flag', r.flag)
+  }
+  base.skip(true, `Needs setup: ${missing.map((r) => r.what).join('; ')}`)
+}
 
-export const requireStripeTest = () =>
-  needs(STRIPE_TEST_MODE, 'QA_STRIPE_TEST_MODE=1 in qa/.env, and deployed Functions using Stripe test keys')
+const firebaseReq = () => ({
+  ok: Boolean(FIREBASE.apiKey),
+  what: 'the Firebase web config (VITE_FIREBASE_API_KEY in the app\'s .env)',
+})
+
+const signupReq = () => {
+  const flag = TARGET === 'live' ? 'QA_ALLOW_SIGNUP_LIVE' : 'QA_ALLOW_SIGNUP_LOCAL'
+  return { ok: ALLOW_SIGNUP, flag, what: `${flag}=1 (creates and deletes throwaway @example.com accounts)` }
+}
+
+const stripeReq = () => ({
+  ok: STRIPE_TEST_MODE,
+  flag: 'QA_STRIPE_TEST_MODE',
+  what: 'QA_STRIPE_TEST_MODE=1, and deployed Functions using Stripe test keys',
+})
+
+export const requireSignup = () => requireAll([firebaseReq(), signupReq()])
+export const requireStripeTest = () => requireAll([stripeReq()])
+export const requireSignupAndStripe = () => requireAll([firebaseReq(), signupReq(), stripeReq()])
 
 /** A known bug: the test still runs, and the dashboard tags the failure. */
 export const knownIssue = (text) => annotate('known-issue', text)
