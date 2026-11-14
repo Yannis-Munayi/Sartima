@@ -24,6 +24,23 @@ function setCache(key, value) {
 
 const outfitFn = httpsCallable(functions, 'anthropicOutfit')
 
+function cacheKeyFor({ closetItems, occasion, dateStr, preferredSeasons }) {
+  const seasonKey = [...targetSeasons(preferredSeasons)].sort().join('+')
+  return `sartima_outfit_${dateStr}_${occasion}_${seasonKey}_${closetHash(closetItems)}`
+}
+
+/**
+ * The outfit already generated this session for these inputs, or null.
+ * Never calls the AI, so it costs nothing against the free daily generation.
+ */
+export function getCachedOutfit({ closetItems, occasion, dateStr, preferredSeasons }) {
+  if (!closetItems || closetItems.length < 3) return null
+  const cached = getCached(cacheKeyFor({ closetItems, occasion, dateStr, preferredSeasons }))
+  if (!cached) return null
+  const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
+  return { ...cached, items: cached.itemIds.map((id) => itemMap[id]).filter(Boolean) }
+}
+
 /**
  * Generate an outfit from the user's closet via the server-side proxy.
  *
@@ -40,13 +57,9 @@ const outfitFn = httpsCallable(functions, 'anthropicOutfit')
 export async function generateOutfit({ closetItems, weather, occasion, dateStr, gender, occupation, preferredSeasons }) {
   if (!closetItems || closetItems.length < 3) return null
 
-  const seasonKey = [...targetSeasons(preferredSeasons)].sort().join('+')
-  const cacheKey  = `sartima_outfit_${dateStr}_${occasion}_${seasonKey}_${closetHash(closetItems)}`
-  const cached   = getCached(cacheKey)
-  if (cached) {
-    const itemMap = Object.fromEntries(closetItems.map((i) => [i.id, i]))
-    return { ...cached, items: cached.itemIds.map((id) => itemMap[id]).filter(Boolean) }
-  }
+  const cached = getCachedOutfit({ closetItems, occasion, dateStr, preferredSeasons })
+  if (cached) return cached
+  const cacheKey = cacheKeyFor({ closetItems, occasion, dateStr, preferredSeasons })
 
   const candidates = outfitCandidates(closetItems, { occasion, preferredSeasons })
 

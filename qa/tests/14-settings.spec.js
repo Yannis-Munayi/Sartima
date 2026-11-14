@@ -219,8 +219,11 @@ test.describe('14. Profile and Settings', () => {
       await openOutfitsSubTab(page, "Today's Outfit")
       await expect(page.getByRole('button', { name: 'Generate Work Outfit' }), 'the default occasion (Work) is pre-selected').toBeEnabled()
       await page.getByRole('button', { name: 'Generate Work Outfit' }).click()
-      await expect.poll(() => fns.count('anthropicOutfit')).toBe(1)
-      const sent = fns.last('anthropicOutfit').items.map((i) => i.name)
+      // Pro's Home "Today's Look" preview also generates (with whatever occasion was set
+      // when Home loaded), so look for the Work call rather than counting calls.
+      const workCall = () => (fns.calls.anthropicOutfit ?? []).findLast((c) => c.occasion === 'work')
+      await expect.poll(() => Boolean(workCall()), 'an outfit was generated for the Work occasion').toBe(true)
+      const sent = workCall().items.map((i) => i.name)
       expect(sent.filter((n) => n.startsWith('QA Summer')).length, `preferred season Summer, sent: ${sent.join(', ')}`).toBeGreaterThan(0)
     })
   })

@@ -110,17 +110,6 @@ test.describe('5. Home', () => {
       await expect(panel(page).getByText(gapTitle, { exact: true })).toBeVisible()
     })
 
-    test("With 3+ closet items, the daily outfit preview shows. With fewer, it doesn't", async ({ page, account }) => {
-      await account.reset({ closet: basicCloset().slice(0, 2) })
-      await open(page, 'home')
-      await expect(page.getByRole('heading', { name: 'Fresh Looks Today' })).toBeVisible()
-      await expect(page.getByText("Today's Look", { exact: true })).toHaveCount(0)
-
-      await account.setCloset(basicCloset())
-      await page.reload()
-      await expect(page.getByText("Today's Look", { exact: true })).toBeVisible({ timeout: 20_000 })
-    })
-
     test("The Wardrobe Recap appears once a month, and dismissing it means it doesn't come back that month", async ({ page, account }) => {
       const closet = basicCloset()
       await account.reset({
@@ -136,6 +125,25 @@ test.describe('5. Home', () => {
       await page.reload()
       await expect(page.getByRole('heading', { name: 'Fresh Looks Today' })).toBeVisible()
       await expect(page.getByText('Your wardrobe this month')).toHaveCount(0)
+    })
+  })
+
+  // Pro: the preview generates on its own. Free only sees it after generating in
+  // Today's Outfit (it never spends their one daily generation), and the free QA
+  // account's generation is used up by the 10-outfits paywall check.
+  test.describe('Pro account', () => {
+    test.use({ role: 'pro' })
+
+    test("With 3+ closet items, the daily outfit preview shows. With fewer, it doesn't", async ({ page, account, fns }) => {
+      await account.reset({ closet: basicCloset().slice(0, 2) })
+      await open(page, 'home')
+      await expect(page.getByRole('heading', { name: 'Fresh Looks Today' })).toBeVisible()
+      await expect(page.getByText("Today's Look", { exact: true })).toHaveCount(0)
+      expect(fns.count('anthropicOutfit'), 'no outfit generated for a 2-item closet').toBe(0)
+
+      await account.setCloset(basicCloset())
+      await page.reload()
+      await expect(page.getByText("Today's Look", { exact: true })).toBeVisible({ timeout: 20_000 })
     })
   })
 })
